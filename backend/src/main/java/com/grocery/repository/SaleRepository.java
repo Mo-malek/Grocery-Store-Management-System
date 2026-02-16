@@ -33,9 +33,9 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
         List<Object[]> getTopProducts(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
         // المبيعات حسب الساعة (لتحليل أوقات الذروة)
-        @Query("SELECT HOUR(s.createdAt) as hour, COUNT(s) as count, SUM(s.total) as total " +
+        @Query("SELECT EXTRACT(HOUR FROM s.createdAt) as hour, COUNT(s) as count, SUM(s.total) as total " +
                         "FROM Sale s WHERE s.createdAt >= :start AND s.createdAt < :end " +
-                        "GROUP BY HOUR(s.createdAt) ORDER BY hour")
+                        "GROUP BY EXTRACT(HOUR FROM s.createdAt) ORDER BY hour")
         List<Object[]> getSalesByHour(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
         // إجمالي المبيعات اليومية (آخر 7 أيام)
@@ -71,9 +71,11 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
         List<Object[]> getCategoryAnalytics(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
         // خريطة الحرارة للمبيعات (يوم الأسبوع والساعة)
-        @Query("SELECT DAYOFWEEK(s.createdAt) as dayOfWeek, HOUR(s.createdAt) as hour, COUNT(s) as count " +
+        // PostgreSQL: EXTRACT(ISODOW FROM date) returns 1 (Monday) to 7 (Sunday)
+        @Query("SELECT EXTRACT(ISODOW FROM s.createdAt) as dayOfWeek, EXTRACT(HOUR FROM s.createdAt) as hour, COUNT(s) as count "
+                        +
                         "FROM Sale s WHERE s.createdAt >= :start " +
-                        "GROUP BY DAYOFWEEK(s.createdAt), HOUR(s.createdAt) ORDER BY dayOfWeek, hour")
+                        "GROUP BY EXTRACT(ISODOW FROM s.createdAt), EXTRACT(HOUR FROM s.createdAt) ORDER BY dayOfWeek, hour")
         List<Object[]> getSalesHeatMap(@Param("start") LocalDateTime start);
 
         // ترتيب الموظفين حسب المبيعات
