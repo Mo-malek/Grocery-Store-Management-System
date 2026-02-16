@@ -6,6 +6,7 @@ import { Product, SaleItemRequest, SaleRequest, SaleView, Customer, Recommendati
 import { ToastService } from '../../core/services/toast.service';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { SaleDetailModalComponent } from '../../shared/components/sale-detail-modal/sale-detail-modal.component';
+import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner/barcode-scanner.component';
 
 interface CartItem {
   product?: Product;
@@ -18,7 +19,7 @@ interface CartItem {
 @Component({
   selector: 'app-pos',
   standalone: true,
-  imports: [CommonModule, FormsModule, SpinnerComponent, SaleDetailModalComponent],
+  imports: [CommonModule, FormsModule, SpinnerComponent, SaleDetailModalComponent, BarcodeScannerComponent],
   template: `
     <div class="pos-container">
       <!-- Left: Cart & Checkout -->
@@ -100,8 +101,11 @@ interface CartItem {
       <!-- Right: Products Grid -->
       <div class="products-section">
         <div class="search-box">
-          <input type="text" [(ngModel)]="searchTerm" (input)="search()" 
+          <div class="search-input-wrapper">
+             <input type="text" [(ngModel)]="searchTerm" (input)="search()" 
                  placeholder="بحث باسم المنتج أو الباركود..." class="form-control search-input" #searchInput autofocus>
+             <button class="scan-btn" (click)="showScanner = true" title="Scan Barcode">📷</button>
+          </div>
         </div>
         
         <div class="categories">
@@ -157,6 +161,12 @@ interface CartItem {
       [sale]="lastSale" 
       (onClosed)="lastSale = null">
     </app-sale-detail-modal>
+
+    <!-- Barcode Scanner Modal -->
+    <app-barcode-scanner *ngIf="showScanner"
+      (scanSuccess)="onCameraScan($event)"
+      (closeScanner)="showScanner = false">
+    </app-barcode-scanner>
   `,
   styles: [`
     .pos-container {
@@ -360,9 +370,34 @@ interface CartItem {
       overflow: hidden;
     }
     
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
     .search-input {
       padding: 1rem;
       font-size: 1.1rem;
+      flex: 1;
+      padding-left: 3rem; /* Space for camera icon */
+    }
+
+    .scan-btn {
+      position: absolute;
+      left: 10px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: all 0.2s;
+      z-index: 10;
+    }
+
+    .scan-btn:hover {
+      opacity: 1;
+      transform: scale(1.1);
     }
     
     .categories {
@@ -512,6 +547,8 @@ interface CartItem {
         background: var(--bg-main);
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 0.5rem;
       }
     }
     .suggestions-section {
@@ -563,6 +600,7 @@ export class PosComponent implements OnInit {
   selectedCategory: string = '';
   searchTerm: string = '';
   showBundles: boolean = false;
+  showScanner: boolean = false; // New: Scanner visibility
 
   cart: CartItem[] = [];
   subtotal: number = 0;
@@ -626,6 +664,15 @@ export class PosComponent implements OnInit {
       this.toast.warning('منتج غير معروف: ' + barcode);
     }
   }
+
+  // New: Handle camera scan result
+  onCameraScan(barcode: string) {
+    console.log('Camera scanned:', barcode);
+    this.processBarcode(barcode);
+    // Optional: Close scanner after one successful scan, OR keep it open for bulk scanning
+    // this.showScanner = false; 
+  }
+
 
   ngOnInit() {
     this.loadProducts();
