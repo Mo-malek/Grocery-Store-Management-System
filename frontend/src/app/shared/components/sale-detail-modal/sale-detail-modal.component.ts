@@ -212,61 +212,67 @@ import { SaleView } from '../../../core/models/models';
     }
 
     @media print {
-      body * {
-        visibility: hidden;
+      /* Reset body/html to prevent extra pages/scroll */
+      body, html {
+        height: 100%;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
       }
 
+      /* Hide everything by default using visibility, so layout remains but content is invisible */
+      body * {
+        visibility: hidden; 
+      }
+
+      /* Make the backdrop content visible and positioned at top */
       .modal-backdrop, .modal-backdrop * {
         visibility: visible;
       }
 
       .modal-backdrop {
-        position: absolute;
+        position: absolute; /* Absolute is often better than fixed for print to ensure it flows if needed, but for receipts fixed/absolute top 0 is fine */
         left: 0;
         top: 0;
         width: 100%;
-        height: auto !important;
+        min-height: 100%;
         background: white;
-        display: block !important;
+        display: flex !important;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 0;
+        margin: 0;
+        z-index: 9999;
+      }
+
+      .receipt-modal {
+        width: 80mm !important; /* Force thermal width */
+        max-width: 80mm !important;
+        box-shadow: none;
+        border: none;
         padding: 0;
         margin: 0;
         overflow: visible !important;
       }
-
-      .receipt-modal {
-        width: 100%;
-        max-width: 80mm; /* Standard Thermal Paper */
-        margin: 0 auto;
-        padding: 5px;
-        box-shadow: none;
-        border: none;
-        max-height: none !important;
-        overflow: visible !important;
+      
+      /* Hide scrollbars and extra spacing */
+      ::-webkit-scrollbar {
+        display: none;
       }
-
-      .receipt-modal * {
-        overflow: visible !important;
-      }
-
+      
       .no-print {
         display: none !important;
       }
 
-      .item-row, .summary-row {
-        display: flex !important;
-        break-inside: avoid;
-      }
-      
+      /* Borders for print clarity */
       .receipt-divider {
-        border-top: 1px dashed black !important;
+        border-top: 2px dashed #000 !important;
       }
-      
       .item-row.header {
-        border-bottom: 1px solid black !important;
+        border-bottom: 2px solid #000 !important;
       }
-      
       .summary-row.total {
-        border-top: 1px double black !important;
+        border-top: 2px double #000 !important;
       }
     }
   `]
