@@ -1,0 +1,32 @@
+databases:
+  - name: grocery-db
+    plan: free
+    databaseName: grocerydb
+    user: grocery_user
+
+services:
+  - type: web
+    name: grocery-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: grocery-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: grocery-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: grocery-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGIN
+        value: https://your-frontend.vercel.app
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod

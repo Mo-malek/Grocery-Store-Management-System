@@ -1,0 +1,73 @@
+🏪 Grocery Store Management System (نظام إدارة البقالة)
+Phase 1: Planning & Design
+ Database design (ERD + Schema)
+ System architecture & module breakdown
+ Implementation plan with verification strategy
+ User approval on plan
+Phase 2: Backend (Spring Boot 3)
+ pom.xml with H2, Flyway, JWT, Lombok
+ application.yml with H2 config
+ Flyway migrations (V1 tables, V2 seed data)
+ Entities: Product, Customer, Sale, SaleItem
+ Repositories with custom queries
+ Services: ProductService, CustomerService, SaleService, DashboardService
+ REST Controllers: Products, Customers, Sales, Dashboard
+ SecurityConfig (open for Phase 1), GlobalExceptionHandler
+Phase 3: Angular Frontend
+ Project setup (Angular 17+)
+ Core module (API services, interceptors)
+ Shared components (Sidebar, Modal, BarChart)
+ POS Module (Cart, Product Search, Checkout)
+ Inventory Module (Product CRUD, Low Stock Alerts)
+ Dashboard Module (KPIs, Charts)
+ Customers Module (CRUD, Loyalty Points)
+Phase 4: Polish & Testing
+ Verify backend compiles and runs
+ Test APIs via browser
+ UI Improvements (Toast, Loading, Recent Sales, Home Page)
+ Fix Angular build and dependency issues
+ Walkthrough documentation
+Phase 5: Sales Management & Inventory Audit
+ Sale Detail View (Show items after checkout)
+ Receipt Generation (PDF/Print layout)
+ Sales History & Tracking (History page)
+ Stock Movement Logs (Audit trail for inventory)
+Phase 6: Security & Authentication
+ User Identity & JWT Authentication (Backend)
+ Login/Logout UI (Frontend)
+ Auth Guard & Route Protection
+Phase 7: Loyalty & Advanced Dashboard
+ Customer Selection in POS (Linking sales to customers)
+ Loyalty Point Formula (Add points based on total)
+ Enhanced Dashboard (KPIs with icons, better charts)
+ Low Stock Notification System (UI Alerts)
+Phase 8: Scaling & Business Intelligence
+ Expense Tracking (Rent, Electricity, etc.)
+ Net Profit Calculation on Dashboard
+ User Roles (Cashier vs Manager - RBAC implemented)
+ Stock Movement Logs (Auditor trail implemented)
+Phase 9: AI-Driven Inventory & Procurement (الاستعداد الذكي) [DONE]
+ Smart Reorder Engine (Daily sales rate + prediction)
+ Expiry Risk Analyzer (Alerts & discount suggestions)
+ Price Optimization Logic (Slow-moving product detection)
+Phase 10: Marketing & Customer Experience (تجربة العميل) [COMPLETED]
+ Smart Basket Suggestions (Upselling in POS)
+ Bundle Builder Engine (Package deals + POS Integration)
+ Smart Receipt (Savings display + loyalty status)
+ Customer Intelligence Profiles (Behavior tracking)
+ CRM Alerts (Stagnant customer notification)
+Phase 11: Business Intelligence 2.0 (التحليلات المتقدمة) [COMPLETED]
+ Sales Heat Map (Peak hours & traffic visualization)
+ Store Health Score (KPI collection & gamification)
+ Deep Financial Analytics (Granular net profit per category)
+Phase 12: Operations & Integrations (الأتمتة والعتاد) 🚀 [COMPLETED]
+ Barcode Scanner Integration (Hardware Support in POS)
+ Auto-Inventory Correction (Discrepancy Detection)
+ Employee Analytics & Leaderboard (Tracking & Incentives)
+ Operational WhatsApp Integration (Mock for Alerts & Notifications)
+Phase 13: Deployment & Collaboration (النشر والمشاركة) 🌐 [DONE]
+ Prepare Production Environment (Environment Variables + PostgreSQL Config)
+ Deploy Backend & Database (Render / Railway Free Tier)
+ Deploy Frontend (Vercel / Netlify)
+ Setup Cross-Origin (CORS) for Production URL
+ Share Access & Documentation for the Team

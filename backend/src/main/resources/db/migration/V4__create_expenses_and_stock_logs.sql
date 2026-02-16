@@ -1,0 +1,17 @@
+CREATE TABLE expenses (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    description VARCHAR(500) NOT NULL,
+    amount DECIMAL(19, 2) NOT NULL,
+    category VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE stock_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id BIGINT NOT NULL,
+    quantity_change INTEGER NOT NULL,
+    type VARCHAR(50) NOT NULL, -- SALE, RESTOCK, ADJUSTMENT, WASTE
+    reason VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_stock_log_product FOREIGN KEY (product_id) REFERENCES product(id)
+);

@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: grocery-store
+
+  # ==========================================
+  # H2 Database (Development)
+  # ==========================================
+  datasource:
+    url: jdbc:h2:file:./data/grocerydb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # ==========================================
+  # PostgreSQL (Production - uncomment when ready)
+  # ==========================================
+  # datasource:
+  #   url: jdbc:postgresql://localhost:5432/grocerydb
+  #   username: postgres
+  #   password: your_password
+  #   driver-class-name: org.postgresql.Driver
+  # jpa:
+  #   database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  # ==========================================
+  # Flyway
+  # ==========================================
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+# ==========================================
+# JWT Configuration
+# ==========================================
+jwt:
+  secret: grocery-store-jwt-secret-key-change-this-in-production-please-2024
+  expiration: 86400000  # 24 hours in ms
+
+# ==========================================
+# Server
+# ==========================================
+server:
+  port: 8080

@@ -1,0 +1,210 @@
+# 🏪 Grocery Store Management System - نظام إدارة البقالة
+
+Full-stack system: **Spring Boot 3 + Angular + PostgreSQL + JWT**
+
+---
+
+## Database Design (ERD)
+
+```mermaid
+erDiagram
+    PRODUCT {
+        Long id PK
+        String name
+        String barcode
+        String category
+        BigDecimal purchasePrice
+        BigDecimal sellingPrice
+        Integer currentStock
+        Integer minStock
+        String unit
+        Boolean active
+        LocalDateTime createdAt
+    }
+    
+    CUSTOMER {
+        Long id PK
+        String name
+        String phone
+        BigDecimal totalPurchases
+        Integer loyaltyPoints
+        LocalDateTime createdAt
+    }
+    
+    SALE {
+        Long id PK
+        Long customerId FK
+        BigDecimal subtotal
+        BigDecimal discount
+        BigDecimal total
+        String paymentMethod
+        LocalDateTime createdAt
+    }
+    
+    SALE_ITEM {
+        Long id PK
+        Long saleId FK
+        Long productId FK
+        Integer quantity
+        BigDecimal unitPrice
+        BigDecimal total
+    }
+    
+    SALE ||--o{ SALE_ITEM : "فاتورة فيها أصناف"
+    SALE_ITEM }o--|| PRODUCT : "كل صنف = منتج"
+    SALE }o--o| CUSTOMER : "فاتورة لعميل (اختياري)"
+```
+
+> [!NOTE]
+> **SALE = فاتورة البيع** 🧾 كل مرة عميل بيشتري، بيتعمل سجل Sale فيه الإجمالي والخصم وطريقة الدفع.
+> **SALE_ITEM = أصناف الفاتورة** — كل منتج جوه الفاتورة (مثلاً: 2 كيلو سكر + 1 زيت).
+
+---
+
+## Project Structure
+
+```
+g:\my-app\
+├── backend/                          # Spring Boot 3
+│   ├── pom.xml
+│   └── src/main/java/com/grocery/
+│       ├── GroceryApplication.java
+│       ├── config/
+│       │   ├── SecurityConfig.java    # JWT + CORS
+│       │   └── JwtUtils.java
+│       ├── entity/
+│       │   ├── Product.java
+│       │   ├── Customer.java
+│       │   ├── Sale.java
+│       │   └── SaleItem.java
+│       ├── repository/
+│       │   ├── ProductRepository.java
+│       │   ├── CustomerRepository.java
+│       │   └── SaleRepository.java
+│       ├── service/
+│       │   ├── ProductService.java
+│       │   ├── CustomerService.java
+│       │   ├── SaleService.java
+│       │   └── DashboardService.java
+│       ├── controller/
+│       │   ├── AuthController.java
+│       │   ├── ProductController.java
+│       │   ├── CustomerController.java
+│       │   ├── SaleController.java
+│       │   └── DashboardController.java
+│       └── dto/
+│           ├── SaleRequest.java
+│           └── DashboardStats.java
+│
+├── frontend/                          # Angular 17+
+│   ├── angular.json
+│   └── src/app/
+│       ├── core/
+│       │   ├── services/              # API services
+│       │   ├── guards/                # Auth guard
+│       │   └── interceptors/          # JWT interceptor
+│       ├── shared/
+│       │   └── components/            # Reusable UI
+│       └── modules/
+│           ├── pos/                   # نقطة البيع
+│           ├── inventory/             # المخزون
+│           ├── dashboard/             # لوحة التحكم
+│           └── customers/             # العملاء
+```
+
+---
+
+## REST API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | JWT Login |
+| GET | `/api/products` | List products (search, filter) |
+| POST | `/api/products` | Add product |
+| PUT | `/api/products/{id}` | Update product |
+| DELETE | `/api/products/{id}` | Delete product |
+| GET | `/api/products/low-stock` | Low stock alerts |
+| GET | `/api/customers` | List customers |
+| POST | `/api/customers` | Add customer |
+| PUT | `/api/customers/{id}` | Update customer |
+| GET | `/api/customers/{id}/history` | Purchase history |
+| POST | `/api/sales` | Create sale (checkout) |
+| GET | `/api/sales` | List sales (date range) |
+| GET | `/api/dashboard/stats` | Today's KPIs |
+| GET | `/api/dashboard/top-products` | Pareto analysis |
+| GET | `/api/dashboard/peak-hours` | Peak hours |
+
+---
+
+## Proposed Changes
+
+### Backend (Spring Boot 3)
+
+#### [NEW] `pom.xml` — Dependencies: Spring Web, Data JPA, Security, PostgreSQL, Lombok, JJWT
+#### [NEW] `application.yml` — DB config, JWT secret, server port 8080
+#### [NEW] Entities — JPA entities with `@Entity`, `@Table`, relationships (`@ManyToOne`, `@OneToMany`)
+#### [NEW] Repositories — `JpaRepository` interfaces with custom query methods
+#### [NEW] Services — Business logic: stock deduction on sale, loyalty points calc, dashboard aggregations
+#### [NEW] Controllers — REST controllers with `@RestController`, validation with `@Valid`
+#### [NEW] Security — JWT auth filter, `SecurityConfig` with CORS for Angular dev server
+#### [NEW] DTOs — Request/response objects for sales checkout, dashboard stats
+
+---
+
+### Frontend (Angular 17+)
+
+#### [NEW] POS Module (نقطة البيع)
+- Product search bar with instant filtering
+- Cart with add/remove/quantity
+- Discount input (% or fixed)
+- Customer linking (optional)
+- Checkout → API call → receipt view
+
+#### [NEW] Inventory Module (المخزون)
+- Products table with search/sort/filter
+- Add/Edit product dialog
+- Low stock alerts banner
+- Profit margin display per product
+
+#### [NEW] Dashboard Module (لوحة التحكم)
+- KPI cards: sales today, net profit, transaction count, avg basket
+- Charts: 7-day sales bar chart, top 5 products, peak hours
+- Slow movers list
+
+#### [NEW] Customers Module (العملاء)
+- Customers table with search
+- Add/Edit customer dialog
+- Profile view: total purchases, loyalty points, history
+- Loyalty: 1000 EGP = 30 points (auto-calculated)
+
+---
+
+## Build Order
+
+| Step | What | Why |
+|------|------|-----|
+| 1 | Backend entities + repositories | Foundation |
+| 2 | Product CRUD API | Inventory needs it |
+| 3 | Angular project + routing + shared UI | Frontend base |
+| 4 | Inventory module (Angular) | First visible feature |
+| 5 | Sale API + stock deduction | Core business logic |
+| 6 | POS module (Angular) | Main daily-use feature |
+| 7 | Customer API + loyalty | Retention feature |
+| 8 | Customers module (Angular) | Customer management |
+| 9 | Dashboard API + aggregations | Analytics |
+| 10 | Dashboard module (Angular) | Visual insights |
+| 11 | JWT auth | Security |
+
+---
+
+## Verification Plan
+
+### Backend
+- Test APIs with browser tool or curl calls
+- Verify stock deduction after sale
+- Verify loyalty points accumulation
+
+### Frontend
+- Open each module in browser and walk through user flows
+- Verify RTL Arabic layout
+- Capture screenshots for walkthrough

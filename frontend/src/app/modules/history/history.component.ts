@@ -1,0 +1,229 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ApiService } from '../../core/services/api.service';
+import { SaleView } from '../../core/models/models';
+import { SaleDetailModalComponent } from '../../shared/components/sale-detail-modal/sale-detail-modal.component';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+
+@Component({
+    selector: 'app-history',
+    standalone: true,
+    imports: [CommonModule, SaleDetailModalComponent, SpinnerComponent],
+    template: `
+    <div class="history-container">
+      <div class="header">
+        <h1>📊 سجل المبيعات</h1>
+        <p class="subtitle">استعراض مبيعات اليوم والعمليات السابقة</p>
+      </div>
+
+      <div class="stats-cards">
+        <div class="stat-card">
+          <span class="icon">💰</span>
+          <div class="info">
+            <span class="label">إجمالي اليوم</span>
+            <span class="value">{{ todayTotal | number:'1.2-2' }} ج.م</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="icon">🧾</span>
+          <div class="info">
+            <span class="label">عدد العمليات</span>
+            <span class="value">{{ sales.length }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <app-spinner *ngIf="isLoading"></app-spinner>
+        
+        <table class="table" *ngIf="!isLoading">
+          <thead>
+            <tr>
+              <th>رقم الفاتورة</th>
+              <th>الوقت</th>
+              <th>العميل</th>
+              <th>طريقة الدفع</th>
+              <th>الإجمالي</th>
+              <th>الأجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sale of sales">
+              <td>#{{ sale.id }}</td>
+              <td>{{ sale.createdAt | date:'shortTime' }}</td>
+              <td>{{ sale.customer?.name || 'عميل نقدي' }}</td>
+              <td>
+                <span class="badge" [class.badge-primary]="sale.paymentMethod === 'CASH'">
+                  {{ sale.paymentMethod === 'CASH' ? 'نقدي' : 'فيزا' }}
+                </span>
+              </td>
+              <td class="total">{{ sale.total | number:'1.2-2' }} ج.م</td>
+              <td>
+                <button class="btn btn-sm btn-outline" (click)="viewSale(sale)">🔍 التفاصيل</button>
+              </td>
+            </tr>
+            <tr *ngIf="sales.length === 0">
+              <td colspan="6" class="empty-msg">لا توجد مبيعات مسجلة اليوم</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <app-sale-detail-modal 
+      [sale]="selectedSale" 
+      (onClosed)="selectedSale = null">
+    </app-sale-detail-modal>
+  `,
+    styles: [`
+    .history-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .stat-card .icon {
+      font-size: 2rem;
+      background: rgba(37, 99, 235, 0.1);
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .info .label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .info .value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .table-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      min-height: 200px;
+      position: relative;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+    }
+
+    .table th, .table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .table th {
+      background: rgba(255,255,255,0.02);
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .total {
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .badge-primary {
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--primary-color);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+      background: var(--bg-input);
+      border-color: var(--primary-color);
+    }
+
+    .empty-msg {
+      text-align: center;
+      padding: 3rem !important;
+      color: var(--text-muted);
+    }
+  `]
+})
+export class HistoryComponent implements OnInit {
+    sales: SaleView[] = [];
+    isLoading: boolean = false;
+    todayTotal: number = 0;
+    selectedSale: SaleView | null = null;
+
+    constructor(private api: ApiService) { }
+
+    ngOnInit() {
+        this.loadTodaySales();
+    }
+
+    loadTodaySales() {
+        this.isLoading = true;
+        this.api.getTodaySales().subscribe({
+            next: (data) => {
+                this.sales = data;
+                this.calculateTodayTotal();
+                this.isLoading = false;
+            },
+            error: (err) => {
+                console.error('Failed to load sales', err);
+                this.isLoading = false;
+            }
+        });
+    }
+
+    calculateTodayTotal() {
+        this.todayTotal = this.sales.reduce((sum, s) => sum + s.total, 0);
+    }
+
+    viewSale(sale: SaleView) {
+        this.selectedSale = sale;
+    }
+}
