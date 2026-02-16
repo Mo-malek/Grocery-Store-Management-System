@@ -4,9 +4,9 @@ spring:
       on-profile: prod
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:postgresql://ep-aged-boat-a81zd4jw-pooler.eastus2.azure.neon.tech/neondb?sslmode=require
+    username: neondb_owner
+    password: npg_sGEWyJo10cbR
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -20,7 +20,7 @@ spring:
     baseline-on-migrate: true
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: grocery-store-secure-jwt-secret-key-2024-change-me
   expiration: 86400000
 
 server:

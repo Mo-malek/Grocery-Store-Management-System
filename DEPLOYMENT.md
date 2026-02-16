@@ -1,95 +1,74 @@
-# 🚀 Deployment Guide — نظام بقالتي
+# 🚀 FREE Deployment Guide (No Card Required)
 
-Step-by-step instructions to deploy the Grocery Store app on **Render** (backend) + **Vercel** (frontend).
+Since Render asks for a credit card for blueprints/databases, we will use **Neon** (Free Database) + **Render Manual Web Service** (Free Backend).
 
 ---
 
-## 1️⃣ Backend: Deploy on Render
+## 1️⃣ Create Free Database (Neon)
 
-### Option A: One-Click Blueprint
-1. Push your code to a **GitHub** repository
-2. Go to [render.com/deploy](https://render.com/deploy)
-3. Connect your repo — Render will detect `render.yaml` and auto-create:
-   - A free **PostgreSQL** database
-   - A **Docker** web service with all env vars pre-wired
-4. Click **Apply** and wait for the build (~5 min)
+1. Go to **[console.neon.tech/signup](https://console.neon.tech/signup)** (Sign up with GitHub/Google).
+2. Create a new **Project**:
+   - Name: `grocery-db`
+   - Region: Pick closest (e.g., `aws-eu-central-1` or `aws-us-east-1`).
+3. Once created, you will see a **Connection String** like:
+   `postgres://neondb_owner:...........@ep-restless-....aws.neon.tech/neondb?sslmode=require`
+4. **Copy this string** (click the Copy button). This is your `SPRING_DATASOURCE_URL`.
 
-### Option B: Manual Setup
-1. **Create PostgreSQL Database**
-   - Dashboard → New → PostgreSQL → Free tier
-   - Note the **Internal Database URL**
+---
 
-2. **Create Web Service**
-   - Dashboard → New → Web Service → Connect GitHub repo
-   - Root Directory: `backend`
-   - Runtime: **Docker**
-   - Plan: **Free**
+## 2️⃣ Deploy Backend (Render - Manual)
 
-3. **Set Environment Variables**
+1. Go to **[dashboard.render.com](https://dashboard.render.com/)**.
+2. Click **New +** → **Web Service** (NOT Blueprint).
+3. Connect your repository: `Mo-malek/Grocery-Store-Management-System`.
+4. **Configure**:
+   - **Name**: `grocery-backend`
+   - **Region**: Same as your database if possible.
+   - **Runtime**: `Docker`
+   - **Instance Type**: `Free`
+5. **Environment Variables** (Advanced): Add these manually:
 
-   | Variable | Value |
-   |----------|-------|
-   | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://<host>:5432/<db>` |
-   | `SPRING_DATASOURCE_USERNAME` | From Render DB dashboard |
-   | `SPRING_DATASOURCE_PASSWORD` | From Render DB dashboard |
-   | `JWT_SECRET` | Any long random string (32+ chars) |
-   | `CORS_ALLOWED_ORIGIN` | `https://your-app.vercel.app` |
+   | Key | Value |
+   |-----|-------|
+   | `SPRING_DATASOURCE_URL` | Paste the Neon Connection String (starting with `postgres://...`) |
+   | `SPRING_DATASOURCE_USERNAME` | (Leave empty if URL includes it, or extract from URL: `neondb_owner`) |
+   | `SPRING_DATASOURCE_PASSWORD` | (Leave empty if URL includes it) |
+   | `JWT_SECRET` | Any long random string |
+   | `CORS_ALLOWED_ORIGIN` | `https://your-frontend.vercel.app` (update later) |
    | `SPRING_PROFILES_ACTIVE` | `prod` |
 
-4. Deploy and wait for build to complete ✅
+6. Click **Create Web Service**.
+
+> **Note**: If Render fails to connect to DB, double-check that the `sslmode=require` is at the end of the URL.
 
 ---
 
-## 2️⃣ Frontend: Deploy on Vercel
+## 3️⃣ Deploy Frontend (Vercel)
 
-1. Go to [vercel.com](https://vercel.com) → New Project → Import GitHub repo
-2. **Configure**:
-   - Framework Preset: **Other**
-   - Root Directory: `frontend`
-   - Build Command: `npm run build -- --configuration production`
-   - Output Directory: `dist/frontend`
-3. **Before deploying**, update `frontend/src/environments/environment.prod.ts`:
-   ```typescript
-   export const environment = {
-       production: true,
-       apiUrl: 'https://your-backend-name.onrender.com/api'
-   };
-   ```
-4. Deploy ✅
-
-> The `vercel.json` file already handles SPA routing rewrites.
+1. Go to **[vercel.com/new](https://vercel.com/new)**.
+2. Import `Mo-malek/Grocery-Store-Management-System`.
+3. **Configure**:
+   - **Root Directory**: Click `Edit` and select `frontend`.
+   - **Build Command**: `npm run build -- --configuration production` (should auto-detect).
+   - **Output Directory**: `dist/frontend` (should auto-detect).
+4. Click **Deploy**.
 
 ---
 
-## 3️⃣ Post-Deploy Checklist
+## 4️⃣ Connect Them
 
-- [ ] Update `CORS_ALLOWED_ORIGIN` on Render with your actual Vercel URL
-- [ ] Update `environment.prod.ts` with your actual Render backend URL
-- [ ] Test login: `admin / admin123` or `cashier1 / cashier123`
-- [ ] Verify POS checkout creates a sale
-- [ ] Verify dashboard loads with stats
+1. Once Backend is live on Render, copy its URL (e.g., `https://grocery-backend.onrender.com`).
+2. Go to Vercel Dashboard → Your Project → Settings → Environment Variables.
+3. Add a new variable (if you haven't hardcoded it in `environment.prod.ts` yet):
+   - Key: `API_URL` (if your app uses it, otherwise update the file code)
+   *Wait, our code uses `environment.prod.ts`. Let's update it manually:*
+   - Go to your local code: `frontend/src/environments/environment.prod.ts`
+   - Paste the Render URL there.
+   - Commit & Push: `git add . && git commit -m "Update API URL" && git push`
+   - Vercel will auto-redeploy.
 
----
+4. Go to Render Dashboard → Environment Variables.
+5. Update `CORS_ALLOWED_ORIGIN` with your Vercel URL (e.g., `https://grocery-frontend.vercel.app`).
+6. Save Changes (Render will restart).
 
-## 4️⃣ Environment Variables Reference
-
-| Variable | Where | Description |
-|----------|-------|-------------|
-| `SPRING_DATASOURCE_URL` | Render | PostgreSQL JDBC URL |
-| `SPRING_DATASOURCE_USERNAME` | Render | DB username |
-| `SPRING_DATASOURCE_PASSWORD` | Render | DB password |
-| `JWT_SECRET` | Render | JWT signing key |
-| `CORS_ALLOWED_ORIGIN` | Render | Frontend production URL |
-| `SPRING_PROFILES_ACTIVE` | Render | Must be `prod` |
-
----
-
-## 5️⃣ Sharing with Team
-
-1. Share the **Vercel URL** for the frontend
-2. Share the **Render URL** for API testing (e.g. `https://your-backend.onrender.com/api/dashboard/stats`)
-3. Default credentials:
-   - **Manager**: `admin` / `admin123`
-   - **Cashier**: `cashier1` / `cashier123`
-
-> ⚠️ Free tier on Render sleeps after 15 min of inactivity. First request may take ~30 seconds.
+✅ **Done!** You now have a full stack app for $0/month.

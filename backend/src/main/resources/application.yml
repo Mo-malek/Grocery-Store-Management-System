@@ -1,7 +1,6 @@
 spring:
   application:
     name: grocery-store
-
   # ==========================================
   # H2 Database (Development)
   # ==========================================
@@ -43,6 +42,8 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+  profiles:
+    active: prod
 
 # ==========================================
 # JWT Configuration
