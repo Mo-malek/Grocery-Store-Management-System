@@ -16,30 +16,22 @@ Since Render asks for a credit card for blueprints/databases, we will use **Neon
 
 ---
 
-## 2️⃣ Deploy Backend (Render - Manual)
+## 1️⃣ Backend: Deploy on **Railway** (Recommended)
 
-1. Go to **[dashboard.render.com](https://dashboard.render.com/)**.
-2. Click **New +** → **Web Service** (NOT Blueprint).
-3. Connect your repository: `Mo-malek/Grocery-Store-Management-System`.
-4. **Configure**:
-   - **Name**: `grocery-backend`
-   - **Region**: Same as your database if possible.
-   - **Runtime**: `Docker`
-   - **Instance Type**: `Free`
-5. **Environment Variables** (Advanced): Add these manually:
+1. Go to **[railway.app](https://railway.app/)** and sign up (GitHub).
+2. Click **New Project** → **Deploy from GitHub repo**.
+3. Select your repository: `Grocery-Store-Management-System`.
+4. Click **Add Variables**:
+   - `SPRING_DATASOURCE_URL`: (Paste your Neon connection string)
+   - `SPRING_DATASOURCE_USERNAME`: `neondb_owner`
+   - `SPRING_DATASOURCE_PASSWORD`: `npg_sGEWyJo10cbR`
+   - `JWT_SECRET`: (Any random string)
+   - `CORS_ALLOWED_ORIGIN`: `https://grocery-frontend.vercel.app` (update this later)
+   - `SPRING_PROFILES_ACTIVE`: `prod`
+   - `PORT`: `8080`
+5. Click **Deploy**.
 
-   | Key | Value |
-   |-----|-------|
-   | `SPRING_DATASOURCE_URL` | Paste the Neon Connection String (starting with `postgres://...`) |
-   | `SPRING_DATASOURCE_USERNAME` | (Leave empty if URL includes it, or extract from URL: `neondb_owner`) |
-   | `SPRING_DATASOURCE_PASSWORD` | (Leave empty if URL includes it) |
-   | `JWT_SECRET` | Any long random string |
-   | `CORS_ALLOWED_ORIGIN` | `https://your-frontend.vercel.app` (update later) |
-   | `SPRING_PROFILES_ACTIVE` | `prod` |
-
-6. Click **Create Web Service**.
-
-> **Note**: If Render fails to connect to DB, double-check that the `sslmode=require` is at the end of the URL.
+> Railway will auto-detect the `Dockerfile` and build your Spring Boot app.
 
 ---
 
