@@ -120,53 +120,57 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
         <!-- Recent Sales -->
         <div class="card recent-sales">
           <h3>أحدث العمليات</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>رقم الفاتورة</th>
-                <th>التاريخ</th>
-                <th>العميل</th>
-                <th>الإجمالي</th>
-                <th>طريقة الدفع</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let sale of stats?.recentSales">
-                <td>#{{ sale.id }}</td>
-                <td>{{ sale.createdAt | date:'shortTime' }}</td>
-                <td>{{ sale.customer ? sale.customer.name : 'عميل نقدي' }}</td>
-                <td>{{ sale.total | number:'1.2-2' }} ج.م</td>
-                <td>
-                  <span class="badge" [class.cash]="sale.paymentMethod === 'CASH'">
-                    {{ sale.paymentMethod === 'CASH' ? 'كاش' : 'فيزا' }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th>
+                  <th>التاريخ</th>
+                  <th>العميل</th>
+                  <th>الإجمالي</th>
+                  <th>طريقة الدفع</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let sale of stats?.recentSales">
+                  <td>#{{ sale.id }}</td>
+                  <td>{{ sale.createdAt | date:'shortTime' }}</td>
+                  <td>{{ sale.customer ? sale.customer.name : 'عميل نقدي' }}</td>
+                  <td>{{ sale.total | number:'1.2-2' }} ج.م</td>
+                  <td>
+                    <span class="badge" [class.cash]="sale.paymentMethod === 'CASH'">
+                      {{ sale.paymentMethod === 'CASH' ? 'كاش' : 'فيزا' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Category Profitability -->
         <div class="card financials mt-4">
           <h3>📈 تحليلات الأرباح حسب التصنيف</h3>
-          <table class="table-simple" style="width: 100%; margin-top: 1rem;">
-            <thead>
-              <tr style="border-bottom: 2px solid var(--border-color); text-align: right;">
-                <th style="padding: 0.5rem;">التصنيف</th>
-                <th style="padding: 0.5rem;">المبيعات</th>
-                <th style="padding: 0.5rem;">الأرباح</th>
-                <th style="padding: 0.5rem;">الهامش</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let cat of stats?.categoryAnalytics" style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.5rem;">{{ cat.category }}</td>
-                <td style="padding: 0.5rem;">{{ cat.totalRevenue | number:'1.0-0' }}</td>
-                <td style="padding: 0.5rem;" class="text-success">{{ cat.totalProfit | number:'1.0-0' }}</td>
-                <td style="padding: 0.5rem;">{{ (cat.totalProfit / cat.totalRevenue * 100) | number:'1.0-0' }}%</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table-simple" style="width: 100%; margin-top: 1rem;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--border-color); text-align: right;">
+                  <th style="padding: 0.5rem;">التصنيف</th>
+                  <th style="padding: 0.5rem;">المبيعات</th>
+                  <th style="padding: 0.5rem;">الأرباح</th>
+                  <th style="padding: 0.5rem;">الهامش</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let cat of stats?.categoryAnalytics" style="border-bottom: 1px solid var(--border-color);">
+                  <td style="padding: 0.5rem;">{{ cat.category }}</td>
+                  <td style="padding: 0.5rem;">{{ cat.totalRevenue | number:'1.0-0' }}</td>
+                  <td style="padding: 0.5rem;" class="text-success">{{ cat.totalProfit | number:'1.0-0' }}</td>
+                  <td style="padding: 0.5rem;">{{ (cat.totalProfit / cat.totalRevenue * 100) | number:'1.0-0' }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -177,28 +181,30 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
             <h3>🏆 قائمة المتصدرين (هذا الشهر)</h3>
             <p>يتم احتساب الترتيب بناءً على إجمالي المبيعات المحققة.</p>
           </div>
-          <table class="table-fancy">
-            <thead>
-              <tr>
-                <th>الترتيب</th>
-                <th>الموظف</th>
-                <th>عدد العمليات</th>
-                <th>إجمالي المبيعات</th>
-                <th>التقييم</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let emp of stats?.employeeLeaderboard; let i = index">
-                <td><span class="rank-badge" [class.top]="i < 3">{{ i + 1 }}</span></td>
-                <td><strong>{{ emp.fullName || 'كاشير' }}</strong></td>
-                <td>{{ emp.transactionCount }}</td>
-                <td>{{ emp.totalSales | number:'1.2-2' }} ج.م</td>
-                <td>
-                  <span class="stars">⭐⭐⭐⭐⭐</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table-fancy">
+              <thead>
+                <tr>
+                  <th>الترتيب</th>
+                  <th>الموظف</th>
+                  <th>عدد العمليات</th>
+                  <th>إجمالي المبيعات</th>
+                  <th>التقييم</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let emp of stats?.employeeLeaderboard; let i = index">
+                  <td><span class="rank-badge" [class.top]="i < 3">{{ i + 1 }}</span></td>
+                  <td><strong>{{ emp.fullName || 'كاشير' }}</strong></td>
+                  <td>{{ emp.transactionCount }}</td>
+                  <td>{{ emp.totalSales | number:'1.2-2' }} ج.م</td>
+                  <td>
+                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -297,7 +303,7 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
     
     .charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 1.5rem;
       margin-bottom: 1.5rem;
     }
@@ -363,8 +369,8 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
     .gauge-value { font-size: 1.5rem; font-weight: 800; color: var(--text-main); z-index: 2; }
     .gauge-label { font-size: 0.7rem; color: var(--text-muted); z-index: 2; }
 
-    .heat-map-container { padding: 1.5rem; }
-    .heat-map-grid { display: flex; flex-direction: column; gap: 4px; margin-top: 1rem; }
+    .heat-map-container { padding: 1.5rem; overflow-x: auto; }
+    .heat-map-grid { display: flex; flex-direction: column; gap: 4px; margin-top: 1rem; min-width: 600px; }
     .day-row { display: flex; align-items: center; gap: 10px; }
     .day-label { width: 60px; font-size: 0.8rem; color: var(--text-muted); }
     .hour-cells { display: flex; flex: 1; gap: 4px; }

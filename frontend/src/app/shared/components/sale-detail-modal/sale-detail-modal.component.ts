@@ -72,6 +72,7 @@ import { SaleView } from '../../../core/models/models';
         </div>
 
         <div class="modal-actions no-print">
+          <button class="btn" style="background-color: #25D366; color: white; border: none;" (click)="shareWhatsApp()">📱 واتساب</button>
           <button class="btn btn-primary" (click)="print()">🖨️ طباعة</button>
           <button class="btn btn-secondary" (click)="close()">إغلاق</button>
         </div>
@@ -96,8 +97,9 @@ import { SaleView } from '../../../core/models/models';
     .receipt-modal {
       background: white;
       color: #333;
-      width: 320px;
-      padding: 20px;
+      width: 95%; /* Responsive width */
+      max-width: 380px; /* Slightly wider max, but responsive */
+      padding: 15px; /* Slightly less padding */
       border-radius: 8px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       font-family: 'Courier New', Courier, monospace;
@@ -279,5 +281,26 @@ export class SaleDetailModalComponent {
 
   print() {
     window.print();
+  }
+
+  shareWhatsApp() {
+    const sale = this.sale;
+    if (!sale) return;
+
+    let text = `🧾 *فاتورة بيع* - بقالة السعادة\n`;
+    text += `رقم: #${sale.id}\n`;
+    text += `التاريخ: ${new Date(sale.createdAt).toLocaleString('ar-EG')}\n`;
+    text += `----------------\n`;
+
+    (sale.items || []).forEach(item => {
+      text += `${item.productName} (${item.quantity}) - ${item.total} ج.م\n`;
+    });
+
+    text += `----------------\n`;
+    text += `💰 الإجمالي: *${sale.total} ج.م*\n`;
+    text += `شكراً لزيارتكم! 🙏`;
+
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
   }
 }

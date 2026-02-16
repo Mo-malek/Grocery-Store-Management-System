@@ -1,37 +1,40 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common'; // Important for *ngIf
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { TopbarComponent } from './shared/components/topbar/topbar.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { LayoutService } from './core/services/layout.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, NavbarComponent, TopbarComponent, ToastComponent],
   template: `
-    <div class="app-layout">
-      <!-- Mobile Overlay -->
+    <!-- Layout for Authenticated Pages -->
+    <div class="app-layout" *ngIf="showLayout">
       <div class="mobile-overlay" 
            *ngIf="layout.isSidebarOpen()" 
            (click)="layout.closeSidebar()">
       </div>
 
-      <!-- Sidebar -->
       <app-navbar class="app-sidebar" [class.open]="layout.isSidebarOpen()"></app-navbar>
 
-      <!-- Main Content Area -->
       <div class="main-wrapper">
         <app-topbar></app-topbar>
-        
         <main class="content-body">
           <router-outlet></router-outlet>
         </main>
       </div>
-
-      <app-toast></app-toast>
     </div>
+
+    <!-- Layout for Login/Public Pages (No Sidebar/Topbar) -->
+    <div *ngIf="!showLayout" class="public-layout">
+        <router-outlet></router-outlet>
+    </div>
+
+    <app-toast></app-toast>
   `,
   styles: [`
     .app-layout {
@@ -39,6 +42,11 @@ import { LayoutService } from './core/services/layout.service';
       min-height: 100vh;
       background-color: var(--bg-main);
       position: relative;
+    }
+
+    .public-layout {
+        min-height: 100vh;
+        background-color: var(--bg-main);
     }
 
     .app-sidebar {
@@ -53,7 +61,7 @@ import { LayoutService } from './core/services/layout.service';
       flex-grow: 1;
       display: flex;
       flex-direction: column;
-      min-width: 0; /* Prevent overflow issues */
+      min-width: 0;
       height: 100vh;
       overflow: hidden;
     }
@@ -85,9 +93,9 @@ import { LayoutService } from './core/services/layout.service';
       .app-sidebar {
          position: fixed;
          top: 0;
-         right: 0; /* RTL: Show from right */
+         right: 0;
          bottom: 0;
-         transform: translateX(100%); /* RTL: Hide off-screen right */
+         transform: translateX(100%);
          box-shadow: -5px 0 15px rgba(0,0,0,0.1);
       }
 
@@ -102,5 +110,14 @@ import { LayoutService } from './core/services/layout.service';
   `]
 })
 export class AppComponent {
-  constructor(public layout: LayoutService) { }
+  showLayout = true;
+
+  constructor(public layout: LayoutService, private router: Router) {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      // Hide layout if URL contains '/login'
+      this.showLayout = !event.urlAfterRedirects.includes('/login');
+    });
+  }
 }

@@ -472,8 +472,46 @@ interface CartItem {
 
     @media (max-width: 768px) {
       .pos-container {
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr 1fr;
+        display: flex;
+        flex-direction: column;
+        height: auto; /* Allow scrolling on mobile */
+        gap: 1rem;
+      }
+      
+      .cart-section {
+        max-height: 400px; /* Limit height of cart */
+        min-height: auto;
+        flex: none;
+      }
+      
+      /* Make cart items scrollable within the limited height */
+      .cart-items {
+        max-height: 200px; 
+      }
+
+      .products-section {
+        height: auto;
+        overflow: visible;
+      }
+
+      .products-container-wrapper {
+        height: auto;
+        overflow: visible;
+      }
+
+      .products-grid {
+        overflow: visible;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); /* Slightly smaller cards */
+        padding-bottom: 1rem;
+      }
+      
+      .search-box {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--bg-main);
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
       }
     }
     .suggestions-section {
