@@ -33,9 +33,9 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
         List<Object[]> getTopProducts(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
         // المبيعات حسب الساعة (لتحليل أوقات الذروة)
-        @Query("SELECT EXTRACT(HOUR FROM s.createdAt) as hour, COUNT(s) as count, SUM(s.total) as total " +
-                        "FROM Sale s WHERE s.createdAt >= :start AND s.createdAt < :end " +
-                        "GROUP BY EXTRACT(HOUR FROM s.createdAt) ORDER BY hour")
+        @Query(value = "SELECT EXTRACT(HOUR FROM created_at) as hour, COUNT(*) as count, SUM(total) as total " +
+                        "FROM sale WHERE created_at >= :start AND created_at < :end " +
+                        "GROUP BY EXTRACT(HOUR FROM created_at) ORDER BY hour", nativeQuery = true)
         List<Object[]> getSalesByHour(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
         // إجمالي المبيعات اليومية (آخر 7 أيام)
@@ -72,10 +72,10 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
 
         // خريطة الحرارة للمبيعات (يوم الأسبوع والساعة)
         // PostgreSQL: EXTRACT(ISODOW FROM date) returns 1 (Monday) to 7 (Sunday)
-        @Query("SELECT EXTRACT(ISODOW FROM s.createdAt) as dayOfWeek, EXTRACT(HOUR FROM s.createdAt) as hour, COUNT(s) as count "
+        @Query(value = "SELECT EXTRACT(ISODOW FROM created_at) as dayOfWeek, EXTRACT(HOUR FROM created_at) as hour, COUNT(*) as count "
                         +
-                        "FROM Sale s WHERE s.createdAt >= :start " +
-                        "GROUP BY EXTRACT(ISODOW FROM s.createdAt), EXTRACT(HOUR FROM s.createdAt) ORDER BY dayOfWeek, hour")
+                        "FROM sale WHERE created_at >= :start " +
+                        "GROUP BY EXTRACT(ISODOW FROM created_at), EXTRACT(HOUR FROM created_at) ORDER BY dayOfWeek, hour", nativeQuery = true)
         List<Object[]> getSalesHeatMap(@Param("start") LocalDateTime start);
 
         // ترتيب الموظفين حسب المبيعات
