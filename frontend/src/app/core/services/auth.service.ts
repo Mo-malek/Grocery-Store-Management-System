@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, map } from 'rxjs';
 import { AuthRequest, AuthResponse } from '../models/models';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
@@ -22,7 +23,7 @@ export class AuthService {
     }
 
     login(request: AuthRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>('/api/auth/login', request).pipe(
+        return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, request).pipe(
             map(user => {
                 localStorage.setItem('currentUser', JSON.stringify(user));
                 this.currentUserSubject.next(user);
