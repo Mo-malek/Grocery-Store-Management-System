@@ -1,4 +1,4 @@
 export const environment = {
     production: false,
-    apiUrl: '/api'
+    apiUrl: 'https://grocery-store-management-system-production.up.railway.app/api'
 };
