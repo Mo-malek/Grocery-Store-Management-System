@@ -210,55 +210,49 @@ import { SaleView } from '../../../core/models/models';
     }
 
     @media print {
-      /* Hide everything by default */
-      @page {
-        margin: 0;
-        size: auto;
-      }
-      
-      html, body {
-        height: initial !important;
-        overflow: initial !important;
-        -webkit-print-color-adjust: exact;
-      }
-
       body * {
-        visibility: hidden !important;
-        display: none !important;
+        visibility: hidden;
       }
 
-      /* Show only the receipt and its ancestors (as blocks) */
-      .modal-backdrop, 
-      .modal-backdrop * {
-        visibility: visible !important;
-        display: block !important;
+      .modal-backdrop, .modal-backdrop * {
+        visibility: visible;
       }
 
       .modal-backdrop {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
         height: auto !important;
-        background: white !important;
-        display: flex !important;
-        justify-content: center !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        backdrop-filter: none !important;
+        background: white;
+        display: block !important;
+        padding: 0;
+        margin: 0;
+        overflow: visible !important;
       }
 
       .receipt-modal {
-        box-shadow: none !important;
-        border: none !important;
-        width: 80mm !important; /* Standard Thermal Paper Width */
-        padding: 5mm !important;
-        margin: 0 auto !important;
-        font-size: 10pt !important;
+        width: 100%;
+        max-width: 80mm; /* Standard Thermal Paper */
+        margin: 0 auto;
+        padding: 5px;
+        box-shadow: none;
+        border: none;
+        max-height: none !important;
+        overflow: visible !important;
+      }
+
+      .receipt-modal * {
+        overflow: visible !important;
       }
 
       .no-print {
         display: none !important;
+      }
+
+      .item-row, .summary-row {
+        display: flex !important;
+        break-inside: avoid;
       }
       
       .receipt-divider {
