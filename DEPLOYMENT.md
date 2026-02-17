@@ -24,7 +24,7 @@ Since Render asks for a credit card for blueprints/databases, we will use **Neon
 4. Click **Add Variables**:
    - `SPRING_DATASOURCE_URL`: (Paste your Neon connection string)
    - `SPRING_DATASOURCE_USERNAME`: `neondb_owner`
-   - `SPRING_DATASOURCE_PASSWORD`: `npg_sGEWyJo10cbR`
+   - `SPRING_DATASOURCE_PASSWORD`: (Paste the password from your Neon connection string)
    - `JWT_SECRET`: (Any random string)
    - `CORS_ALLOWED_ORIGIN`: `https://grocery-frontend.vercel.app` (update this later)
    - `SPRING_PROFILES_ACTIVE`: `prod`
