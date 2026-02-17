@@ -47,8 +47,8 @@ App: `http://localhost:4200`
 
 | Role | Username | Password |
 |------|----------|----------|
-| Manager | `admin` | `admin123` |
-| Cashier | `cashier1` | `cashier123` |
+| Manager | `admin` | `password` |
+| Cashier | _Not seeded by default_ | _Create via API/admin flow_ |
 
 ---
 

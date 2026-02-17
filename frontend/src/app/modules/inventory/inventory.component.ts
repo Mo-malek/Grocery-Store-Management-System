@@ -7,11 +7,12 @@ import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { ToastService } from '../../core/services/toast.service';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { AuthService } from '../../core/services/auth.service';
+import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner/barcode-scanner.component';
 
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalComponent, SpinnerComponent],
+  imports: [CommonModule, FormsModule, ModalComponent, SpinnerComponent, BarcodeScannerComponent],
   template: `
     <div class="container relative">
       <app-spinner *ngIf="isLoading"></app-spinner>
@@ -109,7 +110,10 @@ import { AuthService } from '../../core/services/auth.service';
           
           <div class="form-group">
             <label>الباركود</label>
-            <input [(ngModel)]="currentProduct.barcode" name="barcode" class="form-control">
+            <div class="barcode-row">
+              <input [(ngModel)]="currentProduct.barcode" name="barcode" class="form-control" placeholder="اكتب الباركود أو امسحه بالكاميرا">
+              <button type="button" class="btn btn-secondary scan-btn" (click)="openScanner()">📷 مسح</button>
+            </div>
           </div>
 
           <div class="grid grid-cols-2">
@@ -179,6 +183,12 @@ import { AuthService } from '../../core/services/auth.service';
         </div>
       </form>
     </app-modal>
+
+    <app-barcode-scanner
+      *ngIf="isScannerOpen"
+      (scanSuccess)="onBarcodeScanned($event)"
+      (closeScanner)="closeScanner()">
+    </app-barcode-scanner>
 
     <!-- Stock Adjustment Modal -->
     <app-modal *ngIf="isAdjustModalOpen" [title]="'تعديل كمية المستودع: ' + currentProduct.name" (onClose)="isAdjustModalOpen = false">
@@ -270,6 +280,17 @@ import { AuthService } from '../../core/services/auth.service';
       gap: 1rem;
       margin-top: 2rem;
     }
+
+    .barcode-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .scan-btn {
+      white-space: nowrap;
+      padding-inline: 0.9rem;
+    }
     
     .empty-state {
       text-align: center;
@@ -301,6 +322,7 @@ export class InventoryComponent implements OnInit {
   searchTerm: string = '';
   isModalOpen = false;
   isAdjustModalOpen = false;
+  isScannerOpen = false;
   editingProduct: boolean = false;
   isLoading = false;
   isSaving = false;
@@ -380,18 +402,35 @@ export class InventoryComponent implements OnInit {
 
   openModal() {
     this.isModalOpen = true;
+    this.isScannerOpen = false;
     this.editingProduct = false;
     this.currentProduct = { ...this.defaultProduct };
   }
 
   editProduct(product: Product) {
     this.isModalOpen = true;
+    this.isScannerOpen = false;
     this.editingProduct = true;
     this.currentProduct = { ...product };
   }
 
   closeModal() {
     this.isModalOpen = false;
+    this.isScannerOpen = false;
+  }
+
+  openScanner() {
+    this.isScannerOpen = true;
+  }
+
+  closeScanner() {
+    this.isScannerOpen = false;
+  }
+
+  onBarcodeScanned(barcode: string) {
+    this.currentProduct.barcode = barcode;
+    this.toast.success(`تم قراءة الباركود: ${barcode}`);
+    this.closeScanner();
   }
 
   saveProduct() {
