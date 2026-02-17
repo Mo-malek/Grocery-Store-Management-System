@@ -22,11 +22,9 @@ import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
       </div>
 
       <div class="video-wrapper">
-        <video #video autoplay playsinline muted></video>
+        <video #video></video>
         <div class="scan-frame"></div>
       </div>
-
-      <p class="quality-note">HD mode enabled for clearer barcode detection.</p>
 
     </div>
   </div>
@@ -43,7 +41,8 @@ import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
     }
 
     .card {
-      width: min(96vw, 900px);
+      width: 95%;
+      max-width: 500px;
       background: #111827;
       border-radius: 12px;
       padding: 1rem;
@@ -52,15 +51,11 @@ import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
 
     .video-wrapper {
       position: relative;
-      aspect-ratio: 16 / 9;
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
     }
 
     video {
       width: 100%;
-      height: 100%;
+      border-radius: 8px;
       object-fit: cover;
     }
 
@@ -69,7 +64,7 @@ import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
       top: 50%;
       left: 50%;
       width: 70%;
-      height: min(35%, 140px);
+      height: 120px;
       transform: translate(-50%, -50%);
       border: 3px solid #22c55e;
       border-radius: 12px;
@@ -82,13 +77,6 @@ import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
-    }
-
-    .quality-note {
-      margin: 10px 0 0;
-      color: #9ca3af;
-      font-size: 0.85rem;
-      text-align: center;
     }
 
     button {
@@ -110,11 +98,10 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
   private controls?: IScannerControls;
 
   private lastScanTime = 0;
-  private readonly scanCooldown = 1500;
+  private scanCooldown = 1500; // 1.5 sec anti double scan
 
   async ngOnInit() {
     await this.startCamera();
-    this.boostCameraQuality();
   }
 
   async startCamera() {
@@ -122,9 +109,9 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
       {
         video: {
           facingMode: { ideal: 'environment' },
-          width: { ideal: 3840 },
-          height: { ideal: 2160 },
-          frameRate: { ideal: 30 }
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          advanced: [{ focusMode: 'continuous' }] as any
         }
       },
       this.videoElement.nativeElement,
@@ -135,6 +122,7 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
         if (now - this.lastScanTime < this.scanCooldown) return;
 
         this.lastScanTime = now;
+
         this.successFeedback();
         this.scanSuccess.emit(result.getText());
 
@@ -143,47 +131,12 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
     );
   }
 
-  private boostCameraQuality() {
-    window.setTimeout(async () => {
-      const stream = this.videoElement.nativeElement.srcObject as MediaStream | null;
-      const track = stream?.getVideoTracks()?.[0];
-
-      if (!track || !track.getCapabilities || !track.applyConstraints) {
-        return;
-      }
-
-      const capabilities = track.getCapabilities() as MediaTrackCapabilities;
-
-      const width = typeof capabilities.width?.max === 'number' ? capabilities.width.max : 3840;
-      const height = typeof capabilities.height?.max === 'number' ? capabilities.height.max : 2160;
-      const frameRate = typeof capabilities.frameRate?.max === 'number'
-        ? Math.min(capabilities.frameRate.max, 60)
-        : 30;
-
-      const advanced: MediaTrackConstraintSet = {};
-      const focusModes = (capabilities as MediaTrackCapabilities & { focusMode?: string[] }).focusMode;
-      if (Array.isArray(focusModes) && focusModes.includes('continuous')) {
-        (advanced as MediaTrackConstraintSet & { focusMode?: string }).focusMode = 'continuous';
-      }
-
-      const constraints: MediaTrackConstraints = {
-        width: { ideal: width },
-        height: { ideal: height },
-        frameRate: { ideal: frameRate }
-      };
-
-      if (Object.keys(advanced).length > 0) {
-        constraints.advanced = [advanced];
-      }
-
-      await track.applyConstraints(constraints);
-    }, 300);
-  }
-
   successFeedback() {
+    // 🔊 Sound
     const audio = new Audio('assets/beep.mp3');
     audio.play().catch(() => { });
 
+    // 📳 Vibration
     if (navigator.vibrate) {
       navigator.vibrate(200);
     }
