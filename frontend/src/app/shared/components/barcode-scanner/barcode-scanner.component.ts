@@ -8,6 +8,7 @@ import {
   ViewChild
 } from '@angular/core';
 import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
+import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 
 @Component({
   selector: 'app-barcode-scanner',
@@ -94,41 +95,62 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
   @Output() scanSuccess = new EventEmitter<string>();
   @Output() closeScanner = new EventEmitter<void>();
 
-  private codeReader = new BrowserMultiFormatReader();
+  private hints = new Map();
+  private codeReader: BrowserMultiFormatReader;
   private controls?: IScannerControls;
 
   private lastScanTime = 0;
   private scanCooldown = 1500; // 1.5 sec anti double scan
+
+  constructor() {
+    // 🏷️ Setup hints for better quality and performance
+    this.hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+      BarcodeFormat.QR_CODE,
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.CODE_128,
+      BarcodeFormat.CODE_39,
+      BarcodeFormat.DATA_MATRIX
+    ]);
+    this.hints.set(DecodeHintType.TRY_HARDER, true);
+
+    this.codeReader = new BrowserMultiFormatReader(this.hints);
+  }
 
   async ngOnInit() {
     await this.startCamera();
   }
 
   async startCamera() {
-    this.controls = await this.codeReader.decodeFromConstraints(
-      {
-        video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          advanced: [{ focusMode: 'continuous' }] as any
+    try {
+      this.controls = await this.codeReader.decodeFromConstraints(
+        {
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            advanced: [{ focusMode: 'continuous' }] as any
+          }
+        },
+        this.videoElement.nativeElement,
+        (result) => {
+          if (!result) return;
+
+          const now = Date.now();
+          if (now - this.lastScanTime < this.scanCooldown) return;
+
+          this.lastScanTime = now;
+
+          this.successFeedback();
+          this.scanSuccess.emit(result.getText());
+
+          setTimeout(() => this.close(), 500);
         }
-      },
-      this.videoElement.nativeElement,
-      (result) => {
-        if (!result) return;
-
-        const now = Date.now();
-        if (now - this.lastScanTime < this.scanCooldown) return;
-
-        this.lastScanTime = now;
-
-        this.successFeedback();
-        this.scanSuccess.emit(result.getText());
-
-        setTimeout(() => this.close(), 500);
-      }
-    );
+      );
+    } catch (err) {
+      console.error('Scanner init error:', err);
+    }
   }
 
   successFeedback() {
