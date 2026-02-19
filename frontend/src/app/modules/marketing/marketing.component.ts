@@ -5,11 +5,12 @@ import { ApiService } from '../../core/services/api.service';
 import { Product, Bundle, BundleItem } from '../../core/models/models';
 import { ToastService } from '../../core/services/toast.service';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { BarChartComponent } from '../../shared/components/chart/bar-chart.component';
 
 @Component({
   selector: 'app-marketing',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalComponent],
+  imports: [CommonModule, FormsModule, ModalComponent, BarChartComponent],
   template: `
     <div class="container">
       <div class="header">
@@ -49,6 +50,10 @@ import { ModalComponent } from '../../shared/components/modal/modal.component';
 
       <!-- CRM View -->
       <div *ngIf="activeTab === 'crm'">
+        <div class="card chart-card" *ngIf="stagnantChartData.length">
+          <app-bar-chart [title]="'تصنيفات العملاء الغائبين'" [data]="stagnantChartData"></app-bar-chart>
+        </div>
+
         <div class="card crm-alert-card" *ngIf="stagnantCustomers.length">
            <h3>⚠️ عملاء غائبون (أكثر من 30 يوم)</h3>
            <p>تحتاج هؤلاء العملاء لتذكيرهم بعروضنا الجديدة لضمان عودتهم.</p>
@@ -141,6 +146,7 @@ import { ModalComponent } from '../../shared/components/modal/modal.component';
     .c-stats { display: flex; gap: 1.5rem; font-size: 0.85rem; }
     .btn-whatsapp { background: #25d366; color: white; border: none; font-weight: bold; padding: 0.5rem 0.75rem; }
     .btn-whatsapp:hover { background: #128c7e; transform: scale(1.05); }
+    .chart-card { margin-bottom: 1.5rem; padding: 1.25rem; }
   `]
 })
 export class MarketingComponent implements OnInit {
@@ -152,17 +158,26 @@ export class MarketingComponent implements OnInit {
 
   newBundle: any = { name: '', price: 0, active: true };
   selectedItems: any[] = [];
+  stagnantChartData: { label: string; value: number }[] = [];
 
   constructor(private api: ApiService, private toast: ToastService) { }
 
   ngOnInit() {
     this.loadBundles();
     this.loadStagnantCustomers();
-    this.api.getProducts().subscribe(prods => this.allProducts = prods);
+    this.api.getProducts('', 0, 1000).subscribe(page => this.allProducts = page.content);
   }
 
   loadStagnantCustomers() {
-    this.api.getStagnantCustomers().subscribe(data => this.stagnantCustomers = data);
+    this.api.getStagnantCustomers().subscribe(data => {
+      this.stagnantCustomers = data;
+      const byCategory = new Map<string, number>();
+      this.stagnantCustomers.forEach(c => {
+        const key = c.favoriteCategory || 'غير محدد';
+        byCategory.set(key, (byCategory.get(key) || 0) + 1);
+      });
+      this.stagnantChartData = Array.from(byCategory.entries()).map(([label, value]) => ({ label, value }));
+    });
   }
 
   sendWhatsApp(customer: any) {

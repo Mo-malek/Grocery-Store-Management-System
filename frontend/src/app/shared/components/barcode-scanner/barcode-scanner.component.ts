@@ -19,12 +19,22 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 
       <div class="header">
         <h3>📷 Scan Barcode</h3>
-        <button (click)="close()">✖</button>
+        <div class="header-actions">
+          <button *ngIf="torchSupported" class="icon-btn" (click)="toggleTorch()" [title]="torchOn ? 'إطفاء الفلاش' : 'تشغيل الفلاش'">
+            {{ torchOn ? '🔦 ON' : '🔦 OFF' }}
+          </button>
+          <button class="icon-btn" (click)="close()">✖</button>
+        </div>
       </div>
 
       <div class="video-wrapper">
         <video #video></video>
         <div class="scan-frame"></div>
+      </div>
+
+      <div class="hint">
+        <span>حرك الباركود داخل الإطار، وقرّب الكاميرا لمسافة 10-15 سم.</span>
+        <span *ngIf="torchSupported">إذا كانت الإضاءة ضعيفة، فعّل الفلاش.</span>
       </div>
 
     </div>
@@ -48,6 +58,28 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
       border-radius: 12px;
       padding: 1rem;
       color: white;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .icon-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 0.3rem 0.6rem;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.2);
     }
 
     .video-wrapper {
@@ -80,12 +112,14 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
       margin-bottom: 10px;
     }
 
-    button {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
+    .hint {
+      margin-top: 0.75rem;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.9rem;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
   `]
 })
@@ -101,6 +135,8 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
 
   private lastScanTime = 0;
   private scanCooldown = 1500; // 1.5 sec anti double scan
+  torchSupported = false;
+  torchOn = false;
 
   constructor() {
     // 🏷️ Setup hints for better quality and performance
@@ -148,6 +184,8 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
           setTimeout(() => this.close(), 500);
         }
       );
+      // Give the stream a moment to attach, then detect torch capability
+      setTimeout(() => this.detectTorchSupport(), 300);
     } catch (err) {
       console.error('Scanner init error:', err);
     }
@@ -165,11 +203,42 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
   }
 
   close() {
+    // Turn off torch if it was on
+    if (this.torchOn) {
+      this.setTorch(false);
+    }
     this.controls?.stop();
     this.closeScanner.emit();
   }
 
   ngOnDestroy() {
     this.close();
+  }
+
+  private getVideoTrack(): MediaStreamTrack | null {
+    const video = this.videoElement?.nativeElement;
+    const stream = video?.srcObject as MediaStream | null;
+    return stream?.getVideoTracks()?.[0] ?? null;
+  }
+
+  private detectTorchSupport() {
+    const track = this.getVideoTrack();
+    if (!track || typeof track.getCapabilities !== 'function') return;
+    const caps = track.getCapabilities() as any;
+    this.torchSupported = !!caps?.torch;
+  }
+
+  toggleTorch() {
+    this.setTorch(!this.torchOn);
+  }
+
+  private setTorch(on: boolean) {
+    const track = this.getVideoTrack();
+    if (!track || typeof track.applyConstraints !== 'function') return;
+    this.torchOn = on;
+    track.applyConstraints({ advanced: [{ torch: on }] as any }).catch((err: any) => {
+      console.warn('Torch toggle failed', err);
+      this.torchOn = false;
+    });
   }
 }

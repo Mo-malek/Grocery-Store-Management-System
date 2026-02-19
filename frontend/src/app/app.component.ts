@@ -55,6 +55,8 @@ import { filter } from 'rxjs/operators';
       z-index: 200;
       height: 100vh;
       transition: transform 0.3s ease-in-out;
+      background: var(--sidebar-bg);
+      border-inline-end: 1px solid var(--sidebar-border);
     }
 
     .main-wrapper {
@@ -93,10 +95,10 @@ import { filter } from 'rxjs/operators';
       .app-sidebar {
          position: fixed;
          top: 0;
-         right: 0;
+         left: 0;
          bottom: 0;
-         transform: translateX(100%);
-         box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+         transform: translateX(-100%);
+         box-shadow: 5px 0 15px rgba(0,0,0,0.35);
       }
 
       .app-sidebar.open {

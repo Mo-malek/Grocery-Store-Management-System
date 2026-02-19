@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LayoutService } from '../../../core/services/layout.service';
@@ -10,7 +10,7 @@ import { LayoutService } from '../../../core/services/layout.service';
   template: `
     <header class="topbar">
       <div class="start-section">
-        <button class="icon-btn menu-btn" (click)="toggleSidebar()">
+        <button type="button" class="icon-btn menu-btn" (click)="toggleSidebar()">
           ☰
         </button>
         
@@ -22,17 +22,18 @@ import { LayoutService } from '../../../core/services/layout.service';
 
       <div class="actions">
         <div class="quick-actions">
-           <button class="btn-action" routerLink="/pos" title="بيع سريع">⚡ بيع سريع</button>
+           <button type="button" class="btn-action" routerLink="/pos" title="بيع سريع">⚡ بيع سريع</button>
         </div>
 
         <div class="divider"></div>
 
-        <button class="icon-btn" title="الإشعارات">
+        <button type="button" class="icon-btn" title="الإشعارات">
           🔔 <span class="badge">3</span>
         </button>
         
-        <button class="icon-btn" (click)="toggleTheme()" title="تغيير المظهر">
-          {{ isDarkMode ? '☀️' : '🌙' }}
+        <button type="button" class="theme-toggle" (click)="nextTheme()" [title]="'المظهر: ' + currentTheme.label">
+          <span class="theme-icon">{{ currentTheme.icon }}</span>
+          <span class="theme-label">{{ currentTheme.label }}</span>
         </button>
 
         <div class="profile">
@@ -88,7 +89,7 @@ import { LayoutService } from '../../../core/services/layout.service';
 
     .search-input:focus {
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
       width: 350px;
     }
 
@@ -120,6 +121,29 @@ import { LayoutService } from '../../../core/services/layout.service';
     .icon-btn:hover {
       background: var(--bg-input);
     }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      background: rgba(var(--primary-rgb), 0.08);
+      color: var(--text-main);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.18);
+      transform: translateY(-1px);
+    }
+
+    .theme-icon { font-size: 1rem; }
+    .theme-label { font-size: 0.85rem; }
 
     .badge {
       position: absolute;
@@ -196,7 +220,7 @@ import { LayoutService } from '../../../core/services/layout.service';
 
     .btn-action:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
     }
     
     .divider {
@@ -210,17 +234,40 @@ import { LayoutService } from '../../../core/services/layout.service';
       .menu-btn { display: block; }
       .search-container { display: none; } /* Hide search on mobile for space */
       .topbar { padding: 0 1rem; }
+      .theme-label { display: none; }
     }
   `]
 })
-export class TopbarComponent {
-  isDarkMode = true;
+export class TopbarComponent implements OnInit {
+  themes = [
+    { key: 'theme-dark', label: 'ليلي', icon: '🌙' },
+    { key: 'theme-light', label: 'نهاري', icon: '☀️' },
+    { key: 'theme-oasis', label: 'واحة', icon: '🏜️' },
+    { key: 'theme-aurora', label: 'أورورا', icon: '✨' },
+  ];
+
+  private readonly storageKey = 'app-theme';
+  currentTheme = this.themes[0];
 
   constructor(private layout: LayoutService) { }
 
-  toggleTheme() {
-    this.isDarkMode = !this.isDarkMode;
-    document.body.classList.toggle('light-theme');
+  ngOnInit() {
+    const saved = localStorage.getItem(this.storageKey);
+    const found = this.themes.find(t => t.key === saved);
+    this.currentTheme = found ?? this.themes[0];
+    this.applyTheme(this.currentTheme.key);
+  }
+
+  nextTheme() {
+    const nextIndex = (this.themes.indexOf(this.currentTheme) + 1) % this.themes.length;
+    this.currentTheme = this.themes[nextIndex];
+    this.applyTheme(this.currentTheme.key);
+  }
+
+  private applyTheme(key: string) {
+    this.themes.forEach(t => document.body.classList.remove(t.key));
+    document.body.classList.add(key);
+    localStorage.setItem(this.storageKey, key);
   }
 
   toggleSidebar() {

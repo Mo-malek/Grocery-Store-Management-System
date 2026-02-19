@@ -44,6 +44,17 @@ import { Expense } from '../../core/models/models';
         </div>
       </div>
 
+      <div class="summary-row" *ngIf="expenses.length">
+        <div class="summary-card">
+          <span class="label">إجمالي المصاريف</span>
+          <span class="value">{{ totalAmount | number:'1.2-2' }} ج.م</span>
+        </div>
+        <div class="summary-card" *ngFor="let cat of categoryKeys">
+          <span class="label">{{ getCategoryLabel(cat) }}</span>
+          <span class="value">{{ categoryTotals[cat] | number:'1.0-0' }}</span>
+        </div>
+      </div>
+
       <div class="card mt-4">
         <table>
           <thead>
@@ -58,7 +69,9 @@ import { Expense } from '../../core/models/models';
           <tbody>
             <tr *ngFor="let ex of expenses">
               <td>{{ ex.createdAt | date:'shortDate' }}</td>
-              <td>{{ ex.description }}</td>
+              <td>
+                <span class="truncate cell-description" [title]="ex.description">{{ ex.description }}</span>
+              </td>
               <td>
                 <span class="category-badge">{{ getCategoryLabel(ex.category) }}</span>
               </td>
@@ -81,6 +94,31 @@ import { Expense } from '../../core/models/models';
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
+    }
+    .summary-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      min-width: 160px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .summary-card .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .summary-card .value {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--primary-color);
     }
     .amount {
       font-weight: bold;
@@ -142,6 +180,10 @@ export class ExpensesComponent implements OnInit {
     showAddModal = false;
     newExpense: Expense = { description: '', amount: 0, category: 'OTHER' };
 
+    totalAmount = 0;
+    categoryTotals: { [key: string]: number } = {};
+    categoryKeys: string[] = [];
+
     constructor(private api: ApiService) { }
 
     ngOnInit() {
@@ -149,7 +191,10 @@ export class ExpensesComponent implements OnInit {
     }
 
     loadExpenses() {
-        this.api.getExpenses().subscribe(data => this.expenses = data);
+        this.api.getExpenses().subscribe(data => {
+            this.expenses = data;
+            this.recalculateStats();
+        });
     }
 
     addExpense() {
@@ -164,6 +209,17 @@ export class ExpensesComponent implements OnInit {
         if (confirm('هل أنت متأكد من حذف هذا المصروف؟')) {
             this.api.deleteExpense(id).subscribe(() => this.loadExpenses());
         }
+    }
+
+    recalculateStats() {
+        this.totalAmount = this.expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+        const map: { [key: string]: number } = {};
+        this.expenses.forEach(e => {
+            const key = e.category || 'OTHER';
+            map[key] = (map[key] || 0) + (e.amount || 0);
+        });
+        this.categoryTotals = map;
+        this.categoryKeys = Object.keys(map);
     }
 
     getCategoryLabel(cat: string): string {

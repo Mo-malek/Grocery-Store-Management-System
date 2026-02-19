@@ -8,6 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
@@ -17,11 +20,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByActiveTrue();
 
+    Page<Product> findByActiveTrue(Pageable pageable);
+
     List<Product> findByActiveTrueAndExpiryDateBefore(java.time.LocalDate date);
 
     // البحث بالاسم أو الباركود
     @Query("SELECT p FROM Product p WHERE p.active = true AND (LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR p.barcode LIKE CONCAT('%', :search, '%'))")
-    List<Product> searchProducts(String search);
+    List<Product> searchProducts(@Param("search") String search);
+
+    // البحث بالاسم أو الباركود مع الترقيم
+    @Query("SELECT p FROM Product p WHERE p.active = true AND (LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR p.barcode LIKE CONCAT('%', :search, '%'))")
+    Page<Product> searchProducts(@Param("search") String search, Pageable pageable);
 
     // المنتجات تحت الحد الأدنى
     @Query("SELECT p FROM Product p WHERE p.active = true AND p.currentStock <= p.minStock")

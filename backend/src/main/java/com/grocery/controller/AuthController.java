@@ -3,8 +3,10 @@ package com.grocery.controller;
 import com.grocery.config.JwtUtils;
 import com.grocery.dto.AuthRequest;
 import com.grocery.dto.AuthResponse;
+import com.grocery.dto.RegisterRequest;
 import com.grocery.entity.User;
 import com.grocery.repository.UserRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -41,6 +43,24 @@ public class AuthController {
                 .username(user.getUsername())
                 .role(user.getRole())
                 .build());
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body("اسم المستخدم موجود بالفعل");
+        }
+
+        User user = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .role("ROLE_CASHIER")
+                .active(true)
+                .build();
+
+        userRepository.save(user);
+        return ResponseEntity.ok("تم إنشاء الحساب بنجاح");
     }
 
     @PostMapping("/register-initial")

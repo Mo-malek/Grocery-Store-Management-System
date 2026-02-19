@@ -17,6 +17,8 @@ import com.grocery.dto.CustomerView;
 import java.util.stream.Collectors;
 import java.math.RoundingMode;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -184,11 +186,24 @@ public class SaleService {
                 .collect(Collectors.toList());
     }
 
+    public Page<SaleView> getSalesByDateRange(LocalDate from, LocalDate to, Pageable pageable) {
+        return saleRepository.findByCreatedAtBetweenOrderByCreatedAtDesc(
+                from.atStartOfDay(),
+                to.atTime(LocalTime.MAX),
+                pageable)
+                .map(this::mapToSaleView);
+    }
+
     public List<SaleView> getCustomerSales(Long customerId) {
         return saleRepository.findByCustomerIdOrderByCreatedAtDesc(customerId)
                 .stream()
                 .map(this::mapToSaleView)
                 .collect(Collectors.toList());
+    }
+
+    public Page<SaleView> getCustomerSales(Long customerId, Pageable pageable) {
+        return saleRepository.findByCustomerIdOrderByCreatedAtDesc(customerId, pageable)
+                .map(this::mapToSaleView);
     }
 
     private SaleView mapToSaleView(Sale sale) {

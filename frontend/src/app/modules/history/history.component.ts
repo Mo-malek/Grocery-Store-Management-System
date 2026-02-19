@@ -1,26 +1,35 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { SaleView } from '../../core/models/models';
 import { SaleDetailModalComponent } from '../../shared/components/sale-detail-modal/sale-detail-modal.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
+import { BarChartComponent } from '../../shared/components/chart/bar-chart.component';
 
 @Component({
-    selector: 'app-history',
-    standalone: true,
-    imports: [CommonModule, SaleDetailModalComponent, SpinnerComponent],
-    template: `
+  selector: 'app-history',
+  standalone: true,
+  imports: [CommonModule, SaleDetailModalComponent, SpinnerComponent, FormsModule, BarChartComponent],
+  template: `
     <div class="history-container">
-      <div class="header">
-        <h1>📊 سجل المبيعات</h1>
-        <p class="subtitle">استعراض مبيعات اليوم والعمليات السابقة</p>
+      <div class="filters card">
+        <div class="filter-group">
+          <label>من تاريخ:</label>
+          <input type="date" [(ngModel)]="dateFrom" class="form-control">
+        </div>
+        <div class="filter-group">
+          <label>إلى تاريخ:</label>
+          <input type="date" [(ngModel)]="dateTo" class="form-control">
+        </div>
+        <button class="btn btn-primary search-btn" (click)="search()">🔍 بحث</button>
       </div>
 
       <div class="stats-cards">
         <div class="stat-card">
           <span class="icon">💰</span>
           <div class="info">
-            <span class="label">إجمالي اليوم</span>
+            <span class="label">إجمالي الفترة</span>
             <span class="value">{{ todayTotal | number:'1.2-2' }} ج.م</span>
           </div>
         </div>
@@ -28,8 +37,14 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
           <span class="icon">🧾</span>
           <div class="info">
             <span class="label">عدد العمليات</span>
-            <span class="value">{{ sales.length }}</span>
+            <span class="value">{{ totalElements }}</span>
           </div>
+        </div>
+      </div>
+
+      <div class="charts-row" *ngIf="paymentMethodData.length">
+        <div class="card chart-card">
+          <app-bar-chart [title]="'توزيع طرق الدفع في الفترة'" [data]="paymentMethodData"></app-bar-chart>
         </div>
       </div>
 
@@ -63,10 +78,17 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
               </td>
             </tr>
             <tr *ngIf="sales.length === 0">
-              <td colspan="6" class="empty-msg">لا توجد مبيعات مسجلة اليوم</td>
+              <td colspan="6" class="empty-msg">لا توجد مبيعات في هذه الفترة</td>
             </tr>
           </tbody>
         </table>
+
+        <!-- Pagination Controls -->
+        <div class="pagination" *ngIf="totalPages > 1">
+          <button class="btn btn-sm btn-outline" [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)">السابق</button>
+          <span class="page-info">صفحة {{ currentPage + 1 }} من {{ totalPages }}</span>
+          <button class="btn btn-sm btn-outline" [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)">التالي</button>
+        </div>
       </div>
     </div>
 
@@ -75,21 +97,31 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
       (onClosed)="selectedSale = null">
     </app-sale-detail-modal>
   `,
-    styles: [`
+  styles: [`
     .history-container {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
     }
 
-    .header h1 {
-      font-size: 1.5rem;
-      margin-bottom: 0.25rem;
+    .filters {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      padding: 1rem;
+      flex-wrap: wrap;
     }
-
-    .subtitle {
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .filter-group label {
+      font-size: 0.8rem;
       color: var(--text-muted);
-      font-size: 0.9rem;
+    }
+    .search-btn {
+      height: 42px;
     }
 
     .stats-cards {
@@ -190,40 +222,111 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
       padding: 3rem !important;
       color: var(--text-muted);
     }
+
+    .charts-row {
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-card {
+      padding: 1.25rem;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+    }
+    .page-info {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-btn {
+        width: 100%;
+      }
+    }
   `]
 })
 export class HistoryComponent implements OnInit {
-    sales: SaleView[] = [];
-    isLoading: boolean = false;
-    todayTotal: number = 0;
-    selectedSale: SaleView | null = null;
+  sales: SaleView[] = [];
+  isLoading: boolean = false;
+  todayTotal: number = 0;
+  selectedSale: SaleView | null = null;
 
-    constructor(private api: ApiService) { }
+  // Filter & Pagination
+  dateFrom: string = new Date().toISOString().split('T')[0];
+  dateTo: string = new Date().toISOString().split('T')[0];
+  currentPage: number = 0;
+  totalPages: number = 0;
+  pageSize: number = 20;
+  totalElements: number = 0;
 
-    ngOnInit() {
-        this.loadTodaySales();
+  paymentMethodData: { label: string; value: number }[] = [];
+
+  constructor(private api: ApiService) { }
+
+  ngOnInit() {
+    this.loadSales();
+  }
+
+  search() {
+    this.currentPage = 0;
+    this.loadSales();
+  }
+
+  loadSales() {
+    this.isLoading = true;
+    this.api.getSales(this.dateFrom, this.dateTo, this.currentPage, this.pageSize).subscribe({
+      next: (page) => {
+        this.sales = page.content;
+        this.totalPages = page.totalPages;
+        this.totalElements = page.totalElements;
+        this.calculateTotal();
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load sales', err);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  calculateTotal() {
+    this.todayTotal = this.sales.reduce((sum, s) => sum + s.total, 0);
+
+    let cashTotal = 0;
+    let cardTotal = 0;
+    this.sales.forEach(s => {
+      if (s.paymentMethod === 'CASH') {
+        cashTotal += s.total;
+      } else if (s.paymentMethod === 'CARD') {
+        cardTotal += s.total;
+      }
+    });
+
+    this.paymentMethodData = [
+      { label: 'نقدي', value: cashTotal },
+      { label: 'فيزا', value: cardTotal }
+    ].filter(d => d.value > 0);
+  }
+
+  goToPage(page: number) {
+    if (page >= 0 && page < this.totalPages) {
+      this.currentPage = page;
+      this.loadSales();
     }
+  }
 
-    loadTodaySales() {
-        this.isLoading = true;
-        this.api.getTodaySales().subscribe({
-            next: (data) => {
-                this.sales = data;
-                this.calculateTodayTotal();
-                this.isLoading = false;
-            },
-            error: (err) => {
-                console.error('Failed to load sales', err);
-                this.isLoading = false;
-            }
-        });
-    }
-
-    calculateTodayTotal() {
-        this.todayTotal = this.sales.reduce((sum, s) => sum + s.total, 0);
-    }
-
-    viewSale(sale: SaleView) {
-        this.selectedSale = sale;
-    }
+  viewSale(sale: SaleView) {
+    this.selectedSale = sale;
+  }
 }

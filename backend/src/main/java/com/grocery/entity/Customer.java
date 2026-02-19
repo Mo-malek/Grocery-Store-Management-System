@@ -1,6 +1,7 @@
 package com.grocery.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ public class Customer {
     private Long id;
 
     @Column(nullable = false)
+    @NotBlank(message = "اسم العميل مطلوب")
     private String name;
 
     private String phone;

@@ -9,14 +9,22 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface SaleRepository extends JpaRepository<Sale, Long> {
 
         // فواتير عميل معين
         List<Sale> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 
+        Page<Sale> findByCustomerIdOrderByCreatedAtDesc(Long customerId, Pageable pageable);
+
         // فواتير في نطاق تاريخ
         List<Sale> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime start, LocalDateTime end);
+
+        Page<Sale> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime start, LocalDateTime end,
+                        Pageable pageable);
 
         // إجمالي المبيعات اليوم
         @Query("SELECT COALESCE(SUM(s.total), 0) FROM Sale s WHERE s.createdAt >= :start AND s.createdAt < :end")

@@ -68,8 +68,14 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
             </thead>
             <tbody>
               <tr *ngFor="let product of products">
-                <td>{{ product.name }}</td>
-                <td>{{ product.barcode || '-' }}</td>
+                <td>
+                  <span class="truncate cell-name" [title]="product.name">{{ product.name }}</span>
+                </td>
+                <td>
+                  <span class="truncate" [title]="product.barcode || '-'">
+                    {{ product.barcode || '-' }}
+                  </span>
+                </td>
                 <td><span class="badge">{{ product.category }}</span></td>
                 <td>{{ product.purchasePrice }} ج.م</td>
                 <td>{{ product.sellingPrice }} ج.م</td>
@@ -95,6 +101,13 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
           
           <div class="empty-state" *ngIf="!isLoading && !products.length">
             <p>لا توجد منتجات. أضف منتجاً جديداً للبدء.</p>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="pagination" *ngIf="totalPages > 1">
+            <button class="btn btn-sm" [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)">السابق</button>
+            <span class="page-info">صفحة {{ currentPage + 1 }} من {{ totalPages }}</span>
+            <button class="btn btn-sm" [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)">التالي</button>
           </div>
         </div>
       </div>
@@ -176,7 +189,7 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
 
           <div class="modal-actions">
             <button type="button" class="btn" (click)="closeModal()">إلغاء</button>
-            <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving || !currentProduct.name || !currentProduct.purchasePrice || !currentProduct.sellingPrice">
               {{ isSaving ? 'جاري الحفظ...' : 'حفظ' }}
             </button>
           </div>
@@ -315,6 +328,22 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
     .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
     .btn-outline-danger { background: none; border: 1px solid #ef4444; color: #ef4444; }
     .btn-outline-danger:hover { background: #ef4444; color: white; }
+
+    input.ng-invalid.ng-touched { border-color: var(--danger-color); }
+    .error-msg { color: var(--danger-color); font-size: 0.75rem; margin-top: 0.25rem; }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+    }
+    .page-info {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
   `]
 })
 export class InventoryComponent implements OnInit {
@@ -327,6 +356,12 @@ export class InventoryComponent implements OnInit {
   isLoading = false;
   isSaving = false;
   auditReport: any[] = [];
+
+  // Pagination 
+  currentPage: number = 0;
+  totalPages: number = 0;
+  pageSize: number = 20;
+  totalElements: number = 0;
 
   adjustQuantity: number = 0;
   adjustReason: string = '';
@@ -384,9 +419,11 @@ export class InventoryComponent implements OnInit {
 
   loadProducts() {
     this.isLoading = true;
-    this.api.getProducts(this.searchTerm).subscribe({
-      next: (data) => {
-        this.products = data;
+    this.api.getProducts(this.searchTerm, this.currentPage, this.pageSize).subscribe({
+      next: (page) => {
+        this.products = page.content;
+        this.totalPages = page.totalPages;
+        this.totalElements = page.totalElements;
         this.isLoading = false;
       },
       error: (err) => {
@@ -396,7 +433,15 @@ export class InventoryComponent implements OnInit {
     });
   }
 
+  goToPage(page: number) {
+    if (page >= 0 && page < this.totalPages) {
+      this.currentPage = page;
+      this.loadProducts();
+    }
+  }
+
   search() {
+    this.currentPage = 0;
     this.loadProducts();
   }
 

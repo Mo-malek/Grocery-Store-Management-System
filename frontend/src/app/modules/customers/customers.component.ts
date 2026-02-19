@@ -44,8 +44,12 @@ import { ToastService } from '../../core/services/toast.service';
           </thead>
           <tbody>
             <tr *ngFor="let customer of customers">
-              <td>{{ customer.name }}</td>
-              <td>{{ customer.phone }}</td>
+              <td>
+                <span class="truncate cell-name" [title]="customer.name">{{ customer.name }}</span>
+              </td>
+              <td>
+                <span class="truncate" [title]="customer.phone">{{ customer.phone }}</span>
+              </td>
               <td>{{ customer.totalPurchases | number:'1.2-2' }} ج.م</td>
               <td>
                 <div class="stat-pill">
@@ -91,7 +95,7 @@ import { ToastService } from '../../core/services/toast.service';
 
         <div class="modal-actions">
           <button type="button" class="btn" (click)="closeModal()">إلغاء</button>
-          <button type="submit" class="btn btn-primary">حفظ</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!currentCustomer.name || !currentCustomer.phone">حفظ</button>
         </div>
       </form>
     </app-modal>
@@ -154,6 +158,9 @@ import { ToastService } from '../../core/services/toast.service';
     .stat-value { font-weight: bold; color: var(--primary-color); }
     
     .last-visit { font-size: 0.8rem; }
+    
+    input.ng-invalid.ng-touched { border-color: var(--danger-color); }
+    .error-msg { color: var(--danger-color); font-size: 0.75rem; margin-top: 0.25rem; }
     
     .alert-bar {
       background: rgba(var(--secondary-rgb), 0.1);
