@@ -94,8 +94,8 @@ import { AuthService } from '../../../core/services/auth.service';
     :host {
       display: block;
       height: 100%;
-      background-color: var(--bg-card);
-      border-left: 1px solid var(--border-color);
+      background: var(--sidebar-bg);
+      border-inline-end: 1px solid var(--sidebar-border);
       transition: transform 0.3s ease;
     }
 
@@ -112,6 +112,7 @@ import { AuthService } from '../../../core/services/auth.service';
       gap: 0.5rem;
       margin-bottom: 1.5rem;
       padding: 0 0.5rem;
+      color: var(--text-main);
     }
 
     .logo-info {
@@ -122,7 +123,9 @@ import { AuthService } from '../../../core/services/auth.service';
     .logo-text {
       font-size: 1.6rem;
       font-weight: 800;
-      color: var(--primary-color);
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      -webkit-background-clip: text;
+      color: transparent;
     }
 
     .user-badge {
@@ -136,7 +139,7 @@ import { AuthService } from '../../../core/services/auth.service';
     
     .nav-visual-separator {
       height: 1px;
-      background: linear-gradient(to left, transparent, var(--border-color), transparent);
+      background: linear-gradient(to left, transparent, var(--sidebar-border), transparent);
       margin-bottom: 1.5rem;
     }
 
@@ -173,15 +176,16 @@ import { AuthService } from '../../../core/services/auth.service';
     }
     
     .nav-links a:hover {
-      background-color: var(--bg-input);
+      background-color: var(--sidebar-hover);
       color: var(--text-main);
       transform: translateX(-3px);
     }
     
     .nav-links a.active {
-      background: linear-gradient(270deg, rgba(37, 99, 235, 0.1), transparent);
+      background: var(--sidebar-active);
       color: var(--primary-color);
       border-right: 3px solid var(--primary-color);
+      box-shadow: inset 4px 0 0 0 rgba(var(--primary-rgb), 0.45);
     }
     
     .icon {

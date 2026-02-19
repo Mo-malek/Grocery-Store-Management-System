@@ -5,6 +5,10 @@ import com.grocery.entity.Product;
 import com.grocery.repository.ProductRepository;
 import com.grocery.repository.StockLogRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -20,6 +24,10 @@ public class ProductService {
 
     public List<Product> getAllProducts() {
         return productRepository.findByActiveTrue();
+    }
+
+    public Page<Product> getAllProducts(Pageable pageable) {
+        return productRepository.findByActiveTrue(pageable);
     }
 
     public Product getProduct(Long id) {
@@ -39,12 +47,21 @@ public class ProductService {
         return productRepository.searchProducts(search);
     }
 
+    public Page<Product> searchProducts(String search, Pageable pageable) {
+        if (search == null || search.isBlank()) {
+            return getAllProducts(pageable);
+        }
+        return productRepository.searchProducts(search, pageable);
+    }
+
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public Product createProduct(Product product) {
         return productRepository.save(product);
     }
 
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public Product updateProduct(Long id, Product updated) {
         Product existing = getProduct(id);
         existing.setName(updated.getName());
@@ -66,6 +83,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public void deleteProduct(Long id) {
         Product product = getProduct(id);
         product.setActive(false); // Soft delete
@@ -76,8 +94,14 @@ public class ProductService {
         return productRepository.findLowStockProducts();
     }
 
+    @Cacheable("categories")
     public List<String> getCategories() {
         return productRepository.findDistinctCategories();
+    }
+
+    @CacheEvict(value = "categories", allEntries = true)
+    public void clearCategoryCache() {
+        // This can be called manually if needed
     }
 
     @Transactional

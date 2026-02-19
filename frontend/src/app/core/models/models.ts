@@ -127,6 +127,12 @@ export interface HourlySale {
     totalSales: number;
 }
 
+export interface RegisterRequest {
+    fullName: string;
+    username: string;
+    password?: string;
+}
+
 export interface AuthRequest {
     username: string;
     password?: string;
@@ -195,3 +201,15 @@ export interface EmployeePerformance {
     transactionCount: number;
     totalSales: number;
 }
+
+export interface Page<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+    empty: boolean;
+}
+

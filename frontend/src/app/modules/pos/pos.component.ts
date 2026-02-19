@@ -16,6 +16,13 @@ interface CartItem {
   total: number;
 }
 
+interface StoredCartItem {
+  productId?: number;
+  bundleId?: number;
+  isBundle: boolean;
+  quantity: number;
+}
+
 @Component({
   selector: 'app-pos',
   standalone: true,
@@ -238,6 +245,7 @@ interface CartItem {
     .item-name {
       font-weight: 600;
       font-size: 0.9rem;
+      word-break: break-word;
     }
     
     .item-price {
@@ -466,13 +474,15 @@ interface CartItem {
     }
     
     .product-name {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      height: 2.4rem;
+      font-weight: 700;
+      margin-bottom: 0.65rem;
+      line-height: 1.25rem;
+      min-height: 2.5rem; /* keep equal card heights but allow up to 3 lines */
       overflow: hidden;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
+      word-break: break-word;
     }
     
     .product-info {
@@ -613,6 +623,9 @@ export class PosComponent implements OnInit {
 
   customers: Customer[] = [];
   selectedCustomerId: number | null = null;
+  private readonly cartStorageKey = 'pos-cart';
+  private productsLoaded = false;
+  private bundlesLoaded = false;
 
   // Barcode Scanner Integration
   private scannerBuffer: string = '';
@@ -682,12 +695,14 @@ export class PosComponent implements OnInit {
 
   loadProducts() {
     this.isLoading = true;
-    this.api.getProducts().subscribe({
-      next: (data) => {
-        this.products = data;
-        this.filteredProducts = data;
+    this.api.getProducts('', 0, 1000).subscribe({
+      next: (page) => {
+        this.products = page.content;
+        this.filteredProducts = page.content;
         this.extractCategories();
         this.isLoading = false;
+        this.productsLoaded = true;
+        this.restoreCartFromStorage();
       },
       error: (err) => {
         this.toast.error('فشل تحميل المنتجات');
@@ -697,7 +712,11 @@ export class PosComponent implements OnInit {
   }
 
   loadBundles() {
-    this.api.getActiveBundles().subscribe(data => this.bundles = data);
+    this.api.getActiveBundles().subscribe(data => {
+      this.bundles = data;
+      this.bundlesLoaded = true;
+      this.restoreCartFromStorage();
+    });
   }
 
   loadCustomers() {
@@ -779,6 +798,7 @@ export class PosComponent implements OnInit {
     }
     this.calculateTotals();
     this.updateRecommendations();
+    this.persistCart();
   }
 
   addBundleToCart(bundle: Bundle) {
@@ -800,6 +820,7 @@ export class PosComponent implements OnInit {
     });
     this.calculateTotals();
     this.updateRecommendations();
+    this.persistCart();
   }
 
   updateQty(index: number, change: number) {
@@ -822,6 +843,7 @@ export class PosComponent implements OnInit {
       }
       this.calculateTotals();
       this.updateRecommendations();
+      this.persistCart();
     } else {
       this.removeFromCart(index);
     }
@@ -831,6 +853,7 @@ export class PosComponent implements OnInit {
     this.cart.splice(index, 1);
     this.calculateTotals();
     this.updateRecommendations();
+    this.persistCart();
   }
 
   clearCart() {
@@ -838,6 +861,7 @@ export class PosComponent implements OnInit {
       this.cart = [];
       this.calculateTotals();
       this.updateRecommendations();
+      this.persistCart(true);
       this.toast.info('تم إفراغ السلة');
     }
   }
@@ -845,6 +869,64 @@ export class PosComponent implements OnInit {
   calculateTotals() {
     this.subtotal = this.cart.reduce((sum, item) => sum + item.total, 0);
     this.total = Math.max(0, this.subtotal - this.discount);
+  }
+
+  private persistCart(clear: boolean = false) {
+    if (clear) {
+      localStorage.removeItem(this.cartStorageKey);
+      return;
+    }
+    const stored: StoredCartItem[] = this.cart.map(item => ({
+      isBundle: item.isBundle,
+      quantity: item.quantity,
+      productId: item.product?.id,
+      bundleId: item.bundle?.id
+    }));
+    try {
+      localStorage.setItem(this.cartStorageKey, JSON.stringify(stored));
+    } catch (e) {
+      console.warn('Failed to persist cart', e);
+    }
+  }
+
+  private restoreCartFromStorage() {
+    if (!this.productsLoaded || !this.bundlesLoaded) return;
+    const raw = localStorage.getItem(this.cartStorageKey);
+    if (!raw) return;
+    try {
+      const saved: StoredCartItem[] = JSON.parse(raw);
+      const restored: CartItem[] = [];
+      for (const s of saved) {
+        if (s.isBundle && s.bundleId) {
+          const bundle = this.bundles.find(b => b.id === s.bundleId);
+          if (bundle) {
+            restored.push({
+              bundle,
+              isBundle: true,
+              quantity: s.quantity,
+              total: s.quantity * bundle.price
+            });
+          }
+        } else if (!s.isBundle && s.productId) {
+          const product = this.products.find(p => p.id === s.productId);
+          if (product) {
+            restored.push({
+              product,
+              isBundle: false,
+              quantity: s.quantity,
+              total: s.quantity * product.sellingPrice
+            });
+          }
+        }
+      }
+      if (restored.length) {
+        this.cart = restored;
+        this.calculateTotals();
+        this.updateRecommendations();
+      }
+    } catch (e) {
+      console.warn('Failed to restore cart', e);
+    }
   }
 
   checkout() {
@@ -862,16 +944,17 @@ export class PosComponent implements OnInit {
       paymentMethod: 'CASH'
     };
 
-    this.api.createSale(saleRequest).subscribe({
-      next: (sale) => {
-        this.toast.success(`تمت عملية البيع بنجاح! فاتورة #${sale.id}`);
-        this.lastSale = sale; // Store for modal
-        this.cart = [];
-        this.discount = 0;
-        this.selectedCustomerId = null;
-        this.calculateTotals();
-        this.updateRecommendations();
-        this.isProcessing = false;
+      this.api.createSale(saleRequest).subscribe({
+        next: (sale) => {
+          this.toast.success(`تمت عملية البيع بنجاح! فاتورة #${sale.id}`);
+          this.lastSale = sale; // Store for modal
+          this.cart = [];
+          this.discount = 0;
+          this.selectedCustomerId = null;
+          this.calculateTotals();
+          this.updateRecommendations();
+          this.persistCart(true);
+          this.isProcessing = false;
 
         // Refresh products to update stock
         this.loadProducts();

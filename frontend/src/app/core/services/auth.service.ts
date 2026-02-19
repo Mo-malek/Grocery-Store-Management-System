@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, map } from 'rxjs';
-import { AuthRequest, AuthResponse } from '../models/models';
+import { AuthRequest, AuthResponse, RegisterRequest } from '../models/models';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 
@@ -20,6 +20,10 @@ export class AuthService {
 
     public get currentUserValue(): AuthResponse | null {
         return this.currentUserSubject.value;
+    }
+
+    register(request: RegisterRequest): Observable<string> {
+        return this.http.post(`${environment.apiUrl}/auth/register`, request, { responseType: 'text' });
     }
 
     login(request: AuthRequest): Observable<AuthResponse> {

@@ -98,6 +98,9 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
           <div class="card chart-container">
             <app-bar-chart [title]="'أرباح التصنيفات (هذا الشهر)'" [data]="categoryProfitData"></app-bar-chart>
           </div>
+          <div class="card chart-container">
+            <app-bar-chart [title]="'أفضل المنتجات مبيعاً'" [data]="topProductsData"></app-bar-chart>
+          </div>
         </div>
 
         <!-- Heat Map -->

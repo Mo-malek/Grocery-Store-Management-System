@@ -9,6 +9,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -40,9 +43,10 @@ public class SaleController {
     }
 
     @GetMapping
-    public List<SaleView> getSalesByDateRange(
+    public Page<SaleView> getSalesByDateRange(
             @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return saleService.getSalesByDateRange(from, to);
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return saleService.getSalesByDateRange(from, to, pageable);
     }
 }

@@ -1,6 +1,7 @@
 package com.grocery.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ public class Product {
     private Long id;
 
     @Column(nullable = false)
+    @NotBlank(message = "اسم المنتج لا يمكن أن يكون فارغاً")
     private String name;
 
     private String barcode;
@@ -25,16 +27,24 @@ public class Product {
     private String category;
 
     @Column(name = "purchase_price", nullable = false)
+    @NotNull(message = "سعر الشراء مطلوب")
+    @PositiveOrZero(message = "سعر الشراء يجب أن يكون 0 أو أكثر")
     private BigDecimal purchasePrice;
 
     @Column(name = "selling_price", nullable = false)
+    @NotNull(message = "سعر البيع مطلوب")
+    @PositiveOrZero(message = "سعر البيع يجب أن يكون 0 أو أكثر")
     private BigDecimal sellingPrice;
 
     @Column(name = "current_stock", nullable = false)
+    @NotNull(message = "المخزون الحالي مطلوب")
+    @PositiveOrZero(message = "المخزون لا يمكن أن يكون سالباً")
     @Builder.Default
     private Integer currentStock = 0;
 
     @Column(name = "min_stock", nullable = false)
+    @NotNull(message = "الحد الأدنى للمخزون مطلوب")
+    @PositiveOrZero(message = "الحد الأدنى لا يمكن أن يكون سالباً")
     @Builder.Default
     private Integer minStock = 5;
 

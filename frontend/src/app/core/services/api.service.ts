@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Product, Customer, SaleRequest, SaleView, DashboardStats, Expense, ReorderSuggestion, PriceOptimizationSuggestion, RecommendationSuggestion, Bundle } from '../models/models';
+import { Product, Customer, SaleRequest, SaleView, DashboardStats, Expense, ReorderSuggestion, PriceOptimizationSuggestion, RecommendationSuggestion, Bundle, Page } from '../models/models';
 
 @Injectable({
     providedIn: 'root'
@@ -13,10 +13,12 @@ export class ApiService {
     constructor(private http: HttpClient) { }
 
     // Products
-    getProducts(search?: string): Observable<Product[]> {
-        let params = new HttpParams();
+    getProducts(search?: string, page: number = 0, size: number = 20): Observable<Page<Product>> {
+        let params = new HttpParams()
+            .set('page', page.toString())
+            .set('size', size.toString());
         if (search) params = params.set('search', search);
-        return this.http.get<Product[]>(`${this.apiUrl}/products`, { params });
+        return this.http.get<Page<Product>>(`${this.apiUrl}/products`, { params });
     }
 
     getInventoryAuditReport(): Observable<any[]> {
@@ -77,6 +79,15 @@ export class ApiService {
 
     getTodaySales(): Observable<SaleView[]> {
         return this.http.get<SaleView[]>(`${this.apiUrl}/sales/today`);
+    }
+
+    getSales(from: string, to: string, page: number = 0, size: number = 20): Observable<Page<SaleView>> {
+        let params = new HttpParams()
+            .set('from', from)
+            .set('to', to)
+            .set('page', page.toString())
+            .set('size', size.toString());
+        return this.http.get<Page<SaleView>>(`${this.apiUrl}/sales`, { params });
     }
 
     // Expenses
