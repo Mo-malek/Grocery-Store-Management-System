@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -56,20 +56,20 @@ import { ToastService } from '../../../core/services/toast.service';
     }
     
     .toast.success { 
-      background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(15,118,110,0.3));
-      border-color: var(--primary-color);
+      background: var(--success-soft);
+      border-color: var(--success-color);
     }
     .toast.error { 
-      background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(127,29,29,0.5));
+      background: var(--danger-soft);
       border-color: var(--danger-color);
     }
     .toast.warning { 
-      background: linear-gradient(135deg, rgba(234,179,8,0.2), rgba(161,98,7,0.4));
-      border-color: var(--secondary-color);
+      background: var(--warning-soft);
+      border-color: var(--warning-color);
     }
     .toast.info { 
-      background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,64,175,0.4));
-      border-color: #3b82f6;
+      background: var(--info-soft);
+      border-color: var(--primary-color);
     }
     
     @keyframes slideIn {

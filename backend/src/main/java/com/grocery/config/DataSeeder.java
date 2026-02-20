@@ -22,8 +22,8 @@ public class DataSeeder {
                 User admin = User.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("password"))
-                        .role("ROLE_MANAGER")
-                        .fullName("مدير النظام")
+                        .role("ROLE_ADMIN")
+                        .fullName("مدير النظام (Superuser)")
                         .active(true)
                         .build();
                 userRepository.save(admin);

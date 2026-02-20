@@ -14,7 +14,15 @@ export class AuthService {
 
     constructor(private http: HttpClient, private router: Router) {
         const savedUser = localStorage.getItem('currentUser');
-        this.currentUserSubject = new BehaviorSubject<AuthResponse | null>(savedUser ? JSON.parse(savedUser) : null);
+        let initialUser: AuthResponse | null = null;
+        if (savedUser) {
+            try {
+                initialUser = JSON.parse(savedUser) as AuthResponse;
+            } catch {
+                localStorage.removeItem('currentUser');
+            }
+        }
+        this.currentUserSubject = new BehaviorSubject<AuthResponse | null>(initialUser);
         this.currentUser = this.currentUserSubject.asObservable();
     }
 

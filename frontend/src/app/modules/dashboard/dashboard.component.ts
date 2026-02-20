@@ -1,447 +1,564 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { DashboardStats } from '../../core/models/models';
 import { BarChartComponent } from '../../shared/components/chart/bar-chart.component';
+import { ToastService } from '../../core/services/toast.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, BarChartComponent],
+  imports: [CommonModule, RouterModule, BarChartComponent],
   template: `
-    <div class="container">
-      <h1>📊 لوحة التحكم</h1>
-      
-      <!-- Tabs -->
+    <section class="dashboard-page">
+      <header class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Live operational and financial view of your internal system.</p>
+        </div>
+        <div class="header-actions">
+          <a routerLink="/pos" class="quick-btn">Open POS</a>
+          <a routerLink="/inventory" class="quick-btn">Inventory</a>
+          <a *ngIf="isManagerOrAdmin" routerLink="/delivery-orders" class="quick-btn">Delivery Orders</a>
+        </div>
+      </header>
+
       <div class="dashboard-tabs">
-        <button class="tab-btn" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">📊 نظرة عامة</button>
-        <button class="tab-btn" [class.active]="activeTab === 'performance'" (click)="activeTab = 'performance'">🏆 أداء الموظفين</button>
+        <button class="tab-btn" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">Overview</button>
+        <button class="tab-btn" [class.active]="activeTab === 'team'" (click)="activeTab = 'team'">Team Performance</button>
       </div>
 
-      <div *ngIf="activeTab === 'overview'">
-        <!-- KPIs Row 1 -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Loading dashboard data...</p>
+      </div>
+
+      <p class="error-state" *ngIf="!isLoading && loadError">{{ loadError }}</p>
+
+      <ng-container *ngIf="activeTab === 'overview' && stats">
         <div class="stats-grid">
-          <div class="stat-card health pt-0" style="padding-top: 0; padding-bottom: 0;">
-            <div class="health-gauge" [style.--score]="stats?.storeHealthScore || 0">
-              <div class="gauge-value">{{ stats?.storeHealthScore }}%</div>
-              <div class="gauge-label">صحة المتجر</div>
-            </div>
-          </div>
-          <div class="stat-card primary">
-            <div class="stat-icon">💰</div>
-            <div class="stat-info">
-              <div class="stat-title">مبيعات اليوم</div>
-              <div class="stat-value">{{ stats?.totalSalesToday | number:'1.2-2' }} ج.م</div>
-            </div>
-          </div>
-          <div class="stat-card success">
-            <div class="stat-icon">📈</div>
-            <div class="stat-info">
-              <div class="stat-title">ربح اليوم (تقديري)</div>
-              <div class="stat-value">{{ stats?.estimatedProfitToday | number:'1.2-2' }} ج.م</div>
-            </div>
-          </div>
-          <div class="stat-card info">
-            <div class="stat-icon">🛒</div>
-            <div class="stat-info">
-              <div class="stat-title">متوسط السلة</div>
-              <div class="stat-value">{{ stats?.averageBasketSize | number:'1.2-2' }} ج.م</div>
-            </div>
-          </div>
+          <article class="kpi-card">
+            <span>Store Health</span>
+            <strong>{{ stats.storeHealthScore }}%</strong>
+          </article>
+          <article class="kpi-card">
+            <span>Sales Today</span>
+            <strong>{{ stats.totalSalesToday | number:'1.2-2' }} EGP</strong>
+          </article>
+          <article class="kpi-card">
+            <span>Profit Today</span>
+            <strong>{{ stats.estimatedProfitToday | number:'1.2-2' }} EGP</strong>
+          </article>
+          <article class="kpi-card">
+            <span>Monthly Sales</span>
+            <strong>{{ stats.totalSalesThisMonth | number:'1.2-2' }} EGP</strong>
+          </article>
+          <article class="kpi-card">
+            <span>Monthly Expenses</span>
+            <strong>{{ stats.totalExpensesThisMonth | number:'1.2-2' }} EGP</strong>
+          </article>
+          <article class="kpi-card accent">
+            <span>Net Profit</span>
+            <strong>{{ stats.netProfitThisMonth | number:'1.2-2' }} EGP</strong>
+          </article>
         </div>
 
-        <!-- KPIs Row 2 -->
-        <div class="stats-grid">
-          <div class="stat-card secondary">
-            <div class="stat-icon">📊</div>
-            <div class="stat-info">
-              <div class="stat-title">مبيعات الشهر</div>
-              <div class="stat-value">{{ stats?.totalSalesThisMonth | number:'1.2-2' }} ج.م</div>
+        <article class="panel danger" *ngIf="stats.lowStockProducts?.length">
+          <header>
+            <h2>Low Stock Alerts</h2>
+            <a routerLink="/inventory">Open inventory</a>
+          </header>
+          <div class="alert-grid">
+            <div class="alert-item" *ngFor="let product of stats.lowStockProducts">
+              <strong>{{ product.name }}</strong>
+              <span>Stock: {{ product.currentStock }} {{ product.unit }}</span>
             </div>
           </div>
-          <div class="stat-card warning">
-            <div class="stat-icon">💸</div>
-            <div class="stat-info">
-              <div class="stat-title">مصاريف الشهر</div>
-              <div class="stat-value">{{ stats?.totalExpensesThisMonth | number:'1.2-2' }} ج.م</div>
-            </div>
-          </div>
-          <div class="stat-card accent">
-            <div class="stat-icon">💎</div>
-            <div class="stat-info">
-              <div class="stat-title">صافي ربح الشهر</div>
-              <div class="stat-value">{{ stats?.netProfitThisMonth | number:'1.2-2' }} ج.م</div>
-            </div>
-          </div>
-        </div>
+        </article>
 
-        <!-- Inventory Alerts -->
-        <div class="alert-box danger" *ngIf="stats?.lowStockProducts?.length">
-          <div class="alert-header">
-            <span class="icon">🚨</span>
-            <h3>تنبيه: منتجات أوشكت على النفاذ</h3>
-          </div>
-          <div class="alert-items">
-            <div class="alert-item" *ngFor="let p of stats?.lowStockProducts">
-              <span class="p-name">{{ p.name }}</span>
-              <span class="p-stock">المخزون الحالي: <strong>{{ p.currentStock }}</strong> {{ p.unit }}</span>
-              <span class="p-min">(الحد الأدنى: {{ p.minStock }})</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Charts -->
         <div class="charts-grid">
-          <div class="card chart-container">
-            <app-bar-chart [title]="'المبيعات اليومية (آخر 7 أيام)'" [data]="dailySalesData"></app-bar-chart>
-          </div>
-          <div class="card chart-container">
-            <app-bar-chart [title]="'أرباح التصنيفات (هذا الشهر)'" [data]="categoryProfitData"></app-bar-chart>
-          </div>
-          <div class="card chart-container">
-            <app-bar-chart [title]="'أفضل المنتجات مبيعاً'" [data]="topProductsData"></app-bar-chart>
-          </div>
+          <article class="panel chart">
+            <app-bar-chart [title]="'Daily Sales (Last 7 days)'" [data]="dailySalesData"></app-bar-chart>
+          </article>
+          <article class="panel chart">
+            <app-bar-chart [title]="'Category Profit (This month)'" [data]="categoryProfitData"></app-bar-chart>
+          </article>
         </div>
 
-        <!-- Heat Map -->
-        <div class="card heat-map-container" *ngIf="stats?.heatMap?.length" style="margin-bottom: 1.5rem;">
-          <h3 style="margin-bottom: 1rem;">🔥 خريطة حرارة المبيعات (توزيع العمليات حسب اليوم والساعة)</h3>
-          <div class="heat-map-grid">
-             <div class="day-row" *ngFor="let day of [1,2,3,4,5,6,7]">
-                <div class="day-label">{{ getDayName(day) }}</div>
-                <div class="hour-cells">
-                  <div *ngFor="let hour of hours" 
-                       class="hour-cell" 
-                       [style.opacity]="getHeatOpacity(day, hour)"
-                       [title]="'الساعة ' + hour + ': ' + getHeatCount(day, hour) + ' عملية'">
-                  </div>
-                </div>
-             </div>
-          </div>
-        </div>
+        <div class="tables-grid">
+          <article class="panel">
+            <header>
+              <h2>Recent Sales</h2>
+            </header>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Time</th>
+                    <th>Customer</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let sale of stats.recentSales">
+                    <td>#{{ sale.id }}</td>
+                    <td>{{ sale.createdAt | date:'shortTime' }}</td>
+                    <td>{{ sale.customer ? sale.customer.name : 'Cash Customer' }}</td>
+                    <td class="amount">{{ sale.total | number:'1.2-2' }} EGP</td>
+                    <td>
+                      <span class="status-pill" [attr.data-status]="sale.paymentMethod">{{ sale.paymentMethod }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
 
-        <!-- Recent Sales -->
-        <div class="card recent-sales">
-          <h3>أحدث العمليات</h3>
-          <div class="table-responsive">
+          <article class="panel">
+            <header>
+              <h2>Category Analytics</h2>
+            </header>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Revenue</th>
+                    <th>Profit</th>
+                    <th>Margin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let category of stats.categoryAnalytics">
+                    <td>{{ category.category }}</td>
+                    <td>{{ category.totalRevenue | number:'1.0-0' }}</td>
+                    <td class="success">{{ category.totalProfit | number:'1.0-0' }}</td>
+                    <td>{{ getMargin(category.totalProfit, category.totalRevenue) }}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="activeTab === 'team' && stats">
+        <article class="panel">
+          <header>
+            <h2>Employee Leaderboard</h2>
+          </header>
+          <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>رقم الفاتورة</th>
-                  <th>التاريخ</th>
-                  <th>العميل</th>
-                  <th>الإجمالي</th>
-                  <th>طريقة الدفع</th>
+                  <th>Rank</th>
+                  <th>Employee</th>
+                  <th>Transactions</th>
+                  <th>Total Sales</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let sale of stats?.recentSales">
-                  <td>#{{ sale.id }}</td>
-                  <td>{{ sale.createdAt | date:'shortTime' }}</td>
-                  <td>{{ sale.customer ? sale.customer.name : 'عميل نقدي' }}</td>
-                  <td>{{ sale.total | number:'1.2-2' }} ج.م</td>
-                  <td>
-                    <span class="badge" [class.cash]="sale.paymentMethod === 'CASH'">
-                      {{ sale.paymentMethod === 'CASH' ? 'كاش' : 'فيزا' }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Category Profitability -->
-        <div class="card financials mt-4">
-          <h3>📈 تحليلات الأرباح حسب التصنيف</h3>
-          <div class="table-responsive">
-            <table class="table-simple" style="width: 100%; margin-top: 1rem;">
-              <thead>
-                <tr style="border-bottom: 2px solid var(--border-color); text-align: right;">
-                  <th style="padding: 0.5rem;">التصنيف</th>
-                  <th style="padding: 0.5rem;">المبيعات</th>
-                  <th style="padding: 0.5rem;">الأرباح</th>
-                  <th style="padding: 0.5rem;">الهامش</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let cat of stats?.categoryAnalytics" style="border-bottom: 1px solid var(--border-color);">
-                  <td style="padding: 0.5rem;">{{ cat.category }}</td>
-                  <td style="padding: 0.5rem;">{{ cat.totalRevenue | number:'1.0-0' }}</td>
-                  <td style="padding: 0.5rem;" class="text-success">{{ cat.totalProfit | number:'1.0-0' }}</td>
-                  <td style="padding: 0.5rem;">{{ (cat.totalProfit / cat.totalRevenue * 100) | number:'1.0-0' }}%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Performance Tab -->
-      <div *ngIf="activeTab === 'performance'">
-        <div class="card performance-card">
-          <div class="perf-header">
-            <h3>🏆 قائمة المتصدرين (هذا الشهر)</h3>
-            <p>يتم احتساب الترتيب بناءً على إجمالي المبيعات المحققة.</p>
-          </div>
-          <div class="table-responsive">
-            <table class="table-fancy">
-              <thead>
-                <tr>
-                  <th>الترتيب</th>
-                  <th>الموظف</th>
-                  <th>عدد العمليات</th>
-                  <th>إجمالي المبيعات</th>
-                  <th>التقييم</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let emp of stats?.employeeLeaderboard; let i = index">
-                  <td><span class="rank-badge" [class.top]="i < 3">{{ i + 1 }}</span></td>
-                  <td><strong>{{ emp.fullName || 'كاشير' }}</strong></td>
+                <tr *ngFor="let emp of stats.employeeLeaderboard; let i = index">
+                  <td><span class="rank" [class.top]="i < 3">{{ i + 1 }}</span></td>
+                  <td>{{ emp.fullName || 'Cashier' }}</td>
                   <td>{{ emp.transactionCount }}</td>
-                  <td>{{ emp.totalSales | number:'1.2-2' }} ج.م</td>
-                  <td>
-                    <span class="stars">⭐⭐⭐⭐⭐</span>
-                  </td>
+                  <td class="amount">{{ emp.totalSales | number:'1.2-2' }} EGP</td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+        </article>
+      </ng-container>
+    </section>
   `,
   styles: [`
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
+    .dashboard-page {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
     }
-    
-    .stat-card {
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
       background: var(--bg-card);
-      padding: 1.25rem;
-      border-radius: var(--radius-lg);
       border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-2);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+    }
+
+    .page-header p {
+      margin: 0.35rem 0 0;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
-    
-    .stat-icon {
-      font-size: 2rem;
-      width: 50px;
-      height: 50px;
+
+    .quick-btn {
+      min-height: 40px;
+      border-radius: 11px;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+      text-decoration: none;
+      padding: 0.45rem 0.8rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s ease;
+    }
+
+    .quick-btn:hover {
+      background: rgba(var(--primary-rgb), 0.08);
+      transform: translateY(-1px);
+    }
+
+    .dashboard-tabs {
+      display: inline-flex;
+      gap: 0.5rem;
+      padding: 0.4rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      width: fit-content;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .loading-state {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background: var(--bg-card);
+      padding: 1.2rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.05);
+      gap: 0.7rem;
+      color: var(--text-muted);
     }
 
-    .stat-card.primary .stat-icon { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
-    .stat-card.success .stat-icon { color: #10b981; background: rgba(16, 185, 129, 0.1); }
-    .stat-card.info .stat-icon { color: #8b5cf6; background: rgba(139, 92, 246, 0.1); }
-    .stat-card.danger .stat-icon { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
-    .stat-card.warning .stat-icon { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
-    .stat-card.secondary .stat-icon { color: #64748b; background: rgba(100, 116, 139, 0.1); }
-    .stat-card.accent .stat-icon { color: #eab308; background: rgba(234, 179, 8, 0.1); }
-    
-    .stat-title {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      margin-bottom: 0.25rem;
-    }
-    
-    .stat-value {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--text-main);
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
 
-    .alert-box {
-      background: rgba(239, 68, 68, 0.05);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .alert-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .alert-header h3 {
-      font-size: 1.1rem;
-      color: #f87171;
+    .error-state {
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      border-radius: var(--radius-md);
+      background: var(--danger-soft);
+      color: var(--danger-color);
+      padding: 0.75rem 0.9rem;
+      font-weight: 600;
       margin: 0;
     }
 
-    .alert-items {
+    .tab-btn {
+      min-height: 38px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--text-muted);
+      padding: 0.42rem 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--secondary-color);
+      color: var(--secondary-text);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: var(--space-2);
+    }
+
+    .kpi-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background: var(--bg-card);
+      box-shadow: var(--shadow-sm);
+      padding: 0.95rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.32rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .kpi-card span {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .kpi-card strong {
+      color: var(--text-main);
+      font-size: 1.25rem;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .kpi-card.accent strong {
+      color: var(--secondary-color);
+    }
+
+    .panel {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background: var(--bg-card);
+      box-shadow: var(--shadow-sm);
+      padding: 0.95rem;
+    }
+
+    .panel header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .panel header h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .panel header a {
+      text-decoration: none;
+      color: var(--primary-color);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .panel.danger {
+      border-color: rgba(220, 38, 38, 0.35);
+      background: var(--danger-soft);
+    }
+
+    .alert-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.6rem;
     }
 
     .alert-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      font-size: 0.95rem;
-      color: #cbd5e1;
-      padding: 0.5rem;
-      background: rgba(0,0,0,0.2);
-      border-radius: 8px;
-    }
-
-    .p-name { font-weight: bold; flex: 1; color: white; }
-    .p-stock strong { color: #ef4444; }
-    .p-min { color: var(--text-muted); font-size: 0.8rem; }
-    
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .chart-container {
-      padding: 1.5rem;
-      transition: transform 0.3s ease;
-    }
-    
-    .chart-container:hover {
-      transform: translateY(-5px);
-    }
-
-    .recent-sales {
-      margin-top: 1.5rem;
-    }
-
-    .recent-sales h3 {
-      margin-bottom: 1rem;
-      font-size: 1.1rem;
-      color: var(--text-muted);
-    }
-
-    .badge {
-      padding: 0.25rem 0.5rem;
-      border-radius: var(--radius-sm);
-      font-size: 0.8rem;
-      background: var(--bg-input);
-    }
-
-    .badge.cash {
-      color: var(--primary-color);
-      background: rgba(16, 185, 129, 0.1);
-    }
-
-    .text-center {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 1rem;
-    }
-
-    /* Phase 11 Styles */
-    .health-gauge {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: conic-gradient(var(--primary-color) calc(var(--score) * 1%), var(--bg-input) 0);
+      border: 1px solid rgba(220, 38, 38, 0.25);
+      border-radius: 10px;
+      background: var(--bg-card);
+      padding: 0.6rem;
       display: flex;
       flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .alert-item strong {
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    .alert-item span {
+      color: var(--danger-color);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-2);
+    }
+
+    .panel.chart {
+      min-height: 350px;
+    }
+
+    .tables-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: var(--space-2);
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.7rem 0.55rem;
+      border-bottom: 1px solid var(--border-color);
+      text-align: right;
+      white-space: nowrap;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    th {
+      color: var(--text-muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    td:first-child,
+    td:nth-child(2),
+    td:nth-child(3) {
+      color: var(--text-main);
+    }
+
+    .amount {
+      color: var(--secondary-color) !important;
+      font-weight: 800;
+    }
+
+    .success {
+      color: var(--success-color) !important;
+      font-weight: 800;
+    }
+
+    .status-pill {
+      padding: 0.16rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--surface-soft);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .status-pill[data-status="CARD"] {
+      color: var(--primary-color);
+      background: var(--info-soft);
+      border-color: rgba(var(--primary-rgb), 0.3);
+    }
+
+    .status-pill[data-status="CASH"] {
+      color: var(--success-color);
+      background: var(--success-soft);
+      border-color: rgba(22, 163, 74, 0.3);
+    }
+
+    .rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      position: relative;
-    }
-    .health-gauge::after {
-      content: '';
-      position: absolute;
-      width: 85px;
-      height: 85px;
-      background: var(--bg-card);
-      border-radius: 50%;
-      z-index: 1;
-    }
-    .gauge-value { font-size: 1.5rem; font-weight: 800; color: var(--text-main); z-index: 2; }
-    .gauge-label { font-size: 0.7rem; color: var(--text-muted); z-index: 2; }
-
-    .heat-map-container { padding: 1.5rem; overflow-x: auto; }
-    .heat-map-grid { display: flex; flex-direction: column; gap: 4px; margin-top: 1rem; min-width: 600px; }
-    .day-row { display: flex; align-items: center; gap: 10px; }
-    .day-label { width: 60px; font-size: 0.8rem; color: var(--text-muted); }
-    .hour-cells { display: flex; flex: 1; gap: 4px; }
-    .hour-cell { 
-       flex: 1; 
-       height: 20px; 
-       background: var(--success-color); 
-       border-radius: 2px;
-       min-width: 10px;
+      background: var(--surface-soft);
+      color: var(--text-main);
+      font-size: 0.8rem;
+      font-weight: 800;
+      border: 1px solid var(--border-color);
     }
 
-    /* Tabs & Performance Styling */
-    .dashboard-tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
-    .tab-btn { background: none; border: none; padding: 0.75rem 1.5rem; color: var(--text-muted); cursor: pointer; border-radius: var(--radius-md); font-weight: bold; transition: all 0.2s; }
-    .tab-btn.active { background: rgba(var(--primary-rgb), 0.1); color: var(--primary-color); }
-    .performance-card { padding: 2rem; }
-    .perf-header { margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
-    .table-fancy { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-    .table-fancy th { text-align: right; padding: 1rem; color: var(--text-muted); font-size: 0.85rem; }
-    .table-fancy tr { background: rgba(255,255,255,0.02); }
-    .table-fancy td { padding: 1.25rem 1rem; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
-    .table-fancy td:first-child { border-left: 1px solid var(--border-color); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
-    .table-fancy td:last-child { border-right: 1px solid var(--border-color); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-    .rank-badge { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: var(--bg-input); border-radius: 50%; font-weight: bold; }
-    .rank-badge.top { background: var(--primary-color); color: white; box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.5); }
-    .text-danger { color: #ef4444; font-weight: bold; }
-    .text-success { color: #10b981; font-weight: bold; }
-    .mt-4 { margin-top: 1.5rem; }
-    .badge-info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-    .stars { color: #f1c40f; letter-spacing: 2px; }
+    .rank.top {
+      background: var(--secondary-color);
+      color: var(--secondary-text);
+      border-color: var(--secondary-color);
+    }
+
+    @media (max-width: 1080px) {
+      .charts-grid,
+      .tables-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-page {
+        gap: var(--space-1);
+      }
+
+      .page-header,
+      .panel {
+        padding: var(--space-2);
+      }
+
+      .dashboard-tabs {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .tab-btn {
+        flex: 1;
+      }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
   stats: DashboardStats | null = null;
   dailySalesData: { label: string, value: number }[] = [];
-  topProductsData: { label: string, value: number }[] = [];
   categoryProfitData: { label: string, value: number }[] = [];
-  hours = Array.from({ length: 24 }, (_, i) => i);
-  activeTab: 'overview' | 'performance' = 'overview';
+  activeTab: 'overview' | 'team' = 'overview';
+  isLoading = false;
+  loadError = '';
+  get isManagerOrAdmin(): boolean {
+    const role = this.auth.currentUserValue?.role;
+    return role === 'ROLE_ADMIN' || role === 'ROLE_MANAGER';
+  }
 
-  constructor(private api: ApiService) { }
+  constructor(private api: ApiService, private toast: ToastService, private auth: AuthService) { }
 
   ngOnInit() {
-    this.api.getDashboardStats().subscribe(data => {
-      this.stats = data;
-      this.dailySalesData = data.dailySales.map(d => ({ label: d.date, value: d.totalSales }));
-      this.topProductsData = data.topProducts.map(p => ({ label: p.productName, value: p.totalRevenue }));
-      this.categoryProfitData = data.categoryAnalytics.map(c => ({ label: c.category, value: Number(c.totalProfit) }));
+    this.isLoading = true;
+    this.loadError = '';
+    this.api.getDashboardStats().subscribe({
+      next: data => {
+        this.stats = data;
+        this.dailySalesData = data.dailySales.map(d => ({ label: d.date, value: d.totalSales }));
+        this.categoryProfitData = data.categoryAnalytics.map(c => ({ label: c.category, value: Number(c.totalProfit) }));
+        this.isLoading = false;
+      },
+      error: () => {
+        this.stats = null;
+        this.isLoading = false;
+        this.loadError = 'Failed to load dashboard statistics.';
+        this.toast.error('Failed to load dashboard');
+      }
     });
   }
 
-  getDayName(day: number): string {
-    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-    return days[day - 1];
-  }
-
-  getHeatPoint(day: number, hour: number) {
-    return this.stats?.heatMap?.find(p => p.dayOfWeek === day && p.hour === hour);
-  }
-
-  getHeatOpacity(day: number, hour: number): number {
-    const point = this.getHeatPoint(day, hour);
-    if (!point) return 0.05;
-    const max = Math.max(...(this.stats?.heatMap?.map(p => Number(p.count)) || [1]));
-    return Math.max(0.1, (Number(point.count) / max));
-  }
-
-  getHeatCount(day: number, hour: number): number {
-    return Number(this.getHeatPoint(day, hour)?.count || 0);
+  getMargin(profit: number, revenue: number): string {
+    if (!revenue) return '0';
+    return ((profit / revenue) * 100).toFixed(0);
   }
 }

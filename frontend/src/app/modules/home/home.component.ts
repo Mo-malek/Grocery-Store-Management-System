@@ -10,257 +10,254 @@ import { OnInit } from '@angular/core';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="home-container">
-      <div class="hero-section">
+    <section class="home-shell">
+      <article class="hero">
         <div class="hero-content">
-          <h1>مرحباً بك في نظام بقالتي 👋</h1>
-          <p>نظام إدارة ذكي ومتكامل لمتجرك</p>
-          
+          <span class="eyebrow">Internal Operations</span>
+          <h1>مرحبًا بك في مركز تشغيل المتجر</h1>
+          <p>
+            واجهة موحدة لإدارة المبيعات والمخزون والطلبات بسرعة عالية
+            وبنمط واضح في الوضعين النهاري والليلي.
+          </p>
           <div class="action-buttons">
-            <button class="btn-primary" routerLink="/pos">
-              <span class="icon">💻</span>
-              ابدأ البيع
-            </button>
-            <button class="btn-secondary" routerLink="/dashboard">
-              <span class="icon">📊</span>
-              تقارير اليوم
-            </button>
+            <a class="btn btn-primary" routerLink="/pos">فتح نقطة البيع</a>
+            <a class="btn btn-secondary" routerLink="/dashboard">عرض لوحة الأداء</a>
           </div>
         </div>
+
         <div class="hero-stats">
-          <div class="stat-card">
-            <div class="icon-circle sale">💰</div>
-            <div class="stat-info">
-              <span class="label">مبيعات اليوم</span>
-              <span class="value" *ngIf="!isLoading">{{ stats?.totalSalesToday | number:'1.2-2' }} ج.م</span>
-              <span class="value" *ngIf="isLoading">جاري التحميل...</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="icon-circle stock">📦</div>
-            <div class="stat-info">
-              <span class="label">إدارة المخزون</span>
-              <span class="link" routerLink="/inventory">عرض المنتجات ➜</span>
-            </div>
-          </div>
-        </div>
-      </div>
+          <article class="stat-card">
+            <span class="stat-label">مبيعات اليوم</span>
+            <strong class="stat-value" *ngIf="!isLoading">{{ stats?.totalSalesToday | number:'1.2-2' }} ج.م</strong>
+            <strong class="stat-value muted" *ngIf="isLoading">جاري التحميل...</strong>
+            <small class="stat-meta">عدد العمليات: {{ stats?.transactionCountToday || 0 }}</small>
+          </article>
 
-      <div class="features-grid">
-        <div class="feature-card" routerLink="/pos">
-          <div class="feature-icon">🛒</div>
-          <h3>نقطة البيع</h3>
-          <p>واجهة بيع سريعة وسهلة الاستخدام</p>
-        </div>
-        
-        <div class="feature-card" routerLink="/inventory">
-          <div class="feature-icon">📋</div>
-          <h3>المخزون</h3>
-          <p>تتبع الكميات والتنبيهات</p>
-        </div>
-        
-        <div class="feature-card" routerLink="/customers">
-          <div class="feature-icon">👥</div>
-          <h3>العملاء</h3>
-          <p>إدارة بيانات العملاء والولاء</p>
-        </div>
+          <article class="stat-card">
+            <span class="stat-label">متوسط سلة الشراء</span>
+            <strong class="stat-value">{{ stats?.averageBasketSize || 0 | number:'1.2-2' }} ج.م</strong>
+            <small class="stat-meta">الربح اليومي: {{ stats?.estimatedProfitToday || 0 | number:'1.0-0' }} ج.م</small>
+          </article>
 
-        <div class="feature-card disabled">
-          <div class="feature-icon">⚙️</div>
-          <h3>الإعدادات</h3>
-          <p>قريباً</p>
+          <article class="stat-card warning">
+            <span class="stat-label">تنبيهات المخزون</span>
+            <strong class="stat-value">{{ stats?.lowStockCount || 0 }}</strong>
+            <small class="stat-meta">منتجات أقل من الحد الأدنى</small>
+          </article>
         </div>
-      </div>
-    </div>
+      </article>
+
+      <section class="quick-grid">
+        <a class="quick-card" routerLink="/pos">
+          <span class="card-title">نقطة البيع</span>
+          <p>تنفيذ البيع بسرعة، مسح المنتجات، وطباعة الفاتورة.</p>
+        </a>
+
+        <a class="quick-card" routerLink="/inventory">
+          <span class="card-title">إدارة المخزون</span>
+          <p>متابعة الكميات، المنتجات منخفضة المخزون، وتواريخ الانتهاء.</p>
+        </a>
+
+        <a class="quick-card" routerLink="/customers">
+          <span class="card-title">إدارة العملاء</span>
+          <p>ملفات العملاء، سجل الزيارات، ونقاط الولاء.</p>
+        </a>
+
+        <a class="quick-card" routerLink="/history">
+          <span class="card-title">سجل المبيعات</span>
+          <p>تتبع العمليات اليومية ومراجعة الأداء حسب الفترة.</p>
+        </a>
+      </section>
+    </section>
   `,
   styles: [`
-    .home-container {
-      max-width: 1200px;
+    .home-shell {
+      max-width: 1480px;
       margin: 0 auto;
-      animation: fadeIn 0.5s ease-out;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
     }
 
-    .hero-section {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    .hero {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
-      padding: 3rem;
-      color: white;
+      padding: clamp(1.2rem, 2vw, 1.8rem);
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 3rem;
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+      align-items: flex-start;
+      gap: var(--space-3);
+      box-shadow: var(--shadow-sm);
       position: relative;
       overflow: hidden;
     }
 
-    .hero-section::before {
+    .hero::before {
       content: '';
       position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 500px;
-      height: 500px;
-      background: rgba(255, 255, 255, 0.1);
+      top: -80px;
+      left: -80px;
+      width: 260px;
+      height: 260px;
+      background: rgba(var(--primary-rgb), 0.07);
       border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(var(--primary-rgb), 0.26);
+      background: rgba(var(--primary-rgb), 0.08);
+      color: var(--primary-color);
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 0.65rem;
     }
 
     .hero-content h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
+      font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+      margin: 0;
       font-weight: 800;
+      color: var(--text-main);
     }
 
     .hero-content p {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-      opacity: 0.9;
+      font-size: 0.98rem;
+      line-height: 1.7;
+      margin: 0.75rem 0 1.35rem;
+      color: var(--text-secondary);
+      max-width: 640px;
     }
 
     .action-buttons {
       display: flex;
-      gap: 1rem;
-    }
-
-    .btn-primary, .btn-secondary {
-      padding: 0.75rem 1.5rem;
-      border-radius: 50px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .btn-primary {
-      background: white;
-      color: var(--primary-color);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      backdrop-filter: blur(5px);
-    }
-
-    .btn-primary:hover, .btn-secondary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      gap: 0.65rem;
+      flex-wrap: wrap;
     }
 
     .hero-stats {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+      width: min(380px, 100%);
+      display: grid;
+      gap: 0.75rem;
+      position: relative;
       z-index: 1;
     }
 
     .stat-card {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      padding: 1rem;
+      background: var(--surface-soft);
+      padding: 0.85rem 0.9rem;
       border-radius: var(--radius-md);
       display: flex;
-      align-items: center;
-      gap: 1rem;
-      min-width: 250px;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .icon-circle {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-    }
-
-    .icon-circle.sale { background: rgba(16, 185, 129, 0.2); color: #D1FAE5; }
-    .icon-circle.stock { background: rgba(59, 130, 246, 0.2); color: #DBEAFE; }
-
-    .stat-info {
-      display: flex;
       flex-direction: column;
+      gap: 0.18rem;
+      border: 1px solid var(--border-color);
     }
 
-    .stat-info .label { font-size: 0.8rem; opacity: 0.8; }
-    .stat-info .value { font-weight: bold; font-size: 1.1rem; }
-    .stat-info .link { font-size: 0.8rem; color: white; cursor: pointer; text-decoration: underline; }
+    .stat-card.warning {
+      border-color: rgba(217, 119, 6, 0.35);
+      background: var(--warning-soft);
+    }
 
-    .features-grid {
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      font-size: 1.2rem;
+      color: var(--text-main);
+      line-height: 1.15;
+    }
+
+    .stat-value.muted {
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .stat-meta {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      margin-top: 0.12rem;
+    }
+
+    .quick-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--space-2);
     }
 
-    .feature-card {
+    .quick-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      padding: 2rem;
+      padding: var(--space-2);
       border-radius: var(--radius-lg);
-      text-align: center;
-      transition: all 0.3s;
-      cursor: pointer;
-    }
-
-    .feature-card:hover:not(.disabled) {
-      transform: translateY(-5px);
-      border-color: var(--primary-color);
-      box-shadow: var(--shadow-md);
-    }
-
-    .feature-card.disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .feature-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      background: var(--bg-input);
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      box-shadow: var(--shadow-xs);
+      min-height: 150px;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-left: auto;
-      margin-right: auto;
+      flex-direction: column;
+      gap: 0.45rem;
     }
 
-    .feature-card h3 {
-      margin-bottom: 0.5rem;
+    .quick-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-color);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-title {
       color: var(--text-main);
+      font-size: 1rem;
+      font-weight: 800;
+      line-height: 1.3;
     }
 
-    .feature-card p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
+    .quick-card p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      line-height: 1.6;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @media (max-width: 1080px) {
+      .hero {
+        flex-direction: column;
+      }
+
+      .hero-stats {
+        width: 100%;
+      }
     }
 
     @media (max-width: 768px) {
-      .hero-section {
-        flex-direction: column;
-        text-align: center;
-        padding: 2rem;
+      .home-shell {
+        gap: var(--space-2);
       }
 
-      .hero-content {
-        margin-bottom: 2rem;
+      .hero {
+        padding: var(--space-2);
       }
 
-      .action-buttons {
-        justify-content: center;
+      .action-buttons .btn {
+        width: 100%;
+      }
+
+      .quick-grid {
+        grid-template-columns: 1fr;
       }
     }
   `]
@@ -277,8 +274,7 @@ export class HomeComponent implements OnInit {
         this.stats = data;
         this.isLoading = false;
       },
-      error: (err) => {
-        console.error('Failed to load stats', err);
+      error: () => {
         this.isLoading = false;
       }
     });

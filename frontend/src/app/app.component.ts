@@ -24,7 +24,9 @@ import { filter } from 'rxjs/operators';
       <div class="main-wrapper">
         <app-topbar></app-topbar>
         <main class="content-body">
-          <router-outlet></router-outlet>
+          <div class="content-inner">
+            <router-outlet></router-outlet>
+          </div>
         </main>
       </div>
     </div>
@@ -50,7 +52,7 @@ import { filter } from 'rxjs/operators';
     }
 
     .app-sidebar {
-      width: 260px;
+      width: 280px;
       flex-shrink: 0;
       z-index: 200;
       height: 100vh;
@@ -69,10 +71,19 @@ import { filter } from 'rxjs/operators';
     }
 
     .content-body {
-      padding: 2rem;
+      padding: var(--space-3);
       flex-grow: 1;
       overflow-y: auto;
       animation: fadeIn 0.3s ease-in-out;
+      background:
+        radial-gradient(circle at top left, rgba(var(--primary-rgb), 0.05), transparent 48%),
+        var(--bg-main);
+    }
+
+    .content-inner {
+      width: 100%;
+      max-width: 1480px;
+      margin: 0 auto;
     }
 
     .mobile-overlay {
@@ -106,7 +117,7 @@ import { filter } from 'rxjs/operators';
       }
 
       .content-body {
-        padding: 1rem;
+        padding: var(--space-2);
       }
     }
   `]
@@ -115,11 +126,18 @@ export class AppComponent {
   showLayout = true;
 
   constructor(public layout: LayoutService, private router: Router) {
+    this.updateLayoutByUrl(this.router.url || '');
+
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      // Hide layout if URL contains '/login'
-      this.showLayout = !event.urlAfterRedirects.includes('/login');
+      this.updateLayoutByUrl(event.urlAfterRedirects || '');
     });
+  }
+
+  private updateLayoutByUrl(url: string) {
+    const isPublicPage = url.includes('/login') || url.includes('/signup') || url.includes('/shop');
+    this.showLayout = !isPublicPage;
+    document.body.classList.toggle('admin-app', this.showLayout);
   }
 }

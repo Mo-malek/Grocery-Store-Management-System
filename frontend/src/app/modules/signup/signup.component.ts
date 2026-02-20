@@ -14,7 +14,12 @@ import { RegisterRequest } from '../../core/models/models';
     <div class="login-page">
       <div class="login-card">
         <div class="login-header">
-          <div class="logo">👤</div>
+          <div class="logo" aria-hidden="true">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8.2" r="3.2" stroke="currentColor" stroke-width="1.8"></circle>
+              <path d="M5.5 19.2C5.5 15.9 8.2 14 11.5 14H12.5C15.8 14 18.5 15.9 18.5 19.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+          </div>
           <h1>إنشاء حساب جديد</h1>
           <p>سجل حسابك ككاشير للبدء</p>
         </div>
@@ -88,22 +93,24 @@ import { RegisterRequest } from '../../core/models/models';
   `,
   styles: [`
     .login-page {
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      background: var(--bg-main);
+      background-image: var(--bg-gradient);
+      padding: 1rem;
     }
 
     .login-card {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
       padding: 2.5rem;
       border-radius: 1rem;
       width: 100%;
       max-width: 400px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-lg);
     }
 
     .login-header {
@@ -112,18 +119,31 @@ import { RegisterRequest } from '../../core/models/models';
     }
 
     .logo {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
+      width: 66px;
+      height: 66px;
+      margin: 0 auto 0.5rem;
+      border-radius: 18px;
+      background: rgba(var(--primary-rgb), 0.14);
+      border: 1px solid rgba(var(--primary-rgb), 0.28);
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-svg {
+      width: 34px;
+      height: 34px;
     }
 
     .login-header h1 {
       font-size: 1.5rem;
-      color: white;
+      color: var(--text-main);
       margin-bottom: 0.25rem;
     }
 
     .login-header p {
-      color: #94a3b8;
+      color: var(--text-muted);
       font-size: 0.9rem;
     }
 
@@ -134,32 +154,32 @@ import { RegisterRequest } from '../../core/models/models';
     .form-group label {
       display: block;
       margin-bottom: 0.5rem;
-      color: #cbd5e1;
+      color: var(--text-secondary);
       font-size: 0.9rem;
     }
 
     .form-control {
       width: 100%;
       padding: 0.75rem;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
       border-radius: 0.5rem;
-      color: white;
+      color: var(--text-main);
       transition: all 0.3s;
     }
 
     .form-control:focus {
       outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
     }
 
     .form-control.is-invalid {
-      border-color: #ef4444;
+      border-color: var(--danger-color);
     }
 
     .error-text {
-      color: #ef4444;
+      color: var(--danger-color);
       font-size: 0.75rem;
       margin-top: 0.25rem;
     }
@@ -174,12 +194,12 @@ import { RegisterRequest } from '../../core/models/models';
     .login-footer {
       margin-top: 2rem;
       text-align: center;
-      color: #cbd5e1;
+      color: var(--text-secondary);
       font-size: 0.9rem;
     }
 
     .login-footer a {
-      color: #3b82f6;
+      color: var(--primary-color);
       text-decoration: none;
       font-weight: bold;
     }

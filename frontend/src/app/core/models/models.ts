@@ -13,6 +13,11 @@ export interface Product {
     profitPercentage?: number;
     expiryDate?: string;
     manufacturer?: string;
+    imageUrl?: string;
+    description?: string;
+    discountPercentage?: number;
+    ratingAverage?: number;
+    ratingCount?: number;
 }
 
 export interface ReorderSuggestion {
@@ -142,6 +147,7 @@ export interface AuthResponse {
     token: string;
     username: string;
     role: string;
+    fullName?: string;
 }
 
 export interface Expense {
@@ -195,6 +201,42 @@ export interface BundleItem {
     quantity: number;
 }
 
+// Storefront (public) views
+export interface StorefrontProduct {
+    id: number;
+    name: string;
+    barcode: string;
+    category: string;
+    unit: string;
+    price: number;
+    stock: number;
+    lowStock: boolean;
+    imageUrl?: string;
+    description?: string;
+    ratingAverage?: number;
+    ratingCount?: number;
+    discountPercentage?: number;
+    manufacturer?: string;
+}
+
+export interface StorefrontBundleItem {
+    productId: number;
+    productName: string;
+    quantity: number;
+}
+
+export interface StorefrontBundle {
+    id: number;
+    name: string;
+    price: number;
+    items: StorefrontBundleItem[];
+}
+
+export interface CategoryCount {
+    category: string;
+    count: number;
+}
+
 export interface EmployeePerformance {
     userId: number;
     fullName: string;
@@ -213,3 +255,29 @@ export interface Page<T> {
     empty: boolean;
 }
 
+export enum DeliveryStatus {
+    PENDING = 'PENDING',
+    PREPARING = 'PREPARING',
+    OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
+    DELIVERED = 'DELIVERED',
+    CANCELLED = 'CANCELLED'
+}
+
+export interface DeliveryOrderItem {
+    productId: number | null;
+    productName: string | null;
+    quantity: number;
+    unitPrice: number;
+}
+
+export interface DeliveryOrder {
+    id: number;
+    customer: { username: string; fullName?: string } | null;
+    totalAmount: number;
+    deliveryFee: number;
+    address: string;
+    phone: string;
+    status: DeliveryStatus;
+    createdAt: string;
+    items: DeliveryOrderItem[];
+}

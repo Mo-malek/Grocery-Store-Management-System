@@ -16,13 +16,13 @@ public class ExpenseController {
     private final ExpenseService expenseService;
 
     @GetMapping
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public List<Expense> getAllExpenses() {
         return expenseService.getAllExpenses();
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Expense addExpense(@RequestBody Expense expense) {
         return expenseService.addExpense(expense);
     }

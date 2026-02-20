@@ -28,21 +28,21 @@ public class BundleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Bundle createBundle(@RequestBody Bundle bundle) {
         return bundleService.createBundle(bundle);
     }
 
     @GetMapping("/{id}/profit")
-    @PreAuthorize("hasRole('MANAGER')")
-    public BigDecimal getBundleProfit(@PathVariable Long id) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public BigDecimal getBundleProfit(@PathVariable("id") Long id) {
         // In a real app, you'd fetch the bundle first
         return BigDecimal.ZERO; // Simplified for now
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('MANAGER')")
-    public void deleteBundle(@PathVariable Long id) {
+    public void deleteBundle(@PathVariable("id") Long id) {
         bundleService.deleteBundle(id);
     }
 }

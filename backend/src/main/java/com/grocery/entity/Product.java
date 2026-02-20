@@ -61,6 +61,24 @@ public class Product {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "discount_percentage")
+    @Builder.Default
+    private BigDecimal discountPercentage = BigDecimal.ZERO;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "rating_average")
+    @Builder.Default
+    private BigDecimal ratingAverage = BigDecimal.ZERO;
+
+    @Column(name = "rating_count")
+    @Builder.Default
+    private Integer ratingCount = 0;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LayoutService } from '../../../core/services/layout.service';
@@ -11,28 +11,51 @@ import { LayoutService } from '../../../core/services/layout.service';
     <header class="topbar">
       <div class="start-section">
         <button type="button" class="icon-btn menu-btn" (click)="toggleSidebar()">
-          ☰
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7H20M4 12H20M4 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
         </button>
-        
+
         <div class="search-container">
-          <span class="icon">🔍</span>
-          <input type="text" placeholder="بحث عام (Ctrl+K)..." class="search-input">
+          <span class="icon" aria-hidden="true">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+              <path d="M20 20L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
+          </span>
+          <input type="text" placeholder="بحث سريع... (Ctrl+K)" class="search-input">
         </div>
       </div>
 
       <div class="actions">
         <div class="quick-actions">
-           <button type="button" class="btn-action" routerLink="/pos" title="بيع سريع">⚡ بيع سريع</button>
+          <a class="btn-action" routerLink="/pos" title="بيع سريع">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M13 3L5 13H11L10 21L19 10.5H13L13 3Z" fill="currentColor"></path>
+            </svg>
+            <span>بيع سريع</span>
+          </a>
         </div>
 
         <div class="divider"></div>
 
         <button type="button" class="icon-btn" title="الإشعارات">
-          🔔 <span class="badge">3</span>
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 17H9M17 17V11.5C17 8.46 14.99 5.86 12.2 5.11V4.5C12.2 3.67 11.53 3 10.7 3C9.87 3 9.2 3.67 9.2 4.5V5.11C6.41 5.86 4.4 8.46 4.4 11.5V17L3 18.4V19H18.4V18.4L17 17Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <span class="badge">3</span>
         </button>
-        
+
         <button type="button" class="theme-toggle" (click)="nextTheme()" [title]="'المظهر: ' + currentTheme.label">
-          <span class="theme-icon">{{ currentTheme.icon }}</span>
+          <span class="theme-icon" aria-hidden="true">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" *ngIf="currentTheme.key === 'theme-dark'">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 7 7 0 0 0 20 14.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+            </svg>
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" *ngIf="currentTheme.key === 'theme-light'">
+              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"></circle>
+              <path d="M12 2V4.2M12 19.8V22M4.2 4.2L5.8 5.8M18.2 18.2L19.8 19.8M2 12H4.2M19.8 12H22M4.2 19.8L5.8 18.2M18.2 5.8L19.8 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+          </span>
           <span class="theme-label">{{ currentTheme.label }}</span>
         </button>
 
@@ -48,49 +71,56 @@ import { LayoutService } from '../../../core/services/layout.service';
   `,
   styles: [`
     .topbar {
-      height: 70px;
+      min-height: 74px;
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 2rem;
+      padding: 0 var(--space-3);
       position: sticky;
       top: 0;
       z-index: 100;
       transition: all 0.3s ease;
+      box-shadow: var(--shadow-xs);
+      gap: var(--space-2);
     }
 
     .start-section {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.75rem;
+      min-width: 0;
+      flex: 1;
     }
 
     .menu-btn {
-      display: none; /* Hidden on desktop */
-      font-size: 1.5rem;
+      display: none;
+      width: 40px;
+      height: 40px;
     }
 
     .search-container {
       position: relative;
-      width: 300px;
+      width: min(520px, 100%);
+      min-width: 220px;
+      flex: 1;
     }
 
     .search-input {
       width: 100%;
-      padding: 0.6rem 2.5rem 0.6rem 1rem;
-      border-radius: 20px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-main);
+      min-height: 44px;
+      padding: 0.62rem 2.5rem 0.62rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid var(--input-border-color);
+      background: var(--bg-input);
       color: var(--text-main);
-      transition: all 0.3s;
+      transition: all 0.2s;
     }
 
     .search-input:focus {
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
-      width: 350px;
+      box-shadow: var(--focus-ring-shadow);
     }
 
     .search-container .icon {
@@ -98,38 +128,47 @@ import { LayoutService } from '../../../core/services/layout.service';
       right: 12px;
       top: 50%;
       transform: translateY(-50%);
-      opacity: 0.5;
+      color: var(--text-muted);
+      display: inline-flex;
     }
 
     .actions {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.65rem;
+      flex-shrink: 0;
     }
 
     .icon-btn {
       background: none;
-      border: none;
-      font-size: 1.2rem;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
       cursor: pointer;
       position: relative;
-      padding: 0.5rem;
-      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       transition: background 0.2s;
     }
 
     .icon-btn:hover {
-      background: var(--bg-input);
+      background: var(--surface-soft);
+      border-color: var(--primary-color);
     }
 
     .theme-toggle {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      padding: 0.35rem 0.8rem;
-      border-radius: 16px;
+      min-height: 40px;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
       border: 1px solid var(--border-color);
-      background: rgba(var(--primary-rgb), 0.08);
+      background: var(--bg-card);
       color: var(--text-main);
       font-weight: 600;
       cursor: pointer;
@@ -138,45 +177,49 @@ import { LayoutService } from '../../../core/services/layout.service';
 
     .theme-toggle:hover {
       border-color: var(--primary-color);
-      box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.18);
-      transform: translateY(-1px);
+      box-shadow: var(--shadow-xs);
+      background: var(--surface-soft);
     }
 
-    .theme-icon { font-size: 1rem; }
+    .icon-svg { width: 18px; height: 18px; display: block; }
+    .theme-icon { display: inline-flex; }
     .theme-label { font-size: 0.85rem; }
 
     .badge {
       position: absolute;
-      top: 0;
-      right: 0;
+      top: -4px;
+      right: -4px;
       background: var(--danger-color);
       color: white;
       font-size: 0.7rem;
-      width: 16px;
-      height: 16px;
+      width: 17px;
+      height: 17px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 2px solid var(--bg-card);
     }
 
     .profile {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.55rem;
       cursor: pointer;
-      padding: 0.25rem 0.5rem;
+      padding: 0.25rem 0.45rem;
       border-radius: var(--radius-md);
       transition: background 0.2s;
+      border: 1px solid transparent;
     }
 
     .profile:hover {
-      background: var(--bg-input);
+      background: var(--surface-soft);
+      border-color: var(--border-color);
     }
 
     .avatar {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       border: 2px solid var(--primary-color);
     }
@@ -185,7 +228,7 @@ import { LayoutService } from '../../../core/services/layout.service';
       display: flex;
       flex-direction: column;
       line-height: 1.2;
-      display: none; /* Hide info on smaller screens */
+      display: none;
     }
 
     @media (min-width: 768px) {
@@ -193,7 +236,7 @@ import { LayoutService } from '../../../core/services/layout.service';
     }
 
     .name {
-      font-weight: bold;
+      font-weight: 700;
       font-size: 0.9rem;
     }
 
@@ -203,47 +246,53 @@ import { LayoutService } from '../../../core/services/layout.service';
     }
 
     .btn-action {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-weight: bold;
+      background: var(--secondary-color);
+      color: var(--secondary-text);
+      border: 1px solid transparent;
+      min-height: 40px;
+      padding: 0.45rem 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 999px;
+      font-weight: 700;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      display: none; /* Hide on mobile */
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+      display: none;
+      text-decoration: none;
     }
 
     @media (min-width: 768px) {
-      .btn-action { display: block; }
+      .btn-action { display: inline-flex; }
     }
 
     .btn-action:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+      background: var(--secondary-hover);
+      box-shadow: var(--shadow-sm);
     }
-    
+
     .divider {
       width: 1px;
       height: 24px;
       background: var(--border-color);
-      margin: 0 0.5rem;
+      margin: 0 0.35rem;
     }
 
     @media (max-width: 768px) {
       .menu-btn { display: block; }
-      .search-container { display: none; } /* Hide search on mobile for space */
-      .topbar { padding: 0 1rem; }
+      .search-container { display: none; }
+      .topbar { padding: 0 var(--space-2); }
       .theme-label { display: none; }
+      .profile .info { display: none; }
+      .divider { display: none; }
     }
   `]
 })
 export class TopbarComponent implements OnInit {
   themes = [
-    { key: 'theme-dark', label: 'ليلي', icon: '🌙' },
-    { key: 'theme-light', label: 'نهاري', icon: '☀️' },
-    { key: 'theme-oasis', label: 'واحة', icon: '🏜️' },
-    { key: 'theme-aurora', label: 'أورورا', icon: '✨' },
+    { key: 'theme-light', label: 'فاتح' },
+    { key: 'theme-dark', label: 'داكن' },
   ];
 
   private readonly storageKey = 'app-theme';
@@ -265,9 +314,12 @@ export class TopbarComponent implements OnInit {
   }
 
   private applyTheme(key: string) {
-    this.themes.forEach(t => document.body.classList.remove(t.key));
-    document.body.classList.add(key);
-    localStorage.setItem(this.storageKey, key);
+    const normalized = this.themes.some(t => t.key === key) ? key : 'theme-light';
+    Array.from(document.body.classList)
+      .filter(cls => cls.startsWith('theme-'))
+      .forEach(cls => document.body.classList.remove(cls));
+    document.body.classList.add(normalized);
+    localStorage.setItem(this.storageKey, normalized);
   }
 
   toggleSidebar() {

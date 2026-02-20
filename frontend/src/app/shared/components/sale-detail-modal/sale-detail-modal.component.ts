@@ -354,7 +354,6 @@ export class SaleDetailModalComponent {
         fileType = 'image/png';
       } else {
         const imgWidth = 208;
-        const pageHeight = 295;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         const pdf = new jsPDF('p', 'mm', 'a4');
         const contentDataURL = canvas.toDataURL('image/png');
@@ -385,7 +384,6 @@ export class SaleDetailModalComponent {
         this.shareAsText();
       }
     } catch (error) {
-      console.error('Error sharing file:', error);
       this.toast.error('فشل إنشاء الملف');
     }
   }

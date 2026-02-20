@@ -7,12 +7,15 @@ import {
   Output,
   ViewChild
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
 import { BarcodeFormat, DecodeHintType } from '@zxing/library';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-barcode-scanner',
   standalone: true,
+  imports: [CommonModule],
   template: `
   <div class="overlay">
     <div class="card">
@@ -35,6 +38,7 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
       <div class="hint">
         <span>حرك الباركود داخل الإطار، وقرّب الكاميرا لمسافة 10-15 سم.</span>
         <span *ngIf="torchSupported">إذا كانت الإضاءة ضعيفة، فعّل الفلاش.</span>
+        <span class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</span>
       </div>
 
     </div>
@@ -44,7 +48,7 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
     .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.9);
+      background: rgba(17, 24, 39, 0.72);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -54,10 +58,12 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
     .card {
       width: 95%;
       max-width: 500px;
-      background: #111827;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
       padding: 1rem;
-      color: white;
+      color: var(--text-main);
+      box-shadow: var(--shadow-md);
     }
 
     .header-actions {
@@ -67,9 +73,9 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
     }
 
     .icon-btn {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: white;
+      background: var(--surface-soft);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
       font-size: 14px;
       cursor: pointer;
       border-radius: 8px;
@@ -78,8 +84,8 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
     }
 
     .icon-btn:hover {
-      background: rgba(255,255,255,0.12);
-      border-color: rgba(255,255,255,0.2);
+      background: var(--surface-soft-hover);
+      border-color: var(--primary-color);
     }
 
     .video-wrapper {
@@ -99,9 +105,9 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
       width: 70%;
       height: 120px;
       transform: translate(-50%, -50%);
-      border: 3px solid #22c55e;
+      border: 3px solid var(--success-color);
       border-radius: 12px;
-      box-shadow: 0 0 15px #22c55e;
+      box-shadow: 0 0 16px rgba(22, 163, 74, 0.45);
       pointer-events: none;
     }
 
@@ -114,12 +120,17 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 
     .hint {
       margin-top: 0.75rem;
-      color: rgba(255,255,255,0.8);
+      color: var(--text-secondary);
       font-size: 0.9rem;
       line-height: 1.4;
       display: flex;
       flex-direction: column;
       gap: 4px;
+    }
+
+    .error-msg {
+      color: var(--danger-color);
+      font-weight: 600;
     }
   `]
 })
@@ -137,8 +148,9 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
   private scanCooldown = 1500; // 1.5 sec anti double scan
   torchSupported = false;
   torchOn = false;
+  errorMessage = '';
 
-  constructor() {
+  constructor(private toast: ToastService) {
     // 🏷️ Setup hints for better quality and performance
     this.hints.set(DecodeHintType.POSSIBLE_FORMATS, [
       BarcodeFormat.QR_CODE,
@@ -160,6 +172,7 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
 
   async startCamera() {
     try {
+      this.errorMessage = '';
       this.controls = await this.codeReader.decodeFromConstraints(
         {
           video: {
@@ -187,7 +200,8 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
       // Give the stream a moment to attach, then detect torch capability
       setTimeout(() => this.detectTorchSupport(), 300);
     } catch (err) {
-      console.error('Scanner init error:', err);
+      this.errorMessage = 'Unable to access camera. Check browser permissions.';
+      this.toast.error('Unable to start camera scanner');
     }
   }
 
@@ -207,6 +221,7 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
     if (this.torchOn) {
       this.setTorch(false);
     }
+    this.errorMessage = '';
     this.controls?.stop();
     this.closeScanner.emit();
   }
@@ -236,8 +251,8 @@ export class BarcodeScannerComponent implements OnInit, OnDestroy {
     const track = this.getVideoTrack();
     if (!track || typeof track.applyConstraints !== 'function') return;
     this.torchOn = on;
-    track.applyConstraints({ advanced: [{ torch: on }] as any }).catch((err: any) => {
-      console.warn('Torch toggle failed', err);
+    track.applyConstraints({ advanced: [{ torch: on }] as any }).catch(() => {
+      this.errorMessage = 'Flash is not supported on this device/browser.';
       this.torchOn = false;
     });
   }

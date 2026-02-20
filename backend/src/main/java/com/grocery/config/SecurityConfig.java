@@ -38,7 +38,23 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // Public static resources (Angular build + product images)
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/favicon.ico",
+                                "/assets/**",
+                                "/placeholder.svg",
+                                "/*.js",
+                                "/*.css",
+                                "/*.map",
+                                "/browser/**")
+                        .permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/storefront/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/pos/**").hasAnyRole("ADMIN", "MANAGER", "CASHIER")
+                        .requestMatchers("/api/orders/**").hasAnyRole("ADMIN", "MANAGER", "CASHIER", "CUSTOMER")
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
