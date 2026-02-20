@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
-import { ReorderSuggestion, PriceOptimizationSuggestion } from '../../core/models/models';
+import { PriceOptimizationSuggestion, ReorderSuggestion } from '../../core/models/models';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-procurement',
@@ -10,66 +11,63 @@ import { ReorderSuggestion, PriceOptimizationSuggestion } from '../../core/model
   template: `
     <div class="container">
       <div class="header">
-        <h1>🛒 التموين والذكاء التجاري (Procurement & BI)</h1>
-        <p class="subtitle">نظام ذكي لتحسين المخزون وزيادة المبيعات</p>
+        <h1>Procurement Intelligence</h1>
+        <p class="subtitle">Smart suggestions for restocking and pricing.</p>
       </div>
 
       <div class="tabs mb-4">
-        <button class="tab-btn" [class.active]="activeTab === 'reorder'" (click)="activeTab = 'reorder'">
-          📦 اقتراحات إعادة الطلب
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'price'" (click)="activeTab = 'price'">
-          💰 تحسين الأسعار والخصومات
-        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'reorder'" (click)="activeTab = 'reorder'">Reorder Suggestions</button>
+        <button class="tab-btn" [class.active]="activeTab === 'price'" (click)="activeTab = 'price'">Price Optimization</button>
       </div>
 
-      <!-- Reorder Tab -->
+      <p class="error" *ngIf="loadError">{{ loadError }}</p>
+
       <div *ngIf="activeTab === 'reorder'">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <div class="card stat-card">
-            <span class="stat-label">منتجات تحتاج طلب فوراً</span>
+            <span class="stat-label">Critical items</span>
             <span class="stat-value text-danger">{{ criticalCount }}</span>
           </div>
           <div class="card stat-card">
-            <span class="stat-label">منتجات ستنفذ خلال أسبوع</span>
+            <span class="stat-label">Warning items</span>
             <span class="stat-value text-warning">{{ warningCount }}</span>
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" *ngIf="isLoadingReorder">Loading reorder suggestions...</div>
+
+        <div class="card" *ngIf="!isLoadingReorder">
           <div class="table-responsive">
             <table>
               <thead>
                 <tr>
-                  <th>المنتج</th>
-                  <th>المخزون الحالي</th>
-                  <th>معدل البيع اليومي</th>
-                  <th>الأيام المتبقية</th>
-                  <th>اقتراح الطلب</th>
-                  <th>الحالة</th>
+                  <th>Product</th>
+                  <th>Current Stock</th>
+                  <th>Daily Velocity</th>
+                  <th>Days Left</th>
+                  <th>Suggested Qty</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let s of suggestions">
                   <td>{{ s.productName }}</td>
                   <td>{{ s.currentStock }} {{ s.unit }}</td>
-                  <td>{{ s.dailyVelocity }} / يوم</td>
+                  <td>{{ s.dailyVelocity }} / day</td>
                   <td>
                     <span [class.text-danger]="(s.daysUntilOut || 0) < 3" [class.text-warning]="(s.daysUntilOut || 0) < 7">
-                      {{ s.daysUntilOut !== null ? s.daysUntilOut + ' يوم' : 'مستقر' }}
+                      {{ s.daysUntilOut !== null ? s.daysUntilOut + ' days' : 'Stable' }}
                     </span>
                   </td>
                   <td class="suggested-qty">
                     {{ s.suggestedReorderQuantity > 0 ? '+ ' + s.suggestedReorderQuantity + ' ' + s.unit : '-' }}
                   </td>
                   <td>
-                    <span class="badge" [ngClass]="getStatusClass(s)">
-                      {{ getStatusLabel(s) }}
-                    </span>
+                    <span class="badge" [ngClass]="getStatusClass(s)">{{ getStatusLabel(s) }}</span>
                   </td>
                 </tr>
                 <tr *ngIf="!suggestions.length">
-                  <td colspan="6" class="text-center p-8 text-muted">لا توجد اقتراحات حالية. المخزون مستقر بناءً على المبيعات.</td>
+                  <td colspan="6" class="text-center p-8 text-muted">No reorder suggestions at this time.</td>
                 </tr>
               </tbody>
             </table>
@@ -77,31 +75,32 @@ import { ReorderSuggestion, PriceOptimizationSuggestion } from '../../core/model
         </div>
       </div>
 
-      <!-- Price Optimization Tab -->
       <div *ngIf="activeTab === 'price'">
-        <div class="grid grid-cols-1 gap-4 mb-4">
+        <div class="card" *ngIf="isLoadingPrice">Loading price suggestions...</div>
+
+        <div class="grid grid-cols-1 gap-4 mb-4" *ngIf="!isLoadingPrice">
           <div class="card p-4 flex items-center justify-between" *ngFor="let p of priceSuggestions">
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-1">
                 <span class="badge" [class.badge-danger]="p.reason === 'EXPIRING_SOON'" [class.badge-warning]="p.reason === 'SLOW_MOVING'">
-                  {{ p.reason === 'EXPIRING_SOON' ? 'خطر انتهاء الصلاحية' : 'منتج راكد' }}
+                  {{ p.reason === 'EXPIRING_SOON' ? 'Expiring Soon' : 'Slow Moving' }}
                 </span>
                 <h3 class="font-bold">{{ p.productName }}</h3>
               </div>
               <p class="text-sm text-muted">{{ p.message }}</p>
               <div class="mt-2 text-xs flex gap-4">
-                <span>المخزون: <strong>{{ p.currentStock }}</strong></span>
-                <span>السعر الحالي: <strong>{{ p.currentPrice }} ج.م</strong></span>
+                <span>Stock: <strong>{{ p.currentStock }}</strong></span>
+                <span>Current: <strong>{{ p.currentPrice }} EGP</strong></span>
               </div>
             </div>
             <div class="text-left">
-              <div class="text-xs text-muted mb-1">السعر المقترح</div>
-              <div class="text-xl font-bold text-success">{{ p.suggestedPrice }} ج.م</div>
-              <button class="btn btn-sm btn-outline mt-2" (click)="applyPrice(p)">تطبيق السعر</button>
+              <div class="text-xs text-muted mb-1">Suggested Price</div>
+              <div class="text-xl font-bold text-success">{{ p.suggestedPrice }} EGP</div>
+              <button class="btn btn-sm btn-outline mt-2" (click)="applyPrice(p)">Apply Price</button>
             </div>
           </div>
           <div class="empty-state card" *ngIf="!priceSuggestions.length">
-            لا توجد اقتراحات حالياً. جميع المنتجات تتحرك بشكل جيد.
+            No pricing suggestions currently.
           </div>
         </div>
       </div>
@@ -110,56 +109,37 @@ import { ReorderSuggestion, PriceOptimizationSuggestion } from '../../core/model
   styles: [`
     .header { margin-bottom: 2rem; }
     .subtitle { color: var(--text-muted); font-size: 0.9rem; }
-    .stat-card {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      padding: 1.5rem;
+    .error {
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      background: var(--danger-soft);
+      color: var(--danger-color);
+      border-radius: 10px;
+      padding: 0.75rem 0.9rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
     }
+    .stat-card { display: flex; flex-direction: column; gap: 0.5rem; padding: 1.5rem; }
     .stat-label { font-size: 0.85rem; color: var(--text-muted); }
     .stat-value { font-size: 2rem; font-weight: bold; }
-    
-    .suggested-qty {
-      font-weight: bold;
-      color: var(--success-color);
-    }
-    
-    .badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-    }
-    .badge-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-    .badge-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-    .badge-success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
 
-    .text-danger { color: #ef4444 !important; }
-    .text-warning { color: #f59e0b !important; }
-    .text-success { color: #10b981; }
+    .suggested-qty { font-weight: bold; color: var(--success-color); }
 
-    .tabs {
-      display: flex;
-      gap: 1rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .tab-btn {
-      background: none;
-      border: none;
-      padding: 1rem;
-      cursor: pointer;
-      color: var(--text-muted);
-      border-bottom: 2px solid transparent;
-      transition: all 0.3s;
-    }
-    .tab-btn.active {
-      color: var(--primary-color);
-      border-bottom-color: var(--primary-color);
-      font-weight: bold;
-    }
+    .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; }
+    .badge-danger { background: var(--danger-soft); color: var(--danger-color); }
+    .badge-warning { background: var(--warning-soft); color: var(--warning-color); }
+    .badge-success { background: var(--success-soft); color: var(--success-color); }
+
+    .text-danger { color: var(--danger-color) !important; }
+    .text-warning { color: var(--warning-color) !important; }
+    .text-success { color: var(--success-color); }
+
+    .tabs { display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); }
+    .tab-btn { background: none; border: none; padding: 1rem; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.3s; }
+    .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: bold; }
     .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
     .btn-outline { background: none; border: 1px solid var(--primary-color); color: var(--primary-color); }
-    .btn-outline:hover { background: var(--primary-color); color: white; }
-    
+    .btn-outline:hover { background: rgba(var(--primary-rgb), 0.12); color: var(--primary-color); }
+
     .flex { display: flex; }
     .items-center { align-items: center; }
     .justify-between { justify-content: space-between; }
@@ -181,17 +161,43 @@ export class ProcurementComponent implements OnInit {
   criticalCount = 0;
   warningCount = 0;
   activeTab: 'reorder' | 'price' = 'reorder';
+  isLoadingReorder = false;
+  isLoadingPrice = false;
+  loadError = '';
 
-  constructor(private api: ApiService) { }
+  constructor(private api: ApiService, private toast: ToastService) { }
 
   ngOnInit() {
-    this.api.getReorderSuggestions().subscribe(data => {
-      this.suggestions = data;
-      this.calculateStats();
+    this.isLoadingReorder = true;
+    this.isLoadingPrice = true;
+    this.loadError = '';
+
+    this.api.getReorderSuggestions().subscribe({
+      next: data => {
+        this.suggestions = data || [];
+        this.calculateStats();
+        this.isLoadingReorder = false;
+      },
+      error: () => {
+        this.suggestions = [];
+        this.calculateStats();
+        this.isLoadingReorder = false;
+        this.loadError = 'Failed to load reorder suggestions.';
+        this.toast.error('Failed to load reorder suggestions');
+      }
     });
 
-    this.api.getPriceOptimizationSuggestions().subscribe(data => {
-      this.priceSuggestions = data;
+    this.api.getPriceOptimizationSuggestions().subscribe({
+      next: data => {
+        this.priceSuggestions = data || [];
+        this.isLoadingPrice = false;
+      },
+      error: () => {
+        this.priceSuggestions = [];
+        this.isLoadingPrice = false;
+        this.loadError = this.loadError || 'Failed to load pricing suggestions.';
+        this.toast.error('Failed to load pricing suggestions');
+      }
     });
   }
 
@@ -207,19 +213,29 @@ export class ProcurementComponent implements OnInit {
   }
 
   getStatusLabel(s: ReorderSuggestion) {
-    if ((s.daysUntilOut || 0) < 1) return 'نفذ';
-    if ((s.daysUntilOut || 0) < 3) return 'حرج جداً';
-    if ((s.daysUntilOut || 0) < 7) return 'تحذير';
-    return 'مستقر نسبياً';
+    if ((s.daysUntilOut || 0) < 1) return 'Out';
+    if ((s.daysUntilOut || 0) < 3) return 'Critical';
+    if ((s.daysUntilOut || 0) < 7) return 'Warning';
+    return 'Stable';
   }
 
   applyPrice(suggestion: PriceOptimizationSuggestion) {
-    this.api.getProduct(suggestion.productId).subscribe(product => {
-      product.sellingPrice = suggestion.suggestedPrice;
-      this.api.updateProduct(product.id!, product).subscribe(() => {
-        // Remove applied suggestion
-        this.priceSuggestions = this.priceSuggestions.filter(p => p.productId !== suggestion.productId);
-      });
+    this.api.getProduct(suggestion.productId).subscribe({
+      next: product => {
+        product.sellingPrice = suggestion.suggestedPrice;
+        this.api.updateProduct(product.id!, product).subscribe({
+          next: () => {
+            this.priceSuggestions = this.priceSuggestions.filter(p => p.productId !== suggestion.productId);
+            this.toast.success('Price updated successfully');
+          },
+          error: () => {
+            this.toast.error('Failed to update price');
+          }
+        });
+      },
+      error: () => {
+        this.toast.error('Failed to load product for price update');
+      }
     });
   }
 }

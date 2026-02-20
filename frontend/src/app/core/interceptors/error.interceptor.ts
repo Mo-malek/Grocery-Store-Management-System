@@ -24,9 +24,10 @@ export class ErrorInterceptor implements HttpInterceptor {
                             ? 'جلسة العمل انتهت أو البيانات غير صحيحة'
                             : 'ليس لديك صلاحية للقيام بهذا الإجراء';
 
-                        // Auto-logout
-                        const authService = this.injector.get(AuthService);
-                        authService.logout();
+                        if (error.status === 401) {
+                            const authService = this.injector.get(AuthService);
+                            authService.logout();
+                        }
                     } else if (error.status === 429) {
                         errorMessage = 'تم تجاوز حد الطلبات. يرجى الانتظار دقيقة.';
                     } else if (error.error && error.error.message) {

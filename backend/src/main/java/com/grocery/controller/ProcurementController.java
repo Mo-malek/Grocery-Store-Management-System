@@ -21,13 +21,13 @@ public class ProcurementController {
     private final ProcurementService procurementService;
 
     @GetMapping("/suggestions")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public List<ReorderSuggestion> getReorderSuggestions() {
         return procurementService.getReorderSuggestions();
     }
 
     @GetMapping("/optimizations")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public List<PriceOptimizationSuggestion> getPriceOptimizationSuggestions() {
         return procurementService.getPriceOptimizationSuggestions();
     }

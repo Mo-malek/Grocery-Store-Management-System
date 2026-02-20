@@ -6,6 +6,7 @@ import { SaleView } from '../../core/models/models';
 import { SaleDetailModalComponent } from '../../shared/components/sale-detail-modal/sale-detail-modal.component';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { BarChartComponent } from '../../shared/components/chart/bar-chart.component';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-history',
@@ -50,7 +51,7 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
 
       <div class="table-card">
         <app-spinner *ngIf="isLoading"></app-spinner>
-        
+        <div class="table-responsive">
         <table class="table" *ngIf="!isLoading">
           <thead>
             <tr>
@@ -82,6 +83,7 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
             </tr>
           </tbody>
         </table>
+        </div>
 
         <!-- Pagination Controls -->
         <div class="pagination" *ngIf="totalPages > 1">
@@ -142,7 +144,7 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
 
     .stat-card .icon {
       font-size: 2rem;
-      background: rgba(37, 99, 235, 0.1);
+      background: var(--info-soft);
       width: 50px;
       height: 50px;
       display: flex;
@@ -170,6 +172,7 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
       overflow: hidden;
       min-height: 200px;
       position: relative;
+      box-shadow: var(--shadow-sm);
     }
 
     .table {
@@ -184,9 +187,9 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
     }
 
     .table th {
-      background: rgba(255,255,255,0.02);
-      color: var(--text-muted);
-      font-weight: 500;
+      background: var(--surface-soft);
+      color: var(--text-secondary);
+      font-weight: 700;
       font-size: 0.9rem;
     }
 
@@ -202,7 +205,7 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
     }
 
     .badge-primary {
-      background: rgba(37, 99, 235, 0.1);
+      background: var(--info-soft);
       color: var(--primary-color);
     }
 
@@ -272,13 +275,17 @@ export class HistoryComponent implements OnInit {
 
   paymentMethodData: { label: string; value: number }[] = [];
 
-  constructor(private api: ApiService) { }
+  constructor(private api: ApiService, private toast: ToastService) { }
 
   ngOnInit() {
     this.loadSales();
   }
 
   search() {
+    if (this.dateFrom > this.dateTo) {
+      this.toast.warning('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
+      return;
+    }
     this.currentPage = 0;
     this.loadSales();
   }
@@ -293,8 +300,8 @@ export class HistoryComponent implements OnInit {
         this.calculateTotal();
         this.isLoading = false;
       },
-      error: (err) => {
-        console.error('Failed to load sales', err);
+      error: () => {
+        this.toast.error('فشل تحميل سجل المبيعات');
         this.isLoading = false;
       }
     });

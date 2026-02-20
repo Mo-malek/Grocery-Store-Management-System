@@ -13,92 +13,98 @@ import { ToastService } from '../../core/services/toast.service';
   template: `
     <div class="container">
       <div class="header">
-        <h1>👥 إدارة العملاء</h1>
-        <button class="btn btn-primary" (click)="openModal()">+ عميل جديد</button>
+        <h1>Customers</h1>
+        <button class="btn btn-primary" (click)="openModal()">Add Customer</button>
       </div>
 
       <div class="alert-bar" *ngIf="stagnantCustomers.length">
-        <div class="alert-icon">⚠️</div>
         <div class="alert-content">
-          <strong>تنبيه العملاء الغائبين:</strong> 
-          يوجد {{ stagnantCustomers.length }} عملاء دائمين لم يزوروا المتجر منذ 30 يوم. 
-          <button class="btn btn-sm btn-link" (click)="filterStagnant()">عرض الكل</button>
+          <strong>Inactive customers:</strong>
+          {{ stagnantCustomers.length }} customers did not visit for 30+ days.
+          <button class="btn btn-sm btn-link" (click)="filterStagnant()">Show only inactive</button>
         </div>
       </div>
 
       <div class="search-bar">
-        <input type="text" [(ngModel)]="searchTerm" (input)="search()" class="form-control" placeholder="بحث بالاسم أو رقم الهاتف...">
+        <input type="text" [(ngModel)]="searchTerm" (input)="search()" class="form-control" placeholder="Search by name or phone...">
       </div>
 
-      <div class="card">
-        <table>
-          <thead>
-            <tr>
-              <th>الاسم</th>
-              <th>رقم الهاتف</th>
-              <th>إجمالي المشتريات</th>
-              <th>نقاط الولاء</th>
-              <th>تاريخ التسجيل</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let customer of customers">
-              <td>
-                <span class="truncate cell-name" [title]="customer.name">{{ customer.name }}</span>
-              </td>
-              <td>
-                <span class="truncate" [title]="customer.phone">{{ customer.phone }}</span>
-              </td>
-              <td>{{ customer.totalPurchases | number:'1.2-2' }} ج.م</td>
-              <td>
-                <div class="stat-pill">
-                  <span class="stat-label">زيارة:</span>
-                  <span class="stat-value">{{ customer.visitCount || 0 }}</span>
-                </div>
-                <div class="stat-pill">
-                  <span class="stat-label">متوسط:</span>
-                  <span class="stat-value">{{ customer.avgTicketSize || 0 | number:'1.1-1' }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="badge points">{{ customer.loyaltyPoints }} نقطة</span>
-              </td>
-              <td class="last-visit">
-                <span *ngIf="customer.lastVisitAt">{{ customer.lastVisitAt | date:'shortDate' }}</span>
-                <span *ngIf="!customer.lastVisitAt" class="text-muted">لم يزر بعد</span>
-              </td>
-              <td>
-                <button class="btn-icon" (click)="editCustomer(customer)">✏️</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        
+      <app-modal *ngIf="isModalOpen" [title]="editingCustomer ? 'Edit Customer' : 'Add Customer'" (onClose)="closeModal()">
+        <form (ngSubmit)="saveCustomer()">
+          <div class="form-group">
+            <label>Customer Name</label>
+            <input [(ngModel)]="currentCustomer.name" name="name" class="form-control" required minlength="2">
+          </div>
+
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input [(ngModel)]="currentCustomer.phone" name="phone" class="form-control" required pattern="^[0-9+()\-\s]{7,20}$">
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">{{ isSubmitting ? 'Saving...' : 'Save' }}</button>
+          </div>
+        </form>
+      </app-modal>
+
+      <div class="card" *ngIf="!isLoading; else loadingTpl">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Total Purchases</th>
+                <th>Loyalty Points</th>
+                <th>Last Visit</th>
+                <th>Stats</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let customer of customers">
+                <td>
+                  <span class="truncate cell-name" [title]="customer.name">{{ customer.name }}</span>
+                </td>
+                <td>
+                  <span class="truncate" [title]="customer.phone">{{ customer.phone }}</span>
+                </td>
+                <td>{{ customer.totalPurchases | number:'1.2-2' }} EGP</td>
+                <td><span class="badge points">{{ customer.loyaltyPoints || 0 }}</span></td>
+                <td class="last-visit">
+                  <span *ngIf="customer.lastVisitAt">{{ customer.lastVisitAt | date:'shortDate' }}</span>
+                  <span *ngIf="!customer.lastVisitAt" class="text-muted">No visits yet</span>
+                </td>
+                <td>
+                  <div class="stat-pill">
+                    <span class="stat-label">Visits:</span>
+                    <span class="stat-value">{{ customer.visitCount || 0 }}</span>
+                  </div>
+                  <div class="stat-pill">
+                    <span class="stat-label">Avg:</span>
+                    <span class="stat-value">{{ customer.avgTicketSize || 0 | number:'1.1-1' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <button class="btn-icon" (click)="editCustomer(customer)">Edit</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <div class="empty-state" *ngIf="!customers.length">
-            <p>لا يوجد عملاء.</p>
+            <p>No customers found.</p>
         </div>
       </div>
+
+      <ng-template #loadingTpl>
+        <div class="card empty-state">
+          <p>Loading customers...</p>
+        </div>
+      </ng-template>
     </div>
-
-    <app-modal *ngIf="isModalOpen" [title]="editingCustomer ? 'تعديل بيانات عميل' : 'إضافة عميل جديد'" (onClose)="closeModal()">
-      <form (ngSubmit)="saveCustomer()">
-        <div class="form-group">
-          <label>اسم العميل</label>
-          <input [(ngModel)]="currentCustomer.name" name="name" class="form-control" required>
-        </div>
-        
-        <div class="form-group">
-          <label>رقم الهاتف</label>
-          <input [(ngModel)]="currentCustomer.phone" name="phone" class="form-control" required>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn" (click)="closeModal()">إلغاء</button>
-          <button type="submit" class="btn btn-primary" [disabled]="!currentCustomer.name || !currentCustomer.phone">حفظ</button>
-        </div>
-      </form>
-    </app-modal>
   `,
   styles: [`
     .header {
@@ -106,83 +112,92 @@ import { ToastService } from '../../core/services/toast.service';
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
-    
+
     .points {
       background-color: var(--secondary-color);
-      color: white;
+      color: var(--secondary-text);
       padding: 0.25rem 0.5rem;
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-pill);
       font-size: 0.8rem;
+      border: 1px solid var(--secondary-color);
     }
-    
+
     .btn-icon {
       background: none;
-      border: none;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
       cursor: pointer;
+      color: var(--text-main);
+      min-height: 32px;
+      padding: 0 0.6rem;
     }
-    
+
     .empty-state {
       text-align: center;
       padding: 2rem;
       color: var(--text-muted);
     }
-    
+
     .form-group {
       margin-bottom: 1rem;
     }
-    
+
     label {
       display: block;
       margin-bottom: 0.5rem;
       color: var(--text-muted);
     }
-    
+
     .modal-actions {
       display: flex;
       justify-content: flex-end;
       gap: 1rem;
       margin-top: 1.5rem;
     }
-    
+
     .stat-pill {
       display: inline-flex;
       background: var(--bg-input);
-      border-radius: 4px;
+      border-radius: 6px;
       padding: 0.1rem 0.4rem;
       font-size: 0.75rem;
-      margin-left: 0.4rem;
+      margin-inline-end: 0.4rem;
       border: 1px solid var(--border-color);
     }
-    .stat-label { color: var(--text-muted); margin-left: 0.2rem; }
+    .stat-label { color: var(--text-muted); margin-inline-end: 0.2rem; }
     .stat-value { font-weight: bold; color: var(--primary-color); }
-    
+
     .last-visit { font-size: 0.8rem; }
-    
-    input.ng-invalid.ng-touched { border-color: var(--danger-color); }
-    .error-msg { color: var(--danger-color); font-size: 0.75rem; margin-top: 0.25rem; }
-    
+
     .alert-bar {
       background: rgba(var(--secondary-rgb), 0.1);
-      border: 1px solid var(--secondary-color);
+      border: 1px solid rgba(var(--secondary-rgb), 0.32);
       padding: 1rem;
       border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
       margin-bottom: 1.5rem;
-      color: var(--secondary-color);
+      color: var(--text-main);
     }
-    .alert-icon { font-size: 1.5rem; }
-    .btn-link { color: var(--secondary-color); text-decoration: underline; background: none; border: none; cursor: pointer; }
+
+    .btn-link {
+      color: var(--secondary-color);
+      text-decoration: underline;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
   `]
 })
 export class CustomersComponent implements OnInit {
   customers: Customer[] = [];
   stagnantCustomers: Customer[] = [];
-  searchTerm: string = '';
+  searchTerm = '';
   isModalOpen = false;
   editingCustomer = false;
+  isLoading = false;
+  isSubmitting = false;
 
   defaultCustomer: Customer = { name: '', phone: '' };
   currentCustomer: Customer = { ...this.defaultCustomer };
@@ -198,22 +213,28 @@ export class CustomersComponent implements OnInit {
   }
 
   loadCustomers() {
+    this.isLoading = true;
     this.api.getCustomers(this.searchTerm).subscribe({
       next: (data) => {
-        this.customers = data;
+        this.customers = data || [];
+        this.isLoading = false;
       },
       error: () => {
-        this.toast.error('فشل تحميل العملاء');
+        this.toast.error('Failed to load customers');
+        this.isLoading = false;
       }
     });
   }
 
   loadStagnantCustomers() {
-    this.api.getStagnantCustomers().subscribe(data => this.stagnantCustomers = data);
+    this.api.getStagnantCustomers().subscribe({
+      next: data => this.stagnantCustomers = data || [],
+      error: () => this.stagnantCustomers = []
+    });
   }
 
   filterStagnant() {
-    this.customers = this.stagnantCustomers;
+    this.customers = [...this.stagnantCustomers];
   }
 
   search() {
@@ -233,29 +254,54 @@ export class CustomersComponent implements OnInit {
   }
 
   closeModal() {
+    if (this.isSubmitting) {
+      return;
+    }
     this.isModalOpen = false;
   }
 
   saveCustomer() {
-    if (!this.currentCustomer.name || !this.currentCustomer.phone) {
-      this.toast.warning('يرجى إدخال الاسم ورقم الهاتف');
+    if (!this.currentCustomer.name?.trim() || !this.currentCustomer.phone?.trim()) {
+      this.toast.warning('Name and phone are required');
+      return;
+    }
+    const payload: Customer = {
+      ...this.currentCustomer,
+      name: this.currentCustomer.name.trim(),
+      phone: this.currentCustomer.phone.trim()
+    };
+
+    this.isSubmitting = true;
+
+    if (payload.id) {
+      this.api.updateCustomer(payload.id, payload).subscribe({
+        next: () => {
+          this.toast.success('Customer updated successfully');
+          this.loadCustomers();
+          this.loadStagnantCustomers();
+          this.closeModal();
+          this.isSubmitting = false;
+        },
+        error: () => {
+          this.toast.error('Failed to update customer');
+          this.isSubmitting = false;
+        }
+      });
       return;
     }
 
-    if (this.currentCustomer.id) {
-      this.toast.info('تعديل العملاء غير متاح حالياً');
-      this.closeModal();
-    } else {
-      this.api.createCustomer(this.currentCustomer).subscribe({
-        next: () => {
-          this.toast.success('تم إضافة العميل بنجاح');
-          this.loadCustomers();
-          this.closeModal();
-        },
-        error: () => {
-          this.toast.error('حدث خطأ أثناء إضافة العميل');
-        }
-      });
-    }
+    this.api.createCustomer(payload).subscribe({
+      next: () => {
+        this.toast.success('Customer added successfully');
+        this.loadCustomers();
+        this.loadStagnantCustomers();
+        this.closeModal();
+        this.isSubmitting = false;
+      },
+      error: () => {
+        this.toast.error('Failed to add customer');
+        this.isSubmitting = false;
+      }
+    });
   }
 }

@@ -55,7 +55,7 @@ public class AuthController {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
-                .role("ROLE_CASHIER")
+                .role("ROLE_CUSTOMER")
                 .active(true)
                 .build();
 
@@ -69,6 +69,9 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Initial user already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // Keep roles consistent across the app (MANAGER / CASHIER / CUSTOMER).
+        user.setRole("ROLE_MANAGER");
+        user.setActive(true);
         userRepository.save(user);
         return ResponseEntity.ok("Initial user created");
     }

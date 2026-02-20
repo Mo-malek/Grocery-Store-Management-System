@@ -310,24 +310,24 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
       padding: 3rem;
       color: var(--text-muted);
     }
-    .text-danger { color: #ef4444; font-weight: bold; }
+    .text-danger { color: var(--danger-color); font-weight: bold; }
 
     /* Audit Section Styles */
     .header-actions { display: flex; gap: 0.5rem; }
-    .audit-card { background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); margin-bottom: 2rem; padding: 1.5rem; }
+    .audit-card { background: var(--danger-soft); border: 1px solid rgba(220, 38, 38, 0.3); margin-bottom: 2rem; padding: 1.5rem; }
     .audit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-    .audit-header h3 { margin: 0; color: #f87171; font-size: 1.1rem; }
+    .audit-header h3 { margin: 0; color: var(--danger-color); font-size: 1.1rem; }
     .audit-desc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem; }
     .audit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
     .audit-item-box { background: var(--bg-card); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem; position: relative; }
     .audit-name { font-weight: bold; }
     .audit-stats { display: flex; gap: 1rem; font-size: 0.85rem; color: var(--text-muted); }
-    .audit-stats .loss { color: #f87171; }
-    .audit-stats .rate { font-weight: bold; color: #ef4444; }
+    .audit-stats .loss { color: var(--danger-color); }
+    .audit-stats .rate { font-weight: bold; color: var(--danger-color); }
     .btn-close { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; line-height: 1; }
     .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
-    .btn-outline-danger { background: none; border: 1px solid #ef4444; color: #ef4444; }
-    .btn-outline-danger:hover { background: #ef4444; color: white; }
+    .btn-outline-danger { background: none; border: 1px solid var(--danger-color); color: var(--danger-color); }
+    .btn-outline-danger:hover { background: var(--danger-color); color: white; }
 
     input.ng-invalid.ng-touched { border-color: var(--danger-color); }
     .error-msg { color: var(--danger-color); font-size: 0.75rem; margin-top: 0.25rem; }
@@ -426,7 +426,7 @@ export class InventoryComponent implements OnInit {
         this.totalElements = page.totalElements;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: () => {
         this.toast.error('فشل تحميل المنتجات');
         this.isLoading = false;
       }

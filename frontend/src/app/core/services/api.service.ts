@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Product, Customer, SaleRequest, SaleView, DashboardStats, Expense, ReorderSuggestion, PriceOptimizationSuggestion, RecommendationSuggestion, Bundle, Page } from '../models/models';
+import { Product, Customer, SaleRequest, SaleView, DashboardStats, Expense, ReorderSuggestion, PriceOptimizationSuggestion, RecommendationSuggestion, Bundle, Page, StorefrontProduct, StorefrontBundle, CategoryCount, DeliveryOrder, DeliveryStatus } from '../models/models';
 
 @Injectable({
     providedIn: 'root'
@@ -62,6 +62,10 @@ export class ApiService {
 
     createCustomer(customer: Customer): Observable<Customer> {
         return this.http.post<Customer>(`${this.apiUrl}/customers`, customer);
+    }
+
+    updateCustomer(id: number, customer: Customer): Observable<Customer> {
+        return this.http.put<Customer>(`${this.apiUrl}/customers/${id}`, customer);
     }
 
     getTopCustomers(): Observable<Customer[]> {
@@ -140,5 +144,89 @@ export class ApiService {
 
     deleteBundle(id: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/bundles/${id}`);
+    }
+
+    // Storefront (public)
+    getStorefrontProducts(opts: { search?: string; category?: string; page?: number; size?: number; inStockOnly?: boolean; minPrice?: number; maxPrice?: number; sort?: 'priceAsc' | 'priceDesc' | 'newest' } = {}): Observable<Page<StorefrontProduct>> {
+        let params = new HttpParams()
+            .set('page', (opts.page ?? 0).toString())
+            .set('size', (opts.size ?? 20).toString())
+            .set('inStockOnly', (opts.inStockOnly ?? true).toString());
+        if (opts.search) params = params.set('search', opts.search);
+        if (opts.category) params = params.set('category', opts.category);
+        if (opts.minPrice != null) params = params.set('minPrice', opts.minPrice);
+        if (opts.maxPrice != null) params = params.set('maxPrice', opts.maxPrice);
+        if (opts.sort) params = params.set('sort', opts.sort);
+        return this.http.get<Page<StorefrontProduct>>(`${this.apiUrl}/storefront/products`, { params });
+    }
+
+    getStorefrontCategories(): Observable<string[]> {
+        return this.http.get<string[]>(`${this.apiUrl}/storefront/categories`);
+    }
+
+    getStorefrontCategoriesCount(): Observable<CategoryCount[]> {
+        return this.http.get<CategoryCount[]>(`${this.apiUrl}/storefront/categories/counts`);
+    }
+
+    getStorefrontProduct(id: number): Observable<StorefrontProduct> {
+        return this.http.get<StorefrontProduct>(`${this.apiUrl}/storefront/products/${id}`);
+    }
+
+    getStorefrontOffers(): Observable<StorefrontBundle[]> {
+        return this.http.get<StorefrontBundle[]>(`${this.apiUrl}/storefront/offers`);
+    }
+
+    // Admin User Management
+    getAdminUsers(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/admin/users`);
+    }
+
+    createStaff(staff: any): Observable<string> {
+        return this.http.post(`${this.apiUrl}/admin/users/create-staff`, staff, { responseType: 'text' });
+    }
+
+    updateUser(id: number, user: any): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/admin/users/${id}`, user);
+    }
+
+    updateUserStatus(id: number, active: boolean): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/admin/users/${id}/status?active=${active}`, {});
+    }
+
+    updateUserRole(id: number, role: string): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/admin/users/${id}/role?role=${role}`, {});
+    }
+
+    deleteUser(id: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/admin/users/${id}`);
+    }
+
+    // Orders
+    placeOrder(order: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/orders`, order);
+    }
+
+    getMyOrders(): Observable<DeliveryOrder[]> {
+        return this.http.get<DeliveryOrder[]>(`${this.apiUrl}/orders/my`);
+    }
+
+    getCustomerOrders(username: string): Observable<DeliveryOrder[]> {
+        return this.http.get<DeliveryOrder[]>(`${this.apiUrl}/orders/customer/${username}`);
+    }
+
+    getProductReviews(productId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/storefront/products/${productId}/reviews`);
+    }
+
+    getProductRecommendations(productId: number): Observable<StorefrontProduct[]> {
+        return this.http.get<StorefrontProduct[]>(`${this.apiUrl}/storefront/products/${productId}/recommendations`);
+    }
+
+    getAllDeliveryOrders(): Observable<DeliveryOrder[]> {
+        return this.http.get<DeliveryOrder[]>(`${this.apiUrl}/orders/all`);
+    }
+
+    updateDeliveryOrderStatus(id: number, status: DeliveryStatus): Observable<DeliveryOrder> {
+        return this.http.put<DeliveryOrder>(`${this.apiUrl}/orders/${id}/status?status=${status}`, {});
     }
 }

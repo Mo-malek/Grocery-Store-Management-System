@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.grocery.dto.StorefrontProductDto;
+
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -52,6 +54,19 @@ public class ProductService {
             return getAllProducts(pageable);
         }
         return productRepository.searchProducts(search, pageable);
+    }
+
+    public Page<StorefrontProductDto> searchStorefront(String search, String category, boolean inStockOnly,
+                                                      java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice,
+                                                      Pageable pageable) {
+        Page<Product> page = productRepository.searchStorefront(
+                (search == null || search.isBlank()) ? null : search,
+                (category == null || category.isBlank()) ? null : category,
+                inStockOnly,
+                minPrice,
+                maxPrice,
+                pageable);
+        return page.map(StorefrontProductDto::fromEntity);
     }
 
     @Transactional
@@ -97,6 +112,15 @@ public class ProductService {
     @Cacheable("categories")
     public List<String> getCategories() {
         return productRepository.findDistinctCategories();
+    }
+
+    public List<com.grocery.dto.CategoryCountDto> getCategoryCounts() {
+        return productRepository.categoryCounts().stream()
+                .map(row -> com.grocery.dto.CategoryCountDto.builder()
+                        .category((String) row[0])
+                        .count(((Number) row[1]).longValue())
+                        .build())
+                .toList();
     }
 
     @CacheEvict(value = "categories", allEntries = true)
