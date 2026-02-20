@@ -2,7 +2,7 @@ spring:
   application:
     name: grocery-store
   profiles:
-    active: local
+    active: prod
     # ==========================================
   # H2 Database (Development)
   # ==========================================
