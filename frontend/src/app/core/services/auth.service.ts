@@ -53,4 +53,9 @@ export class AuthService {
     isLoggedIn(): boolean {
         return !!this.currentUserValue;
     }
+
+    get isManagerOrAdmin(): boolean {
+        const role = this.currentUserValue?.role;
+        return role === 'ROLE_ADMIN' || role === 'ROLE_MANAGER';
+    }
 }

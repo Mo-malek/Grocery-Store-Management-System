@@ -109,6 +109,29 @@ interface HeroSlide {
         </div>
       </section>
 
+      <section class="section-block" *ngIf="featuredProducts.length">
+        <div class="section-head">
+          <h2>منتجات مميزة</h2>
+          <a routerLink="/shop/catalog">المزيد</a>
+        </div>
+        <div class="products-grid">
+          <article class="product-card" *ngFor="let p of featuredProducts">
+            <a [routerLink]="['/shop/product', p.id]" class="img-link">
+              <img [src]="getImageUrl(p.imageUrl)" [alt]="p.name" />
+            </a>
+            <h3>{{ p.name }}</h3>
+            <div class="rating">{{ getStars(p.ratingAverage) }} <span>({{ p.ratingCount || 0 }})</span></div>
+            <div class="price-row">
+              <span class="current">{{ p.price | number:'1.2-2' }} ج.م</span>
+            </div>
+            <div class="card-actions">
+              <button class="add-btn" [disabled]="p.stock === 0" (click)="addToCart(p)">أضف للسلة</button>
+              <button class="wish-btn" [class.active]="wishlist.has(p.id)" (click)="toggleWishlist(p)">&#9825;</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
       <section class="section-block" *ngIf="recommended.length">
         <div class="section-head">
           <h2>مقترح لك</h2>
@@ -627,6 +650,7 @@ export class StorefrontHomeComponent implements OnInit, OnDestroy {
   flashOffers: StorefrontProduct[] = [];
   bestSellers: StorefrontProduct[] = [];
   recommended: StorefrontProduct[] = [];
+  featuredProducts: StorefrontProduct[] = [];
   isLoading = false;
   loadError = '';
   private pendingLoads = 0;
@@ -729,12 +753,15 @@ export class StorefrontHomeComponent implements OnInit, OnDestroy {
           this.recommended = items.slice(8, 16);
         }
 
+        this.featuredProducts = [...items].slice(16, 24);
+
         this.markLoadDone();
       },
       error: () => {
         this.flashOffers = [];
         this.bestSellers = [];
         this.recommended = [];
+        this.featuredProducts = [];
         this.loadError = this.loadError || 'فشل تحميل منتجات المتجر.';
         this.markLoadDone();
       }

@@ -77,6 +77,12 @@ import { Subscription } from 'rxjs';
             </a>
 
             <ng-container *ngIf="auth.currentUser | async as user; else guest">
+              <a class="action-pill admin-pill" *ngIf="auth.isManagerOrAdmin" routerLink="/dashboard">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 11H12M4 6H20M4 16H20M16 11H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+                <span>لوحة التحكم</span>
+              </a>
               <a class="account-link" routerLink="/shop/profile">{{ user.username }}</a>
               <button class="logout-btn" (click)="logout()">تسجيل الخروج</button>
             </ng-container>
@@ -92,6 +98,7 @@ import { Subscription } from 'rxjs';
           <a routerLink="/shop/offers" routerLinkActive="active">العروض</a>
           <a routerLink="/shop/catalog" routerLinkActive="active">المنتجات</a>
           <a routerLink="/shop/profile" routerLinkActive="active">حسابي</a>
+          <a *ngIf="auth.isManagerOrAdmin" routerLink="/dashboard" class="admin-nav-link">لوحة الإدارة</a>
         </nav>
       </header>
 
@@ -302,6 +309,19 @@ import { Subscription } from 'rxjs';
 
     .cart-pill {
       border-color: rgba(var(--secondary-rgb), 0.45);
+    }
+
+    .admin-pill {
+      border-color: rgba(var(--primary-rgb), 0.45);
+      background: rgba(var(--primary-rgb), 0.05);
+      color: var(--primary-color);
+    }
+
+    .admin-nav-link {
+      background: rgba(var(--primary-rgb), 0.1);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      color: var(--primary-color) !important;
     }
 
     .count-badge {
