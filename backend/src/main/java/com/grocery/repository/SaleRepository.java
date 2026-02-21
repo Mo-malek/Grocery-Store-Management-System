@@ -30,9 +30,19 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
         @Query("SELECT COALESCE(SUM(s.total), 0) FROM Sale s WHERE s.createdAt >= :start AND s.createdAt < :end")
         BigDecimal getTotalSalesBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
+        @Query("SELECT COALESCE(SUM(s.total), 0) FROM Sale s WHERE s.createdAt >= :start AND s.createdAt < :end AND UPPER(COALESCE(s.saleChannel, 'POS')) = :channel")
+        BigDecimal getTotalSalesBetweenByChannel(@Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end,
+                        @Param("channel") String channel);
+
         // عدد الفواتير اليوم
         @Query("SELECT COUNT(s) FROM Sale s WHERE s.createdAt >= :start AND s.createdAt < :end")
         Long getTransactionCountBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+        @Query("SELECT COUNT(s) FROM Sale s WHERE s.createdAt >= :start AND s.createdAt < :end AND UPPER(COALESCE(s.saleChannel, 'POS')) = :channel")
+        Long getTransactionCountBetweenByChannel(@Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end,
+                        @Param("channel") String channel);
 
         // أعلى المنتجات مبيعاً
         @Query("SELECT si.product.id, si.product.name, SUM(si.quantity) as totalQty, SUM(si.total) as totalRevenue " +

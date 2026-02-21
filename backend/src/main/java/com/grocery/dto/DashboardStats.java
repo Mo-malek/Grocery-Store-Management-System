@@ -16,7 +16,13 @@ public class DashboardStats {
     // KPIs
     private BigDecimal totalSalesToday;
     private BigDecimal totalSalesThisMonth;
+    private BigDecimal posSalesToday;
+    private BigDecimal onlineSalesToday;
+    private BigDecimal posSalesThisMonth;
+    private BigDecimal onlineSalesThisMonth;
     private Long transactionCountToday;
+    private Long posTransactionCountToday;
+    private Long onlineTransactionCountToday;
     private BigDecimal averageBasketSize;
     private BigDecimal estimatedProfitToday;
     private BigDecimal netProfitThisMonth;
@@ -24,6 +30,8 @@ public class DashboardStats {
 
     // Inventory alerts
     private Long lowStockCount;
+    private Long outOfStockCount;
+    private Long expiringSoonCount;
     private List<com.grocery.entity.Product> lowStockProducts;
 
     // Top products

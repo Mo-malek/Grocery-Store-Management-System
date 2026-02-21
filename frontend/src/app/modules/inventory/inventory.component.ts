@@ -18,9 +18,9 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
       <app-spinner *ngIf="isLoading"></app-spinner>
       
       <div class="header">
-        <h1>📦 إدارة المخزون</h1>
+        <h1>إدارة المخزون</h1>
         <div class="header-actions">
-           <button class="btn btn-secondary" (click)="loadAuditReport()">📊 تحليل الفاقد</button>
+           <button class="btn btn-secondary" (click)="loadAuditReport()">تحليل الفاقد</button>
            <button class="btn btn-primary" (click)="openModal()">+ منتج جديد</button>
         </div>
       </div>
@@ -61,6 +61,7 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
                 <th>التصنيف</th>
                 <th>سعر الشراء</th>
                 <th>سعر البيع</th>
+                <th>العرض</th>
                 <th>الكمية</th>
                 <th>تاريخ الانتهاء</th>
                 <th>إجراءات</th>
@@ -80,10 +81,19 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
                 <td>{{ product.purchasePrice }} ج.م</td>
                 <td>{{ product.sellingPrice }} ج.م</td>
                 <td>
+                  <span class="offer-badge" *ngIf="(product.discountPercentage ?? 0) > 0">
+                    {{ product.discountPercentage | number:'1.0-2' }}%
+                  </span>
+                  <span class="no-offer" *ngIf="(product.discountPercentage ?? 0) <= 0">-</span>
+                </td>
+                <td>
                   <span [class.low-stock]="product.currentStock <= product.minStock">
                     {{ product.currentStock }} {{ product.unit }}
                   </span>
-                  <span *ngIf="product.currentStock <= product.minStock" class="warning-icon" title="مخزون منخفض">⚠️</span>
+                  <span *ngIf="product.currentStock <= product.minStock" class="warning-icon" title="مخزون منخفض">
+                    <span class="icon" aria-hidden="true">&#9888;</span>
+                    <span>تنبيه</span>
+                  </span>
                 </td>
                 <td>
                   <span [class.text-danger]="isExpiringSoon(product.expiryDate)">
@@ -91,16 +101,25 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
                   </span>
                 </td>
                 <td>
-                  <button class="btn-icon" (click)="editProduct(product)" title="تعديل">✏️</button>
-                  <button class="btn-icon" *ngIf="authService.currentUserValue?.role === 'ROLE_MANAGER'" (click)="openAdjustModal(product)" title="تعديل الكمية">🔧</button>
-                  <button class="btn-icon delete" *ngIf="authService.currentUserValue?.role === 'ROLE_MANAGER'" (click)="deleteProduct(product.id!)" title="حذف">🗑️</button>
+                  <button class="btn-icon" (click)="editProduct(product)" title="تعديل">
+                    <span class="icon" aria-hidden="true">&#9998;</span>
+                    <span>تعديل</span>
+                  </button>
+                  <button class="btn-icon" *ngIf="isManagerOrAdmin" (click)="openAdjustModal(product)" title="تعديل الكمية">
+                    <span class="icon" aria-hidden="true">&#9881;</span>
+                    <span>كمية</span>
+                  </button>
+                  <button class="btn-icon delete" *ngIf="isManagerOrAdmin" (click)="deleteProduct(product.id!)" title="حذف">
+                    <span class="icon" aria-hidden="true">&#128465;</span>
+                    <span>حذف</span>
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
           
           <div class="empty-state" *ngIf="!isLoading && !products.length">
-            <p>لا توجد منتجات. أضف منتجاً جديداً للبدء.</p>
+            <p>لا توجد منتجات. قم بإضافة منتج جديد.</p>
           </div>
 
           <!-- Pagination Controls -->
@@ -154,7 +173,7 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
             </div>
           </div>
 
-          <div class="grid grid-cols-2">
+          <div class="grid grid-cols-3">
             <div class="form-group">
               <label>سعر الشراء <span class="required">*</span></label>
               <input type="number" [(ngModel)]="currentProduct.purchasePrice" name="purchasePrice" class="form-control" required min="0">
@@ -163,7 +182,16 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
               <label>سعر البيع <span class="required">*</span></label>
               <input type="number" [(ngModel)]="currentProduct.sellingPrice" name="sellingPrice" class="form-control" required min="0">
             </div>
+            <div class="form-group">
+              <label>نسبة العرض (%)</label>
+              <input type="number" [(ngModel)]="currentProduct.discountPercentage" name="discountPercentage" class="form-control" min="0" max="100" step="0.01">
+              <small class="hint">0 = بدون عرض</small>
+            </div>
           </div>
+
+          <p class="offer-preview" *ngIf="(currentProduct.discountPercentage ?? 0) > 0 && currentProduct.sellingPrice > 0">
+            سعر العرض للعميل: <strong>{{ getDiscountedPrice(currentProduct) | number:'1.2-2' }} ج.م</strong>
+          </p>
 
           <div class="grid grid-cols-2">
             <div class="form-group" *ngIf="!editingProduct">
@@ -189,7 +217,7 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
 
           <div class="modal-actions">
             <button type="button" class="btn" (click)="closeModal()">إلغاء</button>
-            <button type="submit" class="btn btn-primary" [disabled]="isSaving || !currentProduct.name || !currentProduct.purchasePrice || !currentProduct.sellingPrice">
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving || !currentProduct.name || !currentProduct.purchasePrice || !currentProduct.sellingPrice || (currentProduct.discountPercentage ?? 0) < 0 || (currentProduct.discountPercentage ?? 0) > 100">
               {{ isSaving ? 'جاري الحفظ...' : 'حفظ' }}
             </button>
           </div>
@@ -242,6 +270,25 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
       border-radius: var(--radius-sm);
       font-size: 0.8rem;
     }
+
+    .offer-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 52px;
+      padding: 0.2rem 0.45rem;
+      border-radius: 999px;
+      background: var(--danger-soft);
+      color: var(--danger-color);
+      font-weight: 700;
+      font-size: 0.78rem;
+      border: 1px solid rgba(220, 38, 38, 0.3);
+    }
+
+    .no-offer {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
     
     .low-stock {
       color: var(--danger-color);
@@ -249,27 +296,54 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
     }
     
     .warning-icon {
-      font-size: 0.8rem;
-      margin-right: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-right: 0.45rem;
+      padding: 0.08rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--warning-color);
+      background: var(--warning-soft);
+      border: 1px solid rgba(217, 119, 6, 0.35);
     }
     
     .btn-icon {
-      background: none;
-      border: none;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
       cursor: pointer;
-      font-size: 1.1rem;
-      padding: 0.25rem;
-      opacity: 0.7;
-      transition: transform 0.2s;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-main);
+      padding: 0.24rem 0.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
     }
     
     .btn-icon:hover {
-      opacity: 1;
-      transform: scale(1.1);
+      transform: translateY(-1px);
+      border-color: var(--primary-color);
+      background: rgba(var(--primary-rgb), 0.08);
     }
     
-    .btn-icon.delete:hover {
+    .btn-icon.delete {
       color: var(--danger-color);
+      border-color: rgba(220, 38, 38, 0.35);
+      background: rgba(220, 38, 38, 0.06);
+    }
+
+    .btn-icon.delete:hover {
+      background: rgba(220, 38, 38, 0.12);
+      border-color: rgba(220, 38, 38, 0.6);
+    }
+
+    .icon {
+      line-height: 1;
+      font-size: 0.84rem;
     }
     
     .form-group {
@@ -286,12 +360,34 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
     .required {
       color: var(--danger-color);
     }
+
+    .hint {
+      display: inline-block;
+      margin-top: 0.25rem;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .offer-preview {
+      margin: -0.35rem 0 0.2rem;
+      padding: 0.55rem 0.7rem;
+      border-radius: 10px;
+      border: 1px dashed rgba(var(--secondary-rgb), 0.4);
+      background: rgba(var(--secondary-rgb), 0.08);
+      color: var(--text-main);
+      font-size: 0.9rem;
+    }
+
+    .offer-preview strong {
+      color: var(--secondary-color);
+    }
     
     .modal-actions {
       display: flex;
       justify-content: flex-end;
       gap: 1rem;
       margin-top: 2rem;
+      flex-wrap: wrap;
     }
 
     .barcode-row {
@@ -344,6 +440,26 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
       font-size: 0.9rem;
       color: var(--text-muted);
     }
+
+    @media (max-width: 920px) {
+      .grid.grid-cols-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .grid.grid-cols-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-actions {
+        justify-content: stretch;
+      }
+
+      .modal-actions .btn {
+        width: 100%;
+      }
+    }
   `]
 })
 export class InventoryComponent implements OnInit {
@@ -372,6 +488,7 @@ export class InventoryComponent implements OnInit {
     category: '',
     purchasePrice: 0,
     sellingPrice: 0,
+    discountPercentage: 0,
     currentStock: 0,
     minStock: 5,
     unit: 'قطعة'
@@ -390,7 +507,10 @@ export class InventoryComponent implements OnInit {
   }
 
   openAdjustModal(product: Product) {
-    this.currentProduct = { ...product };
+    this.currentProduct = {
+      ...product,
+      discountPercentage: this.normalizeDiscount(product.discountPercentage)
+    };
     this.adjustQuantity = 0;
     this.adjustReason = '';
     this.isAdjustModalOpen = true;
@@ -456,7 +576,10 @@ export class InventoryComponent implements OnInit {
     this.isModalOpen = true;
     this.isScannerOpen = false;
     this.editingProduct = true;
-    this.currentProduct = { ...product };
+    this.currentProduct = {
+      ...product,
+      discountPercentage: this.normalizeDiscount(product.discountPercentage)
+    };
   }
 
   closeModal() {
@@ -479,8 +602,15 @@ export class InventoryComponent implements OnInit {
   }
 
   saveProduct() {
+    this.currentProduct.discountPercentage = this.normalizeDiscount(this.currentProduct.discountPercentage);
+
     if (!this.currentProduct.name || this.currentProduct.sellingPrice < 0) {
       this.toast.warning('يرجى ملء البيانات الأساسية بشكل صحيح');
+      return;
+    }
+
+    if ((this.currentProduct.discountPercentage ?? 0) < 0 || (this.currentProduct.discountPercentage ?? 0) > 100) {
+      this.toast.warning('نسبة العرض يجب أن تكون بين 0 و 100');
       return;
     }
 
@@ -552,7 +682,7 @@ export class InventoryComponent implements OnInit {
         this.auditReport = data;
         this.isLoading = false;
         if (data.length === 0) {
-          this.toast.info('✅ لا توجد تنبيهات فقد حالياً (أقل من 2%)');
+          this.toast.info('لا توجد تنبيهات فقد حالياً (أقل من 2%)');
         }
       },
       error: () => {
@@ -560,5 +690,25 @@ export class InventoryComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  getDiscountedPrice(product: Product): number {
+    const price = Number(product.sellingPrice || 0);
+    const discount = this.normalizeDiscount(product.discountPercentage);
+    if (discount <= 0 || price <= 0) {
+      return price;
+    }
+    return Number((price * (1 - discount / 100)).toFixed(2));
+  }
+
+  private normalizeDiscount(value?: number): number {
+    if (value == null || Number.isNaN(Number(value))) {
+      return 0;
+    }
+    return Number(value);
+  }
+  get isManagerOrAdmin(): boolean {
+    const role = this.authService.currentUserValue?.role;
+    return role === 'ROLE_ADMIN' || role === 'ROLE_MANAGER';
   }
 }

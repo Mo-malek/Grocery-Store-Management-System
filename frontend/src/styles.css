@@ -75,6 +75,9 @@
   --image-surface-alt: #ffffff;
   --focus-ring: #1e3a8a;
   --focus-ring-shadow: 0 0 0 3px rgba(30, 58, 138, 0.2);
+  --scrollbar-track: #f3f4f6;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
 }
 
 body.theme-light {
@@ -155,10 +158,38 @@ body.theme-dark {
   --image-surface-alt: #2d3c52;
   --focus-ring: #93b4ff;
   --focus-ring-shadow: 0 0 0 3px rgba(147, 180, 255, 0.24);
+  --scrollbar-track: #1f2937;
+  --scrollbar-thumb: #4b5563;
+  --scrollbar-thumb-hover: #6b7280;
 }
 
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
 }
 
 html,

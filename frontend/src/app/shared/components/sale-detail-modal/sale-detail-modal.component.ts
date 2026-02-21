@@ -16,8 +16,9 @@ import { ToastService } from '../../../core/services/toast.service';
         <div #receiptContainer class="receipt-print-area">
           <div class="receipt-header">
             <div class="store-name">🏪 بقالة السعادة</div>
-            <div class="receipt-title">فاتورة بيع</div>
+            <div class="receipt-title">{{ sale.saleChannel === 'ONLINE' ? 'فاتورة بيع أونلاين' : 'فاتورة بيع' }}</div>
             <div class="receipt-id">رقم: #{{ sale.id }}</div>
+            <div class="receipt-id" *ngIf="sale.sourceOrderId">طلب: #{{ sale.sourceOrderId }}</div>
             <div class="receipt-date">{{ sale.createdAt | date:'short' }}</div>
           </div>
 
@@ -70,7 +71,28 @@ import { ToastService } from '../../../core/services/toast.service';
 
             <div class="summary-row payment">
               <span>طريقة الدفع:</span>
-              <span>{{ sale.paymentMethod === 'CASH' ? 'نقدي' : 'فيزا' }}</span>
+              <span>{{ getPaymentLabel(sale.paymentMethod) }}</span>
+            </div>
+
+            <div class="summary-row payment">
+              <span>القناة:</span>
+              <span>{{ sale.saleChannel === 'ONLINE' ? 'أونلاين' : 'داخل المحل' }}</span>
+            </div>
+
+            <div class="loyalty-card" *ngIf="sale.saleChannel === 'ONLINE' && (sale.externalCustomerName || sale.externalCustomerPhone || sale.externalCustomerAddress)">
+              <div class="receipt-divider"></div>
+              <div class="summary-row" *ngIf="sale.externalCustomerName">
+                <span>اسم المستلم:</span>
+                <span>{{ sale.externalCustomerName }}</span>
+              </div>
+              <div class="summary-row" *ngIf="sale.externalCustomerPhone">
+                <span>الهاتف:</span>
+                <span>{{ sale.externalCustomerPhone }}</span>
+              </div>
+              <div class="summary-row" *ngIf="sale.externalCustomerAddress">
+                <span>العنوان:</span>
+                <span>{{ sale.externalCustomerAddress }}</span>
+              </div>
             </div>
           </div>
 
@@ -100,31 +122,30 @@ import { ToastService } from '../../../core/services/toast.service';
   styles: [`
     .modal-backdrop {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: rgba(0,0,0,0.7);
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       z-index: 1000;
       backdrop-filter: blur(4px);
+      padding: 1rem;
+      overflow-y: auto;
     }
 
     .receipt-modal {
       background: white;
       color: #111827;
-      width: 95%;
-      max-width: 380px;
+      width: min(380px, 100%);
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       font-family: 'Courier New', Courier, monospace;
-      max-height: 90vh;
+      max-height: calc(100dvh - 2rem);
       overflow-y: auto;
       direction: rtl;
       text-align: right;
+      margin: auto 0;
     }
 
     .receipt-print-area {
@@ -231,6 +252,10 @@ import { ToastService } from '../../../core/services/toast.service';
       flex-direction: column;
       gap: 10px;
       margin-top: 20px;
+      position: sticky;
+      bottom: 0;
+      background: #fff;
+      padding-top: 8px;
     }
     
     .modal-actions button {
@@ -250,6 +275,17 @@ import { ToastService } from '../../../core/services/toast.service';
       background: white;
       border: 1px solid #ddd;
       flex: 1;
+    }
+
+    @media (max-width: 480px) {
+      .modal-backdrop {
+        padding: 0.5rem;
+      }
+
+      .receipt-modal {
+        max-height: calc(100dvh - 1rem);
+        padding: 12px;
+      }
     }
 
     @media print {
@@ -332,6 +368,12 @@ export class SaleDetailModalComponent {
     window.print();
   }
 
+  getPaymentLabel(method?: string): string {
+    if (method === 'CASH') return 'نقدي';
+    if (method === 'CARD') return 'فيزا';
+    return method || '-';
+  }
+
   async shareAsFile(type: 'image' | 'pdf') {
     if (!this.sale) return;
     this.toast.info('جاري معالجة الملف...');
@@ -394,7 +436,20 @@ export class SaleDetailModalComponent {
 
     let text = `🧾 *فاتورة بيع* - بقالة السعادة\n`;
     text += `رقم: #${sale.id}\n`;
+    if (sale.sourceOrderId) {
+      text += `رقم الطلب: #${sale.sourceOrderId}\n`;
+    }
+    text += `القناة: ${sale.saleChannel === 'ONLINE' ? 'أونلاين' : 'داخل المحل'}\n`;
     text += `التاريخ: ${new Date(sale.createdAt).toLocaleString('ar-EG')}\n`;
+    if (sale.externalCustomerName) {
+      text += `اسم المستلم: ${sale.externalCustomerName}\n`;
+    }
+    if (sale.externalCustomerPhone) {
+      text += `الهاتف: ${sale.externalCustomerPhone}\n`;
+    }
+    if (sale.externalCustomerAddress) {
+      text += `العنوان: ${sale.externalCustomerAddress}\n`;
+    }
     text += `----------------\n`;
 
     (sale.items || []).forEach(item => {
@@ -405,7 +460,8 @@ export class SaleDetailModalComponent {
     text += `💰 الإجمالي: *${sale.total} ج.م*\n`;
     text += `شكراً لزيارتكم! 🙏`;
 
-    const phone = sale.customer?.phone ? sale.customer.phone.replace(/\D/g, '') : '';
+    const phoneRaw = sale.customer?.phone || sale.externalCustomerPhone || '';
+    const phone = phoneRaw.replace(/\D/g, '');
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
     this.showShareOptions = false;

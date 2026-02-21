@@ -14,10 +14,10 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
   template: `
     <div class="container">
       <div class="header">
-        <h1>Marketing & Promotions</h1>
+        <h1>التسويق والعروض</h1>
         <div class="nav-tabs">
-           <button class="btn btn-tab" [class.active]="activeTab === 'bundles'" (click)="activeTab = 'bundles'">Bundles</button>
-           <button class="btn btn-tab" [class.active]="activeTab === 'crm'" (click)="activeTab = 'crm'">Customer CRM</button>
+           <button class="btn btn-tab" [class.active]="activeTab === 'bundles'" (click)="activeTab = 'bundles'">الباقات</button>
+           <button class="btn btn-tab" [class.active]="activeTab === 'crm'" (click)="activeTab = 'crm'">إدارة العملاء CRM</button>
         </div>
       </div>
 
@@ -25,103 +25,103 @@ import { BarChartComponent } from '../../shared/components/chart/bar-chart.compo
 
       <div *ngIf="activeTab === 'bundles'">
         <div class="action-bar mb-4">
-           <button class="btn btn-primary" (click)="openModal()">Create Bundle</button>
+           <button class="btn btn-primary" (click)="openModal()">إنشاء باقة</button>
         </div>
 
-        <div class="card" *ngIf="isLoadingBundles">Loading bundles...</div>
+        <div class="card" *ngIf="isLoadingBundles">جاري تحميل الباقات...</div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="!isLoadingBundles">
           <div class="card bundle-card" *ngFor="let b of bundles">
             <div class="bundle-header">
               <h3>{{ b.name }}</h3>
-              <span class="badge" [class.badge-active]="b.active">Active</span>
+              <span class="badge" [class.badge-active]="b.active">نشط</span>
             </div>
             <div class="bundle-items">
               <div class="item" *ngFor="let item of b.items">
-                {{ item.product.name }} x {{ item.quantity }}
+                {{ item.product.name }} × {{ item.quantity }}
               </div>
             </div>
             <div class="bundle-footer">
-              <div class="price">Price: <strong>{{ b.price }} EGP</strong></div>
-              <button class="btn btn-sm btn-danger" (click)="deleteBundle(b.id!)">Delete</button>
+              <div class="price">السعر: <strong>{{ b.price }} ج.م</strong></div>
+              <button class="btn btn-sm btn-danger" (click)="deleteBundle(b.id!)">حذف</button>
             </div>
           </div>
         </div>
         <div *ngIf="!isLoadingBundles && !bundles.length" class="empty-state card">
-          No bundles yet. Create your first promotion bundle.
+          لا توجد باقات بعد. قم بإنشاء أول باقة عروض.
         </div>
       </div>
 
       <div *ngIf="activeTab === 'crm'">
-        <div class="card" *ngIf="isLoadingCustomers">Loading customer segments...</div>
+        <div class="card" *ngIf="isLoadingCustomers">جاري تحميل شرائح العملاء...</div>
 
         <ng-container *ngIf="!isLoadingCustomers">
           <div class="card chart-card" *ngIf="stagnantChartData.length">
-            <app-bar-chart [title]="'Stagnant Customers by Category'" [data]="stagnantChartData"></app-bar-chart>
+            <app-bar-chart [title]="'العملاء المنقطعون حسب الفئة'" [data]="stagnantChartData"></app-bar-chart>
           </div>
 
           <div class="card crm-alert-card" *ngIf="stagnantCustomers.length">
-             <h3>Customers inactive for 30+ days</h3>
-             <p>Reach out with retention offers to bring them back.</p>
+             <h3>عملاء غير نشطين لأكثر من 30 يوماً</h3>
+             <p>تواصل معهم بعروض استبقاء لإعادتهم.</p>
 
              <div class="crm-list mt-4">
                 <div class="crm-item" *ngFor="let c of stagnantCustomers">
                    <div class="c-info">
                       <strong>{{ c.name }}</strong>
-                      <span>Last visit: {{ c.lastVisitAt | date:'shortDate' }}</span>
+                      <span>آخر زيارة: {{ c.lastVisitAt | date:'shortDate' }}</span>
                    </div>
                    <div class="c-stats">
-                      <span>Points: {{ c.loyaltyPoints }}</span>
-                      <span>Avg basket: {{ c.avgTicketSize }} EGP</span>
+                      <span>النقاط: {{ c.loyaltyPoints }}</span>
+                      <span>متوسط السلة: {{ c.avgTicketSize }} ج.م</span>
                    </div>
                    <div class="c-actions">
-                      <button class="btn btn-sm btn-whatsapp" (click)="sendWhatsApp(c)">Send WhatsApp Offer</button>
+                      <button class="btn btn-sm btn-whatsapp" (click)="sendWhatsApp(c)">إرسال عرض واتساب</button>
                    </div>
                 </div>
              </div>
           </div>
 
           <div *ngIf="!stagnantCustomers.length" class="empty-state card">
-             No inactive customers currently.
+             لا يوجد عملاء غير نشطين حالياً.
           </div>
         </ng-container>
       </div>
     </div>
 
-    <app-modal *ngIf="isModalOpen" title="Create Promotion Bundle" (onClose)="closeModal()">
+    <app-modal *ngIf="isModalOpen" title="إنشاء باقة عروض" (onClose)="closeModal()">
       <form (ngSubmit)="saveBundle()">
         <div class="form-group mb-4">
-          <label>Bundle Name</label>
-          <input [(ngModel)]="newBundle.name" name="name" class="form-control" placeholder="Breakfast Combo" required>
+          <label>اسم الباقة</label>
+          <input [(ngModel)]="newBundle.name" name="name" class="form-control" placeholder="عرض الإفطار..." required>
         </div>
 
         <div class="form-group mb-4">
-          <label>Bundle Price</label>
+          <label>سعر الباقة</label>
           <input type="number" [(ngModel)]="newBundle.price" name="price" min="0" step="0.01" class="form-control" required>
         </div>
 
         <div class="form-group mb-4">
-          <label>Add products to bundle</label>
+          <label>إضافة منتجات للباقة</label>
           <div class="flex gap-2">
             <select #prodSelect class="form-control">
-              <option value="">-- Select product --</option>
-              <option *ngFor="let p of allProducts" [value]="p.id">{{ p.name }} ({{ p.sellingPrice }} EGP)</option>
+              <option value="">-- اختر المنتج --</option>
+              <option *ngFor="let p of allProducts" [value]="p.id">{{ p.name }} ({{ p.sellingPrice }} ج.م)</option>
             </select>
             <input #qtyInput type="number" value="1" min="1" class="form-control" style="width: 80px;">
-            <button type="button" class="btn btn-primary" (click)="addItem(prodSelect.value, qtyInput.value)">Add</button>
+            <button type="button" class="btn btn-primary" (click)="addItem(prodSelect.value, qtyInput.value)">إضافة</button>
           </div>
         </div>
 
         <div class="items-list mb-4">
           <div class="item-row" *ngFor="let item of selectedItems; let i = index">
-            <span>{{ item.productName }} x {{ item.quantity }}</span>
+            <span>{{ item.productName }} × {{ item.quantity }}</span>
             <button type="button" class="remove-btn" (click)="removeItem(i)">&times;</button>
           </div>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn" (click)="closeModal()" [disabled]="isSavingBundle">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="isSavingBundle">{{ isSavingBundle ? 'Saving...' : 'Save Bundle' }}</button>
+          <button type="button" class="btn" (click)="closeModal()" [disabled]="isSavingBundle">إلغاء</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSavingBundle">{{ isSavingBundle ? 'جاري الحفظ...' : 'حفظ الباقة' }}</button>
         </div>
       </form>
     </app-modal>
@@ -189,7 +189,7 @@ export class MarketingComponent implements OnInit {
     this.loadStagnantCustomers();
     this.api.getProducts('', 0, 1000).subscribe({
       next: page => this.allProducts = page.content || [],
-      error: () => this.toast.error('Failed to load products for bundles')
+      error: () => this.toast.error('فشل تحميل المنتجات للباقات')
     });
   }
 
@@ -210,16 +210,16 @@ export class MarketingComponent implements OnInit {
         this.stagnantCustomers = [];
         this.stagnantChartData = [];
         this.isLoadingCustomers = false;
-        this.loadError = this.loadError || 'Failed to load CRM customers.';
-        this.toast.error('Failed to load stagnant customers');
+        this.loadError = this.loadError || 'فشل تحميل عملاء CRM.';
+        this.toast.error('فشل تحميل العملاء المنقطعين');
       }
     });
   }
 
   sendWhatsApp(customer: any) {
-    this.toast.info(`Preparing WhatsApp offer for ${customer.name}...`);
+    this.toast.info(`جاري تجهيز عرض واتساب لـ ${customer.name}...`);
     setTimeout(() => {
-      this.toast.success(`Offer sent to ${customer.phone}`);
+      this.toast.success(`تم إرسال العرض إلى ${customer.phone}`);
     }, 900);
   }
 
@@ -233,8 +233,8 @@ export class MarketingComponent implements OnInit {
       error: () => {
         this.bundles = [];
         this.isLoadingBundles = false;
-        this.loadError = this.loadError || 'Failed to load bundles.';
-        this.toast.error('Failed to load bundles');
+        this.loadError = this.loadError || 'فشل تحميل الباقات.';
+        this.toast.error('فشل تحميل الباقات');
       }
     });
   }
@@ -254,7 +254,7 @@ export class MarketingComponent implements OnInit {
 
   addItem(prodId: string, qty: string) {
     if (!prodId) {
-      this.toast.warning('Select a product first');
+      this.toast.warning('اختر منتجاً أولاً');
       return;
     }
 
@@ -269,7 +269,7 @@ export class MarketingComponent implements OnInit {
         quantity,
         product
       });
-      this.toast.success(`${product.name} added`);
+      this.toast.success(`تم إضافة ${product.name}`);
     }
   }
 
@@ -279,11 +279,11 @@ export class MarketingComponent implements OnInit {
 
   saveBundle() {
     if (!this.newBundle.name?.trim()) {
-      this.toast.warning('Please enter bundle name');
+      this.toast.warning('يرجى إدخال اسم الباقة');
       return;
     }
     if (this.selectedItems.length < 1) {
-      this.toast.warning('Add at least one product');
+      this.toast.warning('أضف منتجاً واحداً على الأقل');
       return;
     }
 
@@ -300,30 +300,30 @@ export class MarketingComponent implements OnInit {
     this.isSavingBundle = true;
     this.api.createBundle(bundle).subscribe({
       next: () => {
-        this.toast.success('Bundle created successfully');
+        this.toast.success('تم إنشاء الباقة بنجاح');
         this.loadBundles();
         this.closeModal();
         this.isSavingBundle = false;
       },
       error: () => {
-        this.toast.error('Failed to create bundle');
+        this.toast.error('فشل إنشاء الباقة');
         this.isSavingBundle = false;
       }
     });
   }
 
   deleteBundle(id: number) {
-    if (!confirm('Delete this bundle?')) {
+    if (!confirm('حذف هذه الباقة؟')) {
       return;
     }
 
     this.api.deleteBundle(id).subscribe({
       next: () => {
-        this.toast.success('Bundle deleted');
+        this.toast.success('تم حذف الباقة');
         this.bundles = this.bundles.filter(b => b.id !== id);
       },
       error: () => {
-        this.toast.error('Failed to delete bundle');
+        this.toast.error('فشل حذف الباقة');
       }
     });
   }

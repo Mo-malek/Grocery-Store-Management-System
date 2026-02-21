@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { CartService } from '../../core/services/cart.service';
+import { CartService, CartItem } from '../../core/services/cart.service';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -15,103 +15,124 @@ import { Subscription } from 'rxjs';
   template: `
     <section class="checkout-page">
       <header class="checkout-header">
-        <h1>Checkout</h1>
-        <p>Complete your order in a few quick steps.</p>
+        <h1>إتمام الطلب</h1>
+        <p>أكمل طلبك في خطوات سريعة.</p>
       </header>
 
       <div class="steps-bar">
-        <div class="step done">
+        <div class="step" [class.done]="deliveryForm.form.valid" [class.active]="!deliveryForm.form.valid">
           <span>1</span>
-          <label>Address</label>
+          <label>العنوان</label>
         </div>
         <div class="line"></div>
-        <div class="step done">
+        <div class="step" [class.done]="deliveryForm.form.valid">
           <span>2</span>
-          <label>Delivery</label>
+          <label>التوصيل</label>
         </div>
         <div class="line"></div>
-        <div class="step done">
+        <div class="step" [class.done]="deliveryForm.form.valid">
           <span>3</span>
-          <label>Payment</label>
+          <label>الدفع</label>
         </div>
         <div class="line"></div>
-        <div class="step active">
+        <div class="step" [class.active]="deliveryForm.form.valid" [class.done]="isSubmitting">
           <span>4</span>
-          <label>Confirm</label>
+          <label>التأكيد</label>
         </div>
       </div>
 
       <div class="checkout-layout">
         <section class="checkout-main">
           <article class="checkout-card">
-            <h2>1) Shipping Address</h2>
-            <form #deliveryForm="ngForm" class="delivery-form" novalidate>
+            <h2>1) عنوان الشحن</h2>
+            
+            <div class="saved-addresses" *ngIf="savedAddresses.length">
+              <label>استخدم عنوانا محفوظا:</label>
+              <div class="addr-chips">
+                <button type="button" class="addr-chip" *ngFor="let addr of savedAddresses" (click)="order.address = addr">
+                  {{ addr }}
+                </button>
+              </div>
+            </div>
+
+            <form #deliveryForm="ngForm" class="delivery-form" (ngSubmit)="placeOrder()" novalidate>
               <div class="row">
                 <div class="field">
-                  <label>Full name</label>
-                  <input type="text" name="name" [(ngModel)]="order.fullName" required minlength="2" placeholder="John Doe" />
+                  <label>الاسم الكامل</label>
+                  <input type="text" name="fullName" [(ngModel)]="order.fullName" required minlength="2" placeholder="اكتب الاسم الكامل" />
                 </div>
                 <div class="field">
-                  <label>Phone</label>
-                  <input type="tel" name="phone" [(ngModel)]="order.phone" required pattern="^[0-9+()\\-\\s]{7,20}$" placeholder="01xxxxxxxxx" />
+                  <label>الهاتف</label>
+                  <input type="tel" name="phone" [(ngModel)]="order.phone" required pattern="^[0-9()+ -]{7,20}$" placeholder="01xxxxxxxxx" />
                 </div>
               </div>
               <div class="field">
-                <label>Address</label>
-                <textarea name="address" [(ngModel)]="order.address" required minlength="8" rows="3" placeholder="City, district, street, building"></textarea>
+                <label>العنوان</label>
+                <textarea name="address" [(ngModel)]="order.address" required minlength="8" rows="3" placeholder="المدينة، الحي، الشارع، رقم المبنى"></textarea>
               </div>
+              
+              <button type="submit" style="display: none;" [disabled]="!deliveryForm.form.valid || isSubmitting || !hasCartItems"></button>
             </form>
           </article>
 
           <article class="checkout-card">
-            <h2>2) Delivery Option</h2>
+            <h2>2) خيار التوصيل</h2>
             <label class="option-card">
               <input type="radio" checked name="delivery" />
               <div>
-                <strong>Standard delivery</strong>
-                <p>Delivered within the same day when possible.</p>
+                <strong>توصيل عادي</strong>
+                <p>يتم التوصيل في نفس اليوم عند الإمكان.</p>
               </div>
-              <span class="price-tag">Free</span>
+              <span class="price-tag">مجانا</span>
             </label>
           </article>
 
           <article class="checkout-card">
-            <h2>3) Payment Method</h2>
+            <h2>3) طريقة الدفع</h2>
             <label class="option-card">
               <input type="radio" checked name="payment" />
               <div>
-                <strong>Cash on delivery</strong>
-                <p>Pay when your order arrives.</p>
+                <strong>الدفع عند الاستلام</strong>
+                <p>ادفع عند وصول الطلب.</p>
               </div>
-              <span class="price-tag">COD</span>
+              <span class="price-tag">نقدًا</span>
             </label>
           </article>
         </section>
 
         <aside class="summary-col">
-          <article class="summary-card">
-            <h3>4) Confirm Order</h3>
+          <article class="summary-card" *ngIf="cart.cart$ | async as items">
+            <h3>4) تأكيد الطلب</h3>
 
             <div class="items">
-              <div class="item" *ngFor="let item of (cart.cart$ | async)">
-                <div>
+              <div class="item" *ngFor="let item of items">
+                <div class="item-head">
                   <strong>{{ item.product.name }}</strong>
-                  <small>x{{ item.quantity }}</small>
+                  <small>x{{ item.quantity }} - {{ item.product.price | number:'1.2-2' }} ج.م</small>
                 </div>
-                <span>{{ (item.product.price * item.quantity) | number:'1.2-2' }} EGP</span>
+                <div class="item-pricing">
+                  <span class="line-final">{{ getLineFinalTotal(item) | number:'1.2-2' }} ج.م</span>
+                  <small class="line-discount" *ngIf="getLineDiscount(item) > 0">
+                    وفر {{ getLineDiscount(item) | number:'1.2-2' }} ج.م
+                  </small>
+                  <small class="line-original" *ngIf="getLineDiscount(item) > 0">
+                    قبل الخصم {{ getLineOriginalTotal(item) | number:'1.2-2' }} ج.م
+                  </small>
+                </div>
               </div>
             </div>
 
             <div class="totals">
-              <div><span>Subtotal</span><span>{{ cart.getTotal() | number:'1.2-2' }} EGP</span></div>
-              <div><span>Delivery</span><span class="free">Free</span></div>
-              <div><span>Discount</span><span>0.00 EGP</span></div>
-              <div class="total"><span>Total</span><span>{{ cart.getTotal() | number:'1.2-2' }} EGP</span></div>
+              <div><span>إجمالي قبل الخصم</span><span>{{ getSubtotalBeforeDiscount(items) | number:'1.2-2' }} ج.م</span></div>
+              <div><span>خصم المنتجات</span><span class="discount-val">- {{ getDiscountTotal(items) | number:'1.2-2' }} ج.م</span></div>
+              <div><span>إجمالي بعد الخصم</span><span>{{ getSubtotalAfterDiscount(items) | number:'1.2-2' }} ج.م</span></div>
+              <div><span>التوصيل</span><span class="free">مجانا</span></div>
+              <div class="total"><span>الإجمالي</span><span>{{ getGrandTotal(items) | number:'1.2-2' }} ج.م</span></div>
             </div>
 
-            <button class="confirm-btn" [disabled]="!deliveryForm.form.valid || isSubmitting || !hasCartItems" (click)="placeOrder()">
-              <span *ngIf="!isSubmitting">Confirm Order</span>
-              <span *ngIf="isSubmitting">Submitting...</span>
+            <button type="button" class="confirm-btn" (click)="placeOrder()" [disabled]="!deliveryForm.form.valid || isSubmitting || !hasCartItems">
+              <span *ngIf="!isSubmitting">تأكيد الطلب</span>
+              <span *ngIf="isSubmitting">جاري الإرسال...</span>
             </button>
           </article>
         </aside>
@@ -259,6 +280,39 @@ import { Subscription } from 'rxjs';
       box-shadow: var(--focus-ring-shadow);
     }
 
+    .saved-addresses {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px dashed var(--border-color);
+    }
+    .saved-addresses label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .addr-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .addr-chip {
+      background: var(--surface-soft);
+      border: 1px solid var(--border-color);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all 0.2s ease;
+      text-align: right;
+    }
+    .addr-chip:hover {
+      border-color: var(--primary-color);
+      background: rgba(var(--primary-rgb), 0.1);
+    }
+
     .option-card {
       border: 1px solid var(--border-color);
       border-radius: 12px;
@@ -329,16 +383,64 @@ import { Subscription } from 'rxjs';
       justify-content: space-between;
       gap: 0.6rem;
       font-size: 0.82rem;
+      padding: 0.4rem 0;
+      border-bottom: 1px dashed var(--border-color);
     }
 
-    .item strong {
+    .item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .item-head {
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .item-head strong {
       display: block;
       color: var(--text-main);
       line-height: 1.35;
+      word-break: break-word;
     }
 
-    .item small {
+    .item-head small {
       color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .item-pricing {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.08rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .line-final {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .line-discount {
+      color: var(--success-color);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    .line-original {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      text-decoration: line-through;
+    }
+
+    .discount-val {
+      color: var(--success-color);
+      font-weight: 700;
     }
 
     .totals {
@@ -428,6 +530,8 @@ export class StorefrontCheckoutComponent implements OnInit, OnDestroy {
   };
   isSubmitting = false;
   hasCartItems = false;
+  deliveryFee = 0;
+  savedAddresses: string[] = [];
   private readonly subscriptions = new Subscription();
 
   constructor(
@@ -448,6 +552,15 @@ export class StorefrontCheckoutComponent implements OnInit, OnDestroy {
       if (user) this.order.fullName = user.username || '';
     }));
 
+    const saved = localStorage.getItem('customer-addresses');
+    if (saved) {
+      try {
+        this.savedAddresses = JSON.parse(saved);
+      } catch {
+        this.savedAddresses = [];
+      }
+    }
+
     this.subscriptions.add(this.cart.cart$.subscribe(items => {
       this.hasCartItems = items.length > 0;
       if (items.length === 0) {
@@ -466,11 +579,11 @@ export class StorefrontCheckoutComponent implements OnInit, OnDestroy {
 
   placeOrder() {
     if (!this.order.items?.length) {
-      this.toast.warning('Your cart is empty.');
+      this.toast.warning('السلة فارغة.');
       return;
     }
     if (!this.order.fullName?.trim() || !this.order.address?.trim() || !this.order.phone?.trim()) {
-      this.toast.warning('Please complete shipping information.');
+      this.toast.warning('يرجى استكمال بيانات الشحن.');
       return;
     }
 
@@ -484,15 +597,73 @@ export class StorefrontCheckoutComponent implements OnInit, OnDestroy {
 
     this.api.placeOrder(request).subscribe({
       next: () => {
-        this.toast.success('Order placed successfully.');
+        this.toast.success('تم إرسال الطلب بنجاح.');
         this.cart.clearCart();
         this.isSubmitting = false;
         this.router.navigate(['/shop/orders']);
       },
       error: () => {
-        this.toast.error('Failed to place order. Please try again.');
+        this.toast.error('فشل إرسال الطلب. حاول مرة أخرى.');
         this.isSubmitting = false;
       }
     });
+  }
+
+  getDiscountPercent(item: CartItem): number {
+    const discount = Number(item.product.discountPercentage ?? 0);
+    if (!Number.isFinite(discount) || discount <= 0) {
+      return 0;
+    }
+    return Math.min(discount, 99.99);
+  }
+
+  getUnitOriginalPrice(item: CartItem): number {
+    const discount = this.getDiscountPercent(item);
+    if (discount <= 0) {
+      return this.roundMoney(item.product.price);
+    }
+
+    const divisor = 1 - (discount / 100);
+    if (divisor <= 0) {
+      return this.roundMoney(item.product.price);
+    }
+
+    return this.roundMoney(item.product.price / divisor);
+  }
+
+  getLineOriginalTotal(item: CartItem): number {
+    return this.roundMoney(this.getUnitOriginalPrice(item) * item.quantity);
+  }
+
+  getLineFinalTotal(item: CartItem): number {
+    return this.roundMoney(item.product.price * item.quantity);
+  }
+
+  getLineDiscount(item: CartItem): number {
+    return this.roundMoney(Math.max(0, this.getLineOriginalTotal(item) - this.getLineFinalTotal(item)));
+  }
+
+  getSubtotalBeforeDiscount(items: CartItem[]): number {
+    return this.roundMoney(items.reduce((sum, item) => sum + this.getLineOriginalTotal(item), 0));
+  }
+
+  getSubtotalAfterDiscount(items: CartItem[]): number {
+    return this.roundMoney(items.reduce((sum, item) => sum + this.getLineFinalTotal(item), 0));
+  }
+
+  getDiscountTotal(items: CartItem[]): number {
+    return this.roundMoney(items.reduce((sum, item) => sum + this.getLineDiscount(item), 0));
+  }
+
+  getGrandTotal(items: CartItem[]): number {
+    return this.roundMoney(this.getSubtotalAfterDiscount(items) + this.deliveryFee);
+  }
+
+  private roundMoney(value: number): number {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) {
+      return 0;
+    }
+    return Math.round((numericValue + Number.EPSILON) * 100) / 100;
   }
 }

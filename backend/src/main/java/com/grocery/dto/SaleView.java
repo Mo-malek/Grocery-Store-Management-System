@@ -19,6 +19,11 @@ public class SaleView {
     private BigDecimal discount;
     private BigDecimal total;
     private String paymentMethod;
+    private String saleChannel;
+    private Long sourceOrderId;
+    private String externalCustomerName;
+    private String externalCustomerPhone;
+    private String externalCustomerAddress;
     private LocalDateTime createdAt;
     private List<SaleItemView> items;
 

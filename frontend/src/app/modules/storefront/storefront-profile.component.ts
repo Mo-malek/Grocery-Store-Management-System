@@ -24,41 +24,41 @@ type ProfileTab = 'dashboard' | 'orders' | 'wishlist' | 'addresses' | 'settings'
           <div class="profile-head">
             <div class="avatar">{{ (auth.currentUserValue?.username || 'U').charAt(0).toUpperCase() }}</div>
             <div>
-              <strong>{{ auth.currentUserValue?.username || 'Guest' }}</strong>
-              <p>Customer Account</p>
+              <strong>{{ auth.currentUserValue?.username || 'زائر' }}</strong>
+              <p>حساب العميل</p>
             </div>
           </div>
 
-          <button [class.active]="activeTab === 'dashboard'" (click)="setTab('dashboard')">Dashboard</button>
-          <button [class.active]="activeTab === 'orders'" (click)="setTab('orders')">My Orders</button>
-          <button [class.active]="activeTab === 'wishlist'" (click)="setTab('wishlist')">Wishlist</button>
-          <button [class.active]="activeTab === 'addresses'" (click)="setTab('addresses')">Addresses</button>
-          <button [class.active]="activeTab === 'settings'" (click)="setTab('settings')">Settings</button>
-          <button class="logout" (click)="logout()">Logout</button>
+          <button [class.active]="activeTab === 'dashboard'" (click)="setTab('dashboard')">لوحة الحساب</button>
+          <button [class.active]="activeTab === 'orders'" (click)="setTab('orders')">طلباتي</button>
+          <button [class.active]="activeTab === 'wishlist'" (click)="setTab('wishlist')">المفضلة</button>
+          <button [class.active]="activeTab === 'addresses'" (click)="setTab('addresses')">العناوين</button>
+          <button [class.active]="activeTab === 'settings'" (click)="setTab('settings')">الإعدادات</button>
+          <button class="logout" (click)="logout()">تسجيل الخروج</button>
         </aside>
 
         <section class="content">
           <article class="panel" *ngIf="activeTab === 'dashboard'">
-            <h1>Welcome back, {{ auth.currentUserValue?.username || 'Customer' }}</h1>
-            <p class="sub">Track your orders, save favorites and manage your account.</p>
+            <h1>مرحبا بعودتك، {{ auth.currentUserValue?.username || 'عميل' }}</h1>
+            <p class="sub">تابع طلباتك، واحفظ المفضلة، وأدر حسابك بسهولة.</p>
 
             <div class="stats-grid">
               <div class="stat-card">
-                <span>Total Orders</span>
+                <span>إجمالي الطلبات</span>
                 <strong>{{ orders.length }}</strong>
               </div>
               <div class="stat-card">
-                <span>Wishlist Items</span>
+                <span>عناصر المفضلة</span>
                 <strong>{{ wishlistItems.length }}</strong>
               </div>
               <div class="stat-card">
-                <span>Delivered</span>
+                <span>تم التسليم</span>
                 <strong>{{ deliveredCount }}</strong>
               </div>
             </div>
 
             <div class="panel-section" *ngIf="lastOrder">
-              <h2>Last Order</h2>
+              <h2>آخر طلب</h2>
               <div class="order-card compact">
                 <div>
                   <strong>#{{ lastOrder.id }}</strong>
@@ -70,14 +70,14 @@ type ProfileTab = 'dashboard' | 'orders' | 'wishlist' | 'addresses' | 'settings'
           </article>
 
           <article class="panel" *ngIf="activeTab === 'orders'">
-            <h1>My Orders</h1>
-            <p class="sub" *ngIf="isOrdersLoading">Loading your orders...</p>
+            <h1>طلباتي</h1>
+            <p class="sub" *ngIf="isOrdersLoading">جاري تحميل طلباتك...</p>
             <p class="sub error" *ngIf="!isOrdersLoading && ordersError">{{ ordersError }}</p>
             <div class="orders-list" *ngIf="orders.length; else noOrders">
               <article class="order-card" *ngFor="let order of orders">
                 <header>
                   <div>
-                    <strong>Order #{{ order.id }}</strong>
+                    <strong>طلب رقم #{{ order.id }}</strong>
                     <span>{{ order.createdAt | date:'medium' }}</span>
                   </div>
                   <span class="status" [attr.data-status]="order.status">{{ getStatusLabel(order.status) }}</span>
@@ -85,64 +85,64 @@ type ProfileTab = 'dashboard' | 'orders' | 'wishlist' | 'addresses' | 'settings'
                 <div class="items">
                   <div class="item" *ngFor="let item of order.items">
                     <span>{{ item.productName }} x{{ item.quantity }}</span>
-                    <span>{{ (item.unitPrice * item.quantity) | number:'1.2-2' }} EGP</span>
+                    <span>{{ (item.unitPrice * item.quantity) | number:'1.2-2' }} ج.م</span>
                   </div>
                 </div>
                 <footer>
-                  <span>Total</span>
-                  <strong>{{ order.totalAmount | number:'1.2-2' }} EGP</strong>
+                  <span>الإجمالي</span>
+                  <strong>{{ order.totalAmount | number:'1.2-2' }} ج.م</strong>
                 </footer>
               </article>
             </div>
             <ng-template #noOrders>
-              <p class="empty">No orders yet.</p>
+              <p class="empty">لا توجد طلبات بعد.</p>
             </ng-template>
           </article>
 
           <article class="panel" *ngIf="activeTab === 'wishlist'">
-            <h1>Wishlist</h1>
+            <h1>المفضلة</h1>
             <div class="wishlist-grid" *ngIf="wishlistItems.length; else emptyWishlist">
               <article class="wish-card" *ngFor="let item of wishlistItems">
                 <img [src]="getImageUrl(item.imageUrl)" [alt]="item.name" />
                 <h3>{{ item.name }}</h3>
-                <span>{{ item.price | number:'1.2-2' }} EGP</span>
+                <span>{{ item.price | number:'1.2-2' }} ج.م</span>
                 <div class="actions">
-                  <button (click)="addWishToCart(item)">Add to Cart</button>
-                  <button class="ghost" (click)="wishlist.remove(item.id)">Remove</button>
+                  <button (click)="addWishToCart(item)">أضف للسلة</button>
+                  <button class="ghost" (click)="wishlist.remove(item.id)">إزالة</button>
                 </div>
               </article>
             </div>
             <ng-template #emptyWishlist>
-              <p class="empty">No wishlist items yet.</p>
+              <p class="empty">لا توجد عناصر في المفضلة بعد.</p>
             </ng-template>
           </article>
 
           <article class="panel" *ngIf="activeTab === 'addresses'">
-            <h1>Addresses</h1>
+            <h1>العناوين</h1>
             <div class="address-form">
-              <input type="text" [(ngModel)]="newAddress" placeholder="Add a new address" />
-              <button (click)="addAddress()">Save</button>
+              <input type="text" [(ngModel)]="newAddress" placeholder="أضف عنوانا جديدا" />
+              <button (click)="addAddress()">حفظ</button>
             </div>
             <div class="address-list" *ngIf="addresses.length; else noAddresses">
               <div class="address-item" *ngFor="let addr of addresses; let i = index">
                 <span>{{ addr }}</span>
-                <button (click)="removeAddress(i)">Delete</button>
+                <button (click)="removeAddress(i)">حذف</button>
               </div>
             </div>
             <ng-template #noAddresses>
-              <p class="empty">No addresses saved.</p>
+              <p class="empty">لا توجد عناوين محفوظة.</p>
             </ng-template>
           </article>
 
           <article class="panel" *ngIf="activeTab === 'settings'">
-            <h1>Settings</h1>
-            <p class="sub">You can update account details and password from the admin identity endpoints later.</p>
+            <h1>الإعدادات</h1>
+            <p class="sub">يمكنك تحديث بيانات الحساب وكلمة المرور لاحقا من إعدادات الهوية.</p>
             <div class="setting-card">
-              <label>Username</label>
+              <label>اسم المستخدم</label>
               <input [value]="auth.currentUserValue?.username" disabled />
             </div>
             <div class="setting-card">
-              <label>Role</label>
+              <label>الدور</label>
               <input [value]="auth.currentUserValue?.role" disabled />
             </div>
           </article>
@@ -666,11 +666,11 @@ export class StorefrontProfileComponent implements OnInit, OnDestroy {
 
   getStatusLabel(status: string): string {
     switch (status) {
-      case 'PENDING': return 'Pending';
-      case 'PREPARING': return 'Preparing';
-      case 'OUT_FOR_DELIVERY': return 'Out for delivery';
-      case 'DELIVERED': return 'Delivered';
-      case 'CANCELLED': return 'Cancelled';
+      case 'PENDING': return 'قيد الانتظار';
+      case 'PREPARING': return 'جاري التجهيز';
+      case 'OUT_FOR_DELIVERY': return 'خرج للتوصيل';
+      case 'DELIVERED': return 'تم التسليم';
+      case 'CANCELLED': return 'ملغي';
       default: return status;
     }
   }
@@ -715,9 +715,9 @@ export class StorefrontProfileComponent implements OnInit, OnDestroy {
       error: () => {
         this.orders = [];
         this.isOrdersLoading = false;
-        this.ordersError = 'Failed to load orders.';
+        this.ordersError = 'فشل تحميل الطلبات.';
         if (!silent) {
-          this.toast.error('Failed to load orders');
+          this.toast.error('فشل تحميل الطلبات');
         }
       }
     });

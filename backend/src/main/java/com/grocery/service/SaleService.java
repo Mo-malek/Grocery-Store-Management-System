@@ -40,7 +40,9 @@ public class SaleService {
      */
     @Transactional
     public SaleView createSale(SaleRequest request) {
-        Sale sale = Sale.builder().build();
+        Sale sale = Sale.builder()
+                .saleChannel("POS")
+                .build();
 
         // ربط الكاشير (المستخدم الحالي)
         try {
@@ -213,6 +215,11 @@ public class SaleService {
                 .discount(sale.getDiscount())
                 .total(sale.getTotal())
                 .paymentMethod(sale.getPaymentMethod())
+                .saleChannel(sale.getSaleChannel())
+                .sourceOrderId(sale.getSourceOrderId())
+                .externalCustomerName(sale.getExternalCustomerName())
+                .externalCustomerPhone(sale.getExternalCustomerPhone())
+                .externalCustomerAddress(sale.getExternalCustomerAddress())
                 .createdAt(sale.getCreatedAt())
                 .customer(sale.getCustomer() != null ? CustomerView.builder()
                         .id(sale.getCustomer().getId())

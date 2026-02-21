@@ -39,26 +39,26 @@ public class ProductController {
     }
 
     @PostMapping
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('MANAGER')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(product));
     }
 
     @PutMapping("/{id}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('MANAGER')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Product updateProduct(@PathVariable("id") Long id, @Valid @RequestBody Product product) {
         return productService.updateProduct(id, product);
     }
 
     @DeleteMapping("/{id}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('MANAGER')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteProduct(@PathVariable("id") Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/adjust-stock")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('MANAGER')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Product adjustStock(@PathVariable("id") Long id, @RequestBody java.util.Map<String, Object> adjustment) {
         int quantity = ((Number) adjustment.get("quantity")).intValue();
         String reason = (String) adjustment.get("reason");
@@ -76,13 +76,13 @@ public class ProductController {
     }
 
     @GetMapping("/expiring")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('MANAGER')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public List<Product> getExpiringProducts(@RequestParam(name = "days", defaultValue = "30") int days) {
         return productService.getExpiringProducts(days);
     }
 
     @GetMapping("/inventory-audit")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('MANAGER')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public List<com.grocery.dto.StockAuditReport> getInventoryAudit() {
         return productService.getInventoryAuditReport();
     }

@@ -28,7 +28,7 @@ public class ExpenseController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteExpense(@PathVariable("id") Long id) {
         expenseService.deleteExpense(id);
         return ResponseEntity.ok().build();

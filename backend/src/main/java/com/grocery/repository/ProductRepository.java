@@ -67,22 +67,28 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         @Query("SELECT p FROM Product p WHERE p.active = true AND p.expiryDate <= :date")
         List<Product> findExpiringSoon(@Param("date") java.time.LocalDate date);
 
+        @Query("SELECT COUNT(p) FROM Product p WHERE p.active = true AND p.currentStock <= 0")
+        Long countOutOfStockProducts();
+
+        @Query("SELECT COUNT(p) FROM Product p WHERE p.active = true AND p.expiryDate IS NOT NULL AND p.expiryDate <= :date")
+        Long countExpiringSoonProducts(@Param("date") java.time.LocalDate date);
+
         @Query(value = """
                         SELECT * FROM product p
                          WHERE p.active = true
                            AND (:inStockOnly = false OR p.current_stock > 0)
                            AND (:category IS NULL OR p.category = :category)
                            AND (COALESCE(CAST(:search AS text), '') = '' OR p.name ILIKE CONCAT('%', CAST(:search AS text), '%') OR COALESCE(p.barcode, '') ILIKE CONCAT('%', CAST(:search AS text), '%'))
-                           AND (:minPrice IS NULL OR p.selling_price >= :minPrice)
-                           AND (:maxPrice IS NULL OR p.selling_price <= :maxPrice)
+                           AND (:minPrice IS NULL OR (p.selling_price * (1 - (COALESCE(p.discount_percentage, 0) / 100.0))) >= :minPrice)
+                           AND (:maxPrice IS NULL OR (p.selling_price * (1 - (COALESCE(p.discount_percentage, 0) / 100.0))) <= :maxPrice)
                         """, countQuery = """
                         SELECT count(*) FROM product p
                          WHERE p.active = true
                            AND (:inStockOnly = false OR p.current_stock > 0)
                            AND (:category IS NULL OR p.category = :category)
                            AND (COALESCE(CAST(:search AS text), '') = '' OR p.name ILIKE CONCAT('%', CAST(:search AS text), '%') OR COALESCE(p.barcode, '') ILIKE CONCAT('%', CAST(:search AS text), '%'))
-                           AND (:minPrice IS NULL OR p.selling_price >= :minPrice)
-                           AND (:maxPrice IS NULL OR p.selling_price <= :maxPrice)
+                           AND (:minPrice IS NULL OR (p.selling_price * (1 - (COALESCE(p.discount_percentage, 0) / 100.0))) >= :minPrice)
+                           AND (:maxPrice IS NULL OR (p.selling_price * (1 - (COALESCE(p.discount_percentage, 0) / 100.0))) <= :maxPrice)
                         """, nativeQuery = true)
         Page<Product> searchStorefront(@Param("search") String search,
                         @Param("category") String category,

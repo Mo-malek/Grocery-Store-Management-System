@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
+import { resolveImageUrl } from '../../core/utils/image-url.util';
 
 @Component({
   selector: 'app-storefront-cart',
@@ -20,6 +21,9 @@ import { AuthService } from '../../core/services/auth.service';
         <div class="cart-content" *ngIf="cart.cart$ | async as items; else loading">
           <div class="cart-items" *ngIf="items.length > 0; else emptyCart">
             <article class="cart-item" *ngFor="let item of items">
+              <div class="item-visual">
+                <img [src]="getImageUrl(item.product.imageUrl)" [alt]="item.product.name">
+              </div>
               <div class="item-info">
                 <h3>{{ item.product.name }}</h3>
                 <p class="meta">{{ item.product.category }} · {{ item.product.unit }}</p>
@@ -103,12 +107,26 @@ import { AuthService } from '../../core/services/auth.service';
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
       border-radius: 16px;
-      padding: 1rem 1.25rem;
+      padding: 0.85rem;
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) auto auto auto;
+      grid-template-columns: 80px minmax(0, 1.1fr) auto auto auto;
       gap: 1rem;
       align-items: center;
       backdrop-filter: var(--glass-blur);
+    }
+    .item-visual {
+      width: 80px;
+      aspect-ratio: 1/1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--image-surface);
+      border: 1px solid var(--glass-border);
+    }
+    .item-visual img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 0.25rem;
     }
 
     .item-info h3 { margin: 0 0 0.25rem; font-size: 1.05rem; }
@@ -226,5 +244,9 @@ export class StorefrontCartComponent {
     } else {
       this.router.navigate(['/login'], { queryParams: { returnUrl: '/shop/cart' } });
     }
+  }
+
+  getImageUrl(url?: string): string {
+    return resolveImageUrl(url);
   }
 }

@@ -41,7 +41,7 @@ public class BundleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public void deleteBundle(@PathVariable("id") Long id) {
         bundleService.deleteBundle(id);
     }

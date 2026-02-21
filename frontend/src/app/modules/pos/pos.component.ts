@@ -7,6 +7,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 import { SaleDetailModalComponent } from '../../shared/components/sale-detail-modal/sale-detail-modal.component';
 import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner/barcode-scanner.component';
+import { resolveImageUrl } from '../../core/utils/image-url.util';
 
 interface CartItem {
   product?: Product;
@@ -131,6 +132,9 @@ interface StoredCartItem {
             <!-- Products List -->
             <ng-container *ngIf="!showBundles">
               <div class="product-card" *ngFor="let product of filteredProducts" (click)="addToCart(product)">
+                <div class="pc-image">
+                  <img [src]="getImageUrl(product.imageUrl)" [alt]="product.name">
+                </div>
                 <div class="product-name">{{ product.name }}</div>
                 <div class="product-info">
                   <div class="product-stock" [class.low-stock]="product.currentStock <= product.minStock">
@@ -473,14 +477,31 @@ interface StoredCartItem {
       transform: scale(0.98);
     }
     
+    .pc-image {
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--image-surface);
+      border: 1px solid var(--border-color);
+      margin-bottom: 0.5rem;
+    }
+    .pc-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 0.25rem;
+    }
+    
     .product-name {
       font-weight: 700;
       margin-bottom: 0.65rem;
-      line-height: 1.25rem;
-      min-height: 2.5rem; /* keep equal card heights but allow up to 3 lines */
+      line-height: 1.1rem;
+      font-size: 0.85rem;
+      min-height: 2.2rem;
       overflow: hidden;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       word-break: break-word;
     }
@@ -680,10 +701,7 @@ export class PosComponent implements OnInit {
 
   // New: Handle camera scan result
   onCameraScan(barcode: string) {
-    console.log('Camera scanned:', barcode);
     this.processBarcode(barcode);
-    // Optional: Close scanner after one successful scan, OR keep it open for bulk scanning
-    // this.showScanner = false; 
   }
 
 
@@ -944,17 +962,17 @@ export class PosComponent implements OnInit {
       paymentMethod: 'CASH'
     };
 
-      this.api.createSale(saleRequest).subscribe({
-        next: (sale) => {
-          this.toast.success(`تمت عملية البيع بنجاح! فاتورة #${sale.id}`);
-          this.lastSale = sale; // Store for modal
-          this.cart = [];
-          this.discount = 0;
-          this.selectedCustomerId = null;
-          this.calculateTotals();
-          this.updateRecommendations();
-          this.persistCart(true);
-          this.isProcessing = false;
+    this.api.createSale(saleRequest).subscribe({
+      next: (sale) => {
+        this.toast.success(`تمت عملية البيع بنجاح! فاتورة #${sale.id}`);
+        this.lastSale = sale; // Store for modal
+        this.cart = [];
+        this.discount = 0;
+        this.selectedCustomerId = null;
+        this.calculateTotals();
+        this.updateRecommendations();
+        this.persistCart(true);
+        this.isProcessing = false;
 
         // Refresh products to update stock
         this.loadProducts();
@@ -992,5 +1010,9 @@ export class PosComponent implements OnInit {
     if (product) {
       this.addToCart(product);
     }
+  }
+
+  getImageUrl(url?: string): string {
+    return resolveImageUrl(url);
   }
 }

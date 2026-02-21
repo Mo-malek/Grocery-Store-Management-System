@@ -11,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,6 +74,7 @@ public class ProductService {
     @Transactional
     @CacheEvict(value = "categories", allEntries = true)
     public Product createProduct(Product product) {
+        product.setDiscountPercentage(normalizeDiscountPercentage(product.getDiscountPercentage()));
         return productRepository.save(product);
     }
 
@@ -89,6 +92,9 @@ public class ProductService {
         existing.setUnit(updated.getUnit());
         existing.setExpiryDate(updated.getExpiryDate());
         existing.setManufacturer(updated.getManufacturer());
+        existing.setDescription(updated.getDescription());
+        existing.setImageUrl(updated.getImageUrl());
+        existing.setDiscountPercentage(normalizeDiscountPercentage(updated.getDiscountPercentage()));
         return productRepository.save(existing);
     }
 
@@ -167,5 +173,13 @@ public class ProductService {
                 })
                 .filter(report -> report.getLossRate() > 2.0)
                 .collect(Collectors.toList());
+    }
+
+    private BigDecimal normalizeDiscountPercentage(BigDecimal discountPercentage) {
+        if (discountPercentage == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal sanitized = discountPercentage.max(BigDecimal.ZERO).min(BigDecimal.valueOf(100));
+        return sanitized.setScale(2, RoundingMode.HALF_UP);
     }
 }

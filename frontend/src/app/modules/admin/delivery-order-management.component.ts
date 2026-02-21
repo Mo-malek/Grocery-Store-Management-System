@@ -13,12 +13,12 @@ import { ToastService } from '../../core/services/toast.service';
     <div class="orders-admin-page fade-in">
       <header class="page-header">
         <div class="header-content">
-          <h1>Delivery Orders</h1>
-          <p>Track and update customer order status from one place.</p>
+          <h1>طلبات التوصيل</h1>
+          <p>تتبع وتحديث حالة طلبات العملاء من مكان واحد.</p>
         </div>
 
         <div class="filters glass-box">
-          <label>Filter by status:</label>
+          <label>تصفية حسب الحالة:</label>
           <div class="filter-pills">
             <button *ngFor="let status of statuses"
                     [class.active]="activeFilter === status"
@@ -31,7 +31,7 @@ import { ToastService } from '../../core/services/toast.service';
 
       <div class="loading-state" *ngIf="isLoading">
         <div class="spinner"></div>
-        <p>Loading delivery orders...</p>
+        <p>جاري تحميل طلبات التوصيل...</p>
       </div>
 
       <p class="error-state" *ngIf="!isLoading && loadError">{{ loadError }}</p>
@@ -43,7 +43,7 @@ import { ToastService } from '../../core/services/toast.service';
 
           <div class="order-head">
             <div class="order-id">
-              <span class="label">Order</span>
+              <span class="label">رقم الطلب</span>
               <span class="val">#{{ order.id }}</span>
             </div>
             <div class="order-status" [attr.data-status]="order.status">
@@ -55,7 +55,7 @@ import { ToastService } from '../../core/services/toast.service';
             <div class="info-row">
               <span class="icon">👤</span>
               <div class="text">
-                <div class="name">{{ order.customer?.fullName || order.customer?.username || 'Customer' }}</div>
+                <div class="name">{{ order.customer?.fullName || order.customer?.username || 'عميل' }}</div>
                 <div class="phone">{{ order.phone }}</div>
               </div>
             </div>
@@ -67,29 +67,29 @@ import { ToastService } from '../../core/services/toast.service';
 
           <div class="order-details">
             <div class="items-summary" (click)="toggleItems(order.id)">
-              <span>{{ order.items.length }} item(s)</span>
+              <span>{{ order.items.length }} منتج(ات)</span>
               <span class="toggle-icon">{{ expandedOrders.has(order.id) ? '▲' : '▼' }}</span>
             </div>
 
             <div class="items-list" *ngIf="expandedOrders.has(order.id)">
               <div class="item" *ngFor="let item of order.items">
-                <span class="name">{{ item.productName || 'Product' }}</span>
+                <span class="name">{{ item.productName || 'منتج' }}</span>
                 <span class="qty">x {{ item.quantity }}</span>
-                <span class="price">{{ item.unitPrice * item.quantity | number:'1.2-2' }} EGP</span>
+                <span class="price">{{ item.unitPrice * item.quantity | number:'1.2-2' }} ج.م</span>
               </div>
             </div>
 
             <div class="totals">
               <div class="total-row">
-                <span>Total:</span>
-                <span class="grand-total">{{ order.totalAmount | number:'1.2-2' }} EGP</span>
+                <span>الإجمالي:</span>
+                <span class="grand-total">{{ order.totalAmount | number:'1.2-2' }} ج.م</span>
               </div>
             </div>
           </div>
 
           <div class="order-actions">
             <div class="status-manager">
-              <label>Change status:</label>
+              <label>تغيير الحالة:</label>
               <select [ngModel]="order.status" (ngModelChange)="updateStatus(order, $event)">
                 <option *ngFor="let status of statuses.slice(1)" [value]="status">
                   {{ getStatusLabel(status) }}
@@ -103,14 +103,14 @@ import { ToastService } from '../../core/services/toast.service';
       <ng-template #empty>
         <div class="empty-state glass-box zoom-in" *ngIf="!isLoading && !loadError">
           <div class="icon">📦</div>
-          <h2>No orders found</h2>
-          <p>No delivery orders match the selected filter.</p>
+          <h2>لا توجد طلبات</h2>
+          <p>لا توجد طلبات توصيل تطابق التصفية المختارة.</p>
         </div>
       </ng-template>
     </div>
   `,
   styles: [`
-    .orders-admin-page { padding: 1rem; max-width: 1400px; margin: 0 auto; }
+    .orders-admin-page { padding: 1rem; max-width: 1400px; margin: 0 auto; text-align: right; }
 
     .page-header { margin-bottom: 1.5rem; }
     .header-content h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.4rem; }
@@ -294,8 +294,8 @@ export class DeliveryOrderManagementComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.toast.show('Failed to load delivery orders', 'error');
-        this.loadError = 'Failed to load delivery orders.';
+        this.toast.error('فشل تحميل طلبات التوصيل');
+        this.loadError = 'فشل تحميل طلبات التوصيل.';
         this.isLoading = false;
       }
     });
@@ -333,24 +333,24 @@ export class DeliveryOrderManagementComponent implements OnInit {
       next: (updated) => {
         order.status = updated.status;
         this.applyFilter();
-        this.toast.show(`Order #${order.id} updated`, 'success');
+        this.toast.success(`تم تحديث الطلب #${order.id}`);
       },
       error: () => {
         order.status = previous;
         this.applyFilter();
-        this.toast.show('Failed to update order status', 'error');
+        this.toast.error('فشل تحديث حالة الطلب');
       }
     });
   }
 
   getStatusLabel(status: string): string {
     switch (status) {
-      case 'ALL': return 'All';
-      case DeliveryStatus.PENDING: return 'Pending';
-      case DeliveryStatus.PREPARING: return 'Preparing';
-      case DeliveryStatus.OUT_FOR_DELIVERY: return 'Out for delivery';
-      case DeliveryStatus.DELIVERED: return 'Delivered';
-      case DeliveryStatus.CANCELLED: return 'Cancelled';
+      case 'ALL': return 'الكل';
+      case DeliveryStatus.PENDING: return 'قيد الانتظار';
+      case DeliveryStatus.PREPARING: return 'جاري التحضير';
+      case DeliveryStatus.OUT_FOR_DELIVERY: return 'خرج للتوصيل';
+      case DeliveryStatus.DELIVERED: return 'تم التوصيل';
+      case DeliveryStatus.CANCELLED: return 'تم الإلغاء';
       default: return status;
     }
   }
