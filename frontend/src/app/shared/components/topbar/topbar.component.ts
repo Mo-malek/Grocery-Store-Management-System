@@ -296,14 +296,14 @@ export class TopbarComponent implements OnInit {
   ];
 
   private readonly storageKey = 'app-theme';
-  currentTheme = this.themes[0];
+  currentTheme = this.themes[1];
 
   constructor(private layout: LayoutService) { }
 
   ngOnInit() {
     const saved = localStorage.getItem(this.storageKey);
     const found = this.themes.find(t => t.key === saved);
-    this.currentTheme = found ?? this.themes[0];
+    this.currentTheme = found ?? this.themes[1];
     this.applyTheme(this.currentTheme.key);
   }
 
@@ -314,7 +314,7 @@ export class TopbarComponent implements OnInit {
   }
 
   private applyTheme(key: string) {
-    const normalized = this.themes.some(t => t.key === key) ? key : 'theme-light';
+    const normalized = this.themes.some(t => t.key === key) ? key : 'theme-dark';
     Array.from(document.body.classList)
       .filter(cls => cls.startsWith('theme-'))
       .forEach(cls => document.body.classList.remove(cls));

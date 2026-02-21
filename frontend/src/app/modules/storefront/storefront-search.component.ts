@@ -22,16 +22,16 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
               <path d="M20 20L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
             </svg>
           </span>
-          <input [(ngModel)]="q" (input)="reloadDebounced()" placeholder="Search products, categories, brands..." />
+          <input [(ngModel)]="q" (input)="reloadDebounced()" placeholder="ابحث عن المنتجات والأقسام والعلامات التجارية..." />
         </div>
         <div class="results-meta fade-in" *ngIf="q">
-          Results for "<strong>{{ q }}</strong>": {{ page?.totalElements || 0 }} products
+          نتائج البحث عن "<strong>{{ q }}</strong>": {{ page?.totalElements || 0 }} منتج
         </div>
       </header>
 
       <div class="loading-state" *ngIf="isLoading">
         <div class="spinner"></div>
-        <p>Searching products...</p>
+        <p>جاري البحث عن المنتجات...</p>
       </div>
 
       <p class="error-state" *ngIf="!isLoading && loadError">{{ loadError }}</p>
@@ -41,21 +41,23 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
                  [style.animation-delay]="i * 0.05 + 's'">
           <div class="card-visual">
             <img [src]="getImageUrl(p.imageUrl)" alt="">
-            <span class="stock-badge" *ngIf="p.lowStock">Low stock</span>
+            <span class="offer-badge" *ngIf="(p.discountPercentage ?? 0) > 0">{{ p.discountPercentage | number:'1.0-2' }}% خصم</span>
+            <span class="stock-badge" *ngIf="p.lowStock">كمية منخفضة</span>
           </div>
 
           <div class="card-info">
-            <div class="category-chip">{{ p.category || 'General' }}</div>
+            <div class="category-chip">{{ p.category || 'عام' }}</div>
             <h3>{{ p.name }}</h3>
             <div class="price-row">
-              <span class="price">{{ p.price | number:'1.2-2' }} <small>EGP</small></span>
-              <span class="unit">/ {{ p.unit || 'unit' }}</span>
+              <span class="price">{{ p.price | number:'1.2-2' }} <small>ج.م</small></span>
+              <span class="old-price" *ngIf="(p.discountPercentage ?? 0) > 0 && (p.discountPercentage ?? 0) < 100">{{ (p.price / (1 - ((p.discountPercentage ?? 0) / 100))) | number:'1.2-2' }} ج.م</span>
+              <span class="unit">/ {{ p.unit || 'وحدة' }}</span>
             </div>
           </div>
 
           <div class="card-actions">
-            <a class="btn-secondary" [routerLink]="['/shop/product', p.id]">Details</a>
-            <button class="btn-primary" [disabled]="p.stock === 0" (click)="addToCart(p)">Add to cart</button>
+            <a class="btn-secondary" [routerLink]="['/shop/product', p.id]">التفاصيل</a>
+            <button class="btn-primary" [disabled]="p.stock === 0" (click)="addToCart(p)">أضف للسلة</button>
           </div>
         </article>
       </div>
@@ -67,9 +69,9 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
             <path d="M20 20L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
           </svg>
         </div>
-        <h2>No products found</h2>
-        <p>Try another keyword or browse categories.</p>
-        <a routerLink="/shop/catalog" class="btn-primary">Browse catalog</a>
+        <h2>لا توجد منتجات</h2>
+        <p>جرّب كلمة بحث أخرى أو تصفح الأقسام.</p>
+        <a routerLink="/shop/catalog" class="btn-primary">تصفح المنتجات</a>
       </div>
     </section>
   `,
@@ -125,6 +127,7 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
     .card-visual { height: 180px; position: relative; background: var(--image-surface); border-radius: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .card-visual img { max-width: 85%; max-height: 85%; object-fit: contain; }
     .stock-badge { position: absolute; top: 10px; right: 10px; background: var(--danger-color); color: #fff; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 800; }
+    .offer-badge { position: absolute; top: 10px; left: 10px; background: var(--danger-color); color: #fff; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 800; }
 
     .category-chip { align-self: flex-start; background: var(--surface-soft); padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; color: var(--text-muted); border: 1px solid var(--glass-border); }
     .card-info h3 { margin: 0.5rem 0; font-size: 1.05rem; font-weight: 800; line-height: 1.4; }
@@ -132,6 +135,7 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
     .price-row { display: flex; align-items: baseline; gap: 0.5rem; }
     .price-row .price { font-size: 1.2rem; font-weight: 900; color: var(--text-main); }
     .price-row .price small { font-size: 0.78rem; font-weight: 700; opacity: 0.8; }
+    .price-row .old-price { color: var(--text-muted); font-size: 0.82rem; text-decoration: line-through; }
     .price-row .unit { font-size: 0.85rem; color: var(--text-muted); }
 
     .card-actions { display: flex; gap: 0.75rem; margin-top: auto; }
@@ -198,7 +202,7 @@ export class StorefrontSearchComponent implements OnInit, OnDestroy {
         error: () => {
           this.products = [];
           this.isLoading = false;
-          this.loadError = 'Search failed. Please try again.';
+          this.loadError = 'فشل البحث. حاول مرة أخرى.';
         }
       });
   }
@@ -215,7 +219,7 @@ export class StorefrontSearchComponent implements OnInit, OnDestroy {
 
   addToCart(product: StorefrontProduct) {
     this.cart.addToCart(product, 1);
-    this.toast.success(`${product.name} added to cart`);
+    this.toast.success(`تمت إضافة ${product.name} إلى السلة`);
   }
 
   getImageUrl(url?: string): string {

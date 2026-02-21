@@ -62,6 +62,11 @@ export interface SaleView {
     discount: number;
     total: number;
     paymentMethod: 'CASH' | 'CARD';
+    saleChannel?: 'POS' | 'ONLINE' | string;
+    sourceOrderId?: number;
+    externalCustomerName?: string;
+    externalCustomerPhone?: string;
+    externalCustomerAddress?: string;
     createdAt: string;
     customer?: Customer;
     items?: SaleItemView[];
@@ -79,12 +84,20 @@ export interface SaleItemView {
 export interface DashboardStats {
     totalSalesToday: number;
     totalSalesThisMonth: number;
+    posSalesToday: number;
+    onlineSalesToday: number;
+    posSalesThisMonth: number;
+    onlineSalesThisMonth: number;
     transactionCountToday: number;
+    posTransactionCountToday: number;
+    onlineTransactionCountToday: number;
     averageBasketSize: number;
     estimatedProfitToday: number;
     netProfitThisMonth: number;
     totalExpensesThisMonth: number;
     lowStockCount: number;
+    outOfStockCount: number;
+    expiringSoonCount: number;
     lowStockProducts?: Product[];
     topProducts: TopProduct[];
     dailySales: DailySale[];

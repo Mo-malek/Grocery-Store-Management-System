@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
-import { DashboardStats } from '../../core/models/models';
+import { DashboardStats, SaleView } from '../../core/models/models';
 import { BarChartComponent } from '../../shared/components/chart/bar-chart.component';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -15,24 +15,24 @@ import { AuthService } from '../../core/services/auth.service';
     <section class="dashboard-page">
       <header class="page-header">
         <div>
-          <h1>Dashboard</h1>
-          <p>Live operational and financial view of your internal system.</p>
+          <h1>لوحة القيادة</h1>
+          <p>عرض حي للعمليات والتحليل المالي للنظام الداخلي.</p>
         </div>
         <div class="header-actions">
-          <a routerLink="/pos" class="quick-btn">Open POS</a>
-          <a routerLink="/inventory" class="quick-btn">Inventory</a>
-          <a *ngIf="isManagerOrAdmin" routerLink="/delivery-orders" class="quick-btn">Delivery Orders</a>
+          <a routerLink="/pos" class="quick-btn">فتح نقطة البيع</a>
+          <a routerLink="/inventory" class="quick-btn">المخزون</a>
+          <a *ngIf="isManagerOrAdmin" routerLink="/delivery-orders" class="quick-btn">طلبات التوصيل</a>
         </div>
       </header>
 
       <div class="dashboard-tabs">
-        <button class="tab-btn" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">Overview</button>
-        <button class="tab-btn" [class.active]="activeTab === 'team'" (click)="activeTab = 'team'">Team Performance</button>
+        <button class="tab-btn" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">نظرة عامة</button>
+        <button class="tab-btn" [class.active]="activeTab === 'team'" (click)="activeTab = 'team'">أداء الفريق</button>
       </div>
 
       <div class="loading-state" *ngIf="isLoading">
         <div class="spinner"></div>
-        <p>Loading dashboard data...</p>
+        <p>جاري تحميل بيانات لوحة القيادة...</p>
       </div>
 
       <p class="error-state" *ngIf="!isLoading && loadError">{{ loadError }}</p>
@@ -40,77 +40,133 @@ import { AuthService } from '../../core/services/auth.service';
       <ng-container *ngIf="activeTab === 'overview' && stats">
         <div class="stats-grid">
           <article class="kpi-card">
-            <span>Store Health</span>
+            <span>صحة المتجر</span>
             <strong>{{ stats.storeHealthScore }}%</strong>
           </article>
           <article class="kpi-card">
-            <span>Sales Today</span>
-            <strong>{{ stats.totalSalesToday | number:'1.2-2' }} EGP</strong>
+            <span>مبيعات اليوم</span>
+            <strong>{{ stats.totalSalesToday | number:'1.2-2' }} ج.م</strong>
           </article>
           <article class="kpi-card">
-            <span>Profit Today</span>
-            <strong>{{ stats.estimatedProfitToday | number:'1.2-2' }} EGP</strong>
+            <span>ربح اليوم</span>
+            <strong>{{ stats.estimatedProfitToday | number:'1.2-2' }} ج.م</strong>
           </article>
           <article class="kpi-card">
-            <span>Monthly Sales</span>
-            <strong>{{ stats.totalSalesThisMonth | number:'1.2-2' }} EGP</strong>
+            <span>المبيعات الشهرية</span>
+            <strong>{{ stats.totalSalesThisMonth | number:'1.2-2' }} ج.م</strong>
           </article>
           <article class="kpi-card">
-            <span>Monthly Expenses</span>
-            <strong>{{ stats.totalExpensesThisMonth | number:'1.2-2' }} EGP</strong>
+            <span>المصاريف الشهرية</span>
+            <strong>{{ stats.totalExpensesThisMonth | number:'1.2-2' }} ج.م</strong>
           </article>
           <article class="kpi-card accent">
-            <span>Net Profit</span>
-            <strong>{{ stats.netProfitThisMonth | number:'1.2-2' }} EGP</strong>
+            <span>صافي الربح</span>
+            <strong>{{ stats.netProfitThisMonth | number:'1.2-2' }} ج.م</strong>
+          </article>
+        </div>
+
+        <div class="split-grid">
+          <article class="panel">
+            <header>
+              <h2>تحليل قنوات البيع</h2>
+            </header>
+            <div class="split-cards">
+              <div class="split-card">
+                <p class="split-title">مبيعات المتجر (POS)</p>
+                <strong>{{ (stats.posSalesToday || 0) | number:'1.2-2' }} ج.م</strong>
+                <small>اليوم: {{ stats.posTransactionCountToday || 0 }} عملية</small>
+                <small>الشهر: {{ (stats.posSalesThisMonth || 0) | number:'1.2-2' }} ج.م</small>
+              </div>
+              <div class="split-card online">
+                <p class="split-title">المبيعات أونلاين</p>
+                <strong>{{ (stats.onlineSalesToday || 0) | number:'1.2-2' }} ج.م</strong>
+                <small>اليوم: {{ stats.onlineTransactionCountToday || 0 }} عملية</small>
+                <small>الشهر: {{ (stats.onlineSalesThisMonth || 0) | number:'1.2-2' }} ج.م</small>
+              </div>
+            </div>
+            <div class="split-meta">
+              <span>نسبة الأونلاين اليوم: {{ getChannelShare(stats.onlineSalesToday || 0, stats.totalSalesToday || 0) }}%</span>
+              <span>نسبة الأونلاين هذا الشهر: {{ getChannelShare(stats.onlineSalesThisMonth || 0, stats.totalSalesThisMonth || 0) }}%</span>
+            </div>
+          </article>
+
+          <article class="panel">
+            <header>
+              <h2>صحة المخزون والتنبيهات</h2>
+            </header>
+            <div class="inventory-snapshot">
+              <div class="inventory-chip">
+                <span>إجمالي التنبيهات</span>
+                <strong>{{ getCriticalAlertsCount(stats) }}</strong>
+              </div>
+              <div class="inventory-chip warning">
+                <span>مخزون منخفض</span>
+                <strong>{{ stats.lowStockCount || 0 }}</strong>
+              </div>
+              <div class="inventory-chip danger">
+                <span>نفاد مخزون</span>
+                <strong>{{ stats.outOfStockCount || 0 }}</strong>
+              </div>
+              <div class="inventory-chip danger">
+                <span>قرب الانتهاء (7 أيام)</span>
+                <strong>{{ stats.expiringSoonCount || 0 }}</strong>
+              </div>
+            </div>
           </article>
         </div>
 
         <article class="panel danger" *ngIf="stats.lowStockProducts?.length">
           <header>
-            <h2>Low Stock Alerts</h2>
-            <a routerLink="/inventory">Open inventory</a>
+            <h2>تنبيهات انخفاض المخزون</h2>
+            <a routerLink="/inventory">فتح المخزون</a>
           </header>
           <div class="alert-grid">
             <div class="alert-item" *ngFor="let product of stats.lowStockProducts">
               <strong>{{ product.name }}</strong>
-              <span>Stock: {{ product.currentStock }} {{ product.unit }}</span>
+              <span>المخزون: {{ product.currentStock }} {{ product.unit }}</span>
             </div>
           </div>
         </article>
 
         <div class="charts-grid">
           <article class="panel chart">
-            <app-bar-chart [title]="'Daily Sales (Last 7 days)'" [data]="dailySalesData"></app-bar-chart>
+            <app-bar-chart [title]="'المبيعات اليومية (آخر 7 أيام)'" [data]="dailySalesData"></app-bar-chart>
           </article>
           <article class="panel chart">
-            <app-bar-chart [title]="'Category Profit (This month)'" [data]="categoryProfitData"></app-bar-chart>
+            <app-bar-chart [title]="'أرباح الفئات (هذا الشهر)'" [data]="categoryProfitData"></app-bar-chart>
           </article>
         </div>
 
         <div class="tables-grid">
           <article class="panel">
             <header>
-              <h2>Recent Sales</h2>
+              <h2>أحدث المبيعات</h2>
             </header>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Time</th>
-                    <th>Customer</th>
-                    <th>Total</th>
-                    <th>Payment</th>
+                    <th>الوقت</th>
+                    <th>النوع</th>
+                    <th>العميل</th>
+                    <th>الإجمالي</th>
+                    <th>الدفع</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr *ngFor="let sale of stats.recentSales">
                     <td>#{{ sale.id }}</td>
                     <td>{{ sale.createdAt | date:'shortTime' }}</td>
-                    <td>{{ sale.customer ? sale.customer.name : 'Cash Customer' }}</td>
-                    <td class="amount">{{ sale.total | number:'1.2-2' }} EGP</td>
                     <td>
-                      <span class="status-pill" [attr.data-status]="sale.paymentMethod">{{ sale.paymentMethod }}</span>
+                      <span class="channel-pill" [attr.data-channel]="sale.saleChannel || 'POS'">
+                        {{ getSaleChannelLabel(sale.saleChannel) }}
+                      </span>
+                    </td>
+                    <td>{{ getSaleCustomerName(sale) }}</td>
+                    <td class="amount">{{ sale.total | number:'1.2-2' }} ج.م</td>
+                    <td>
+                      <span class="status-pill" [attr.data-status]="sale.paymentMethod">{{ getPaymentLabel(sale.paymentMethod) }}</span>
                     </td>
                   </tr>
                 </tbody>
@@ -120,16 +176,16 @@ import { AuthService } from '../../core/services/auth.service';
 
           <article class="panel">
             <header>
-              <h2>Category Analytics</h2>
+              <h2>تحليلات الفئات</h2>
             </header>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Category</th>
-                    <th>Revenue</th>
-                    <th>Profit</th>
-                    <th>Margin</th>
+                    <th>الفئة</th>
+                    <th>الإيرادات</th>
+                    <th>الربح</th>
+                    <th>الهامش</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -149,24 +205,24 @@ import { AuthService } from '../../core/services/auth.service';
       <ng-container *ngIf="activeTab === 'team' && stats">
         <article class="panel">
           <header>
-            <h2>Employee Leaderboard</h2>
+            <h2>ترتيب الموظفين</h2>
           </header>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Rank</th>
-                  <th>Employee</th>
-                  <th>Transactions</th>
-                  <th>Total Sales</th>
+                  <th>الترتيب</th>
+                  <th>الموظف</th>
+                  <th>العمليات</th>
+                  <th>إجمالي المبيعات</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let emp of stats.employeeLeaderboard; let i = index">
                   <td><span class="rank" [class.top]="i < 3">{{ i + 1 }}</span></td>
-                  <td>{{ emp.fullName || 'Cashier' }}</td>
+                  <td>{{ emp.fullName || 'كاشير' }}</td>
                   <td>{{ emp.transactionCount }}</td>
-                  <td class="amount">{{ emp.totalSales | number:'1.2-2' }} EGP</td>
+                  <td class="amount">{{ emp.totalSales | number:'1.2-2' }} ج.م</td>
                 </tr>
               </tbody>
             </table>
@@ -332,6 +388,113 @@ import { AuthService } from '../../core/services/auth.service';
       color: var(--secondary-color);
     }
 
+    .split-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-2);
+    }
+
+    .split-cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .split-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0.72rem;
+      background: var(--surface-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+    }
+
+    .split-card.online {
+      border-color: rgba(var(--secondary-rgb), 0.35);
+      background: rgba(var(--secondary-rgb), 0.08);
+    }
+
+    .split-title {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .split-card strong {
+      color: var(--text-main);
+      font-size: 1.05rem;
+    }
+
+    .split-card small {
+      color: var(--text-secondary);
+      font-size: 0.77rem;
+      font-weight: 600;
+    }
+
+    .split-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+    }
+
+    .split-meta span {
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.2rem 0.5rem;
+      background: var(--surface-soft);
+    }
+
+    .inventory-snapshot {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    .inventory-chip {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--surface-soft);
+      padding: 0.72rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .inventory-chip span {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .inventory-chip strong {
+      color: var(--text-main);
+      font-size: 1.2rem;
+      line-height: 1.1;
+    }
+
+    .inventory-chip.warning {
+      border-color: rgba(217, 119, 6, 0.35);
+      background: rgba(217, 119, 6, 0.08);
+    }
+
+    .inventory-chip.warning strong {
+      color: var(--warning-color);
+    }
+
+    .inventory-chip.danger {
+      border-color: rgba(220, 38, 38, 0.35);
+      background: rgba(220, 38, 38, 0.08);
+    }
+
+    .inventory-chip.danger strong {
+      color: var(--danger-color);
+    }
+
     .panel {
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
@@ -472,6 +635,22 @@ import { AuthService } from '../../core/services/auth.service';
       border-color: rgba(22, 163, 74, 0.3);
     }
 
+    .channel-pill {
+      padding: 0.16rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--surface-soft);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .channel-pill[data-channel="ONLINE"] {
+      color: var(--secondary-color);
+      border-color: rgba(var(--secondary-rgb), 0.35);
+      background: rgba(var(--secondary-rgb), 0.12);
+    }
+
     .rank {
       width: 28px;
       height: 28px;
@@ -493,6 +672,9 @@ import { AuthService } from '../../core/services/auth.service';
     }
 
     @media (max-width: 1080px) {
+      .split-grid,
+      .split-cards,
+      .inventory-snapshot,
       .charts-grid,
       .tables-grid {
         grid-template-columns: 1fr;
@@ -551,10 +733,43 @@ export class DashboardComponent implements OnInit {
       error: () => {
         this.stats = null;
         this.isLoading = false;
-        this.loadError = 'Failed to load dashboard statistics.';
-        this.toast.error('Failed to load dashboard');
+        this.loadError = 'فشل تحميل إحصائيات لوحة القيادة.';
+        this.toast.error('فشل تحميل لوحة القيادة');
       }
     });
+  }
+
+  getPaymentLabel(method: string): string {
+    return method === 'CASH' ? 'نقدي' : 'فيزا';
+  }
+
+  getSaleChannelLabel(channel?: string): string {
+    return channel === 'ONLINE' ? 'أونلاين' : 'المتجر';
+  }
+
+  getSaleCustomerName(sale: SaleView): string {
+    if (sale.customer?.name?.trim()) {
+      return sale.customer.name;
+    }
+    if (sale.externalCustomerName?.trim()) {
+      return sale.externalCustomerName;
+    }
+    return 'عميل نقدي';
+  }
+
+  getChannelShare(channelSales: number, totalSales: number): number {
+    const total = Number(totalSales) || 0;
+    if (total <= 0) {
+      return 0;
+    }
+    const part = Number(channelSales) || 0;
+    return Math.round((part / total) * 100);
+  }
+
+  getCriticalAlertsCount(stats: DashboardStats): number {
+    return (Number(stats.lowStockCount) || 0)
+      + (Number(stats.outOfStockCount) || 0)
+      + (Number(stats.expiringSoonCount) || 0);
   }
 
   getMargin(profit: number, revenue: number): string {

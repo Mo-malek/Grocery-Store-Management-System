@@ -7,53 +7,53 @@ import { ToastService } from '../../core/services/toast.service';
 import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
 @Component({
-    selector: 'app-expenses',
-    standalone: true,
-    imports: [CommonModule, FormsModule, SpinnerComponent],
-    template: `
+  selector: 'app-expenses',
+  standalone: true,
+  imports: [CommonModule, FormsModule, SpinnerComponent],
+  template: `
     <div class="container">
       <app-spinner *ngIf="isLoading"></app-spinner>
       <div class="header">
-        <h1>Expense Management</h1>
-        <button class="btn btn-primary" (click)="openModal()">Add Expense</button>
+        <h1>إدارة المصاريف</h1>
+        <button class="btn btn-primary" (click)="openModal()">إضافة مصروف</button>
       </div>
 
       <div class="modal" *ngIf="showAddModal">
         <div class="modal-content">
-          <h3>Add New Expense</h3>
+          <h3>إضافة مصروف جديد</h3>
           <div class="form-group">
-            <label>Description</label>
-            <input type="text" [(ngModel)]="newExpense.description" placeholder="Rent, electricity bill, maintenance...">
+            <label>الوصف</label>
+            <input type="text" [(ngModel)]="newExpense.description" placeholder="إيجار، فاتورة كهرباء، صيانة...">
           </div>
           <div class="form-group">
-            <label>Amount (EGP)</label>
+            <label>المبلغ (ج.م)</label>
             <input type="number" min="0" step="0.01" [(ngModel)]="newExpense.amount">
           </div>
           <div class="form-group">
-            <label>Category</label>
+            <label>الفئة</label>
             <select [(ngModel)]="newExpense.category">
-              <option value="RENT">Rent</option>
-              <option value="ELECTRICITY">Electricity</option>
-              <option value="SALARY">Salary</option>
-              <option value="MAINTENANCE">Maintenance</option>
-              <option value="OTHER">Other</option>
+              <option value="RENT">إيجار</option>
+              <option value="ELECTRICITY">كهرباء</option>
+              <option value="SALARY">رواتب</option>
+              <option value="MAINTENANCE">صيانة</option>
+              <option value="OTHER">أخرى</option>
             </select>
           </div>
           <div class="modal-actions">
-            <button class="btn btn-secondary" (click)="closeModal()" [disabled]="isSubmitting">Cancel</button>
-            <button class="btn btn-primary" (click)="addExpense()" [disabled]="isSubmitting || !canSubmit">{{ isSubmitting ? 'Saving...' : 'Save' }}</button>
+            <button class="btn btn-secondary" (click)="closeModal()" [disabled]="isSubmitting">إلغاء</button>
+            <button class="btn btn-primary" (click)="addExpense()" [disabled]="isSubmitting || !canSubmit">{{ isSubmitting ? 'جاري الحفظ...' : 'حفظ' }}</button>
           </div>
         </div>
       </div>
 
       <div class="summary-row" *ngIf="expenses.length">
         <div class="summary-card">
-          <span class="label">Total Expenses</span>
-          <span class="value">{{ totalAmount | number:'1.2-2' }} EGP</span>
+          <span class="label">إجمالي المصاريف</span>
+          <span class="value">{{ totalAmount | number:'1.2-2' }} ج.م</span>
         </div>
         <div class="summary-card" *ngFor="let cat of categoryKeys">
           <span class="label">{{ getCategoryLabel(cat) }}</span>
-          <span class="value">{{ categoryTotals[cat] | number:'1.2-2' }} EGP</span>
+          <span class="value">{{ categoryTotals[cat] | number:'1.2-2' }} ج.م</span>
         </div>
       </div>
 
@@ -61,11 +61,11 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
         <table>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Amount</th>
-              <th>Actions</th>
+              <th>التاريخ</th>
+              <th>الوصف</th>
+              <th>الفئة</th>
+              <th>المبلغ</th>
+              <th>إجراءات</th>
             </tr>
           </thead>
           <tbody>
@@ -77,20 +77,20 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
               <td>
                 <span class="category-badge">{{ getCategoryLabel(ex.category) }}</span>
               </td>
-              <td class="amount">{{ ex.amount | number:'1.2-2' }} EGP</td>
+              <td class="amount">{{ ex.amount | number:'1.2-2' }} ج.م</td>
               <td>
-                <button class="btn-icon danger" (click)="deleteExpense(ex.id!)">Delete</button>
+                <button class="btn-icon danger" (click)="deleteExpense(ex.id!)">حذف</button>
               </td>
             </tr>
             <tr *ngIf="!expenses.length">
-              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No expenses found.</td>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">لا توجد مصاريف.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .header {
       display: flex;
       justify-content: space-between;
@@ -139,19 +139,23 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(17, 24, 39, 0.5);
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       z-index: 1000;
       backdrop-filter: blur(4px);
       padding: 1rem;
+      overflow-y: auto;
     }
     .modal-content {
       background: var(--bg-card);
       padding: 2rem;
       border-radius: var(--radius-lg);
       width: min(440px, 100%);
+      max-height: calc(100dvh - 2rem);
+      overflow-y: auto;
       box-shadow: var(--shadow-lg);
       border: 1px solid var(--border-color);
+      margin: auto 0;
     }
     .form-group {
       margin-bottom: 1.25rem;
@@ -182,6 +186,7 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
       justify-content: flex-end;
       gap: 1rem;
       margin-top: 2rem;
+      flex-wrap: wrap;
     }
     .btn-icon {
       background: transparent;
@@ -197,117 +202,132 @@ import { SpinnerComponent } from '../../shared/components/spinner/spinner.compon
       border-color: var(--danger-color);
       color: var(--danger-color);
     }
+
+    @media (max-width: 640px) {
+      .modal {
+        padding: 0.65rem;
+      }
+
+      .modal-content {
+        padding: 1rem;
+        max-height: calc(100dvh - 1.3rem);
+      }
+
+      .modal-actions .btn {
+        width: 100%;
+      }
+    }
   `]
 })
 export class ExpensesComponent implements OnInit {
-    expenses: Expense[] = [];
-    showAddModal = false;
-    newExpense: Expense = { description: '', amount: 0, category: 'OTHER' };
-    isLoading = false;
-    isSubmitting = false;
+  expenses: Expense[] = [];
+  showAddModal = false;
+  newExpense: Expense = { description: '', amount: 0, category: 'OTHER' };
+  isLoading = false;
+  isSubmitting = false;
 
-    totalAmount = 0;
-    categoryTotals: { [key: string]: number } = {};
-    categoryKeys: string[] = [];
+  totalAmount = 0;
+  categoryTotals: { [key: string]: number } = {};
+  categoryKeys: string[] = [];
 
-    constructor(private api: ApiService, private toast: ToastService) { }
+  constructor(private api: ApiService, private toast: ToastService) { }
 
-    ngOnInit() {
-        this.loadExpenses();
+  ngOnInit() {
+    this.loadExpenses();
+  }
+
+  get canSubmit(): boolean {
+    return !!this.newExpense.description?.trim() && !!this.newExpense.amount && this.newExpense.amount > 0;
+  }
+
+  openModal() {
+    this.showAddModal = true;
+    this.newExpense = { description: '', amount: 0, category: 'OTHER' };
+  }
+
+  closeModal() {
+    if (this.isSubmitting) return;
+    this.showAddModal = false;
+  }
+
+  loadExpenses() {
+    this.isLoading = true;
+    this.api.getExpenses().subscribe({
+      next: (data) => {
+        this.expenses = data || [];
+        this.recalculateStats();
+        this.isLoading = false;
+      },
+      error: () => {
+        this.toast.error('فشل تحميل المصاريف');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  addExpense() {
+    if (!this.canSubmit) {
+      this.toast.warning('يرجى إدخال وصف ومبلغ صحيحين');
+      return;
     }
 
-    get canSubmit(): boolean {
-        return !!this.newExpense.description?.trim() && !!this.newExpense.amount && this.newExpense.amount > 0;
-    }
+    this.isSubmitting = true;
+    const payload: Expense = {
+      ...this.newExpense,
+      description: this.newExpense.description.trim()
+    };
 
-    openModal() {
-        this.showAddModal = true;
-        this.newExpense = { description: '', amount: 0, category: 'OTHER' };
-    }
-
-    closeModal() {
-        if (this.isSubmitting) return;
+    this.api.addExpense(payload).subscribe({
+      next: () => {
+        this.toast.success('تم إضافة المصروف بنجاح');
         this.showAddModal = false;
+        this.newExpense = { description: '', amount: 0, category: 'OTHER' };
+        this.isSubmitting = false;
+        this.loadExpenses();
+      },
+      error: () => {
+        this.toast.error('فشل إضافة المصروف');
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  deleteExpense(id: number) {
+    if (!confirm('حذف هذا المصروف؟')) {
+      return;
     }
 
-    loadExpenses() {
-        this.isLoading = true;
-        this.api.getExpenses().subscribe({
-            next: (data) => {
-                this.expenses = data || [];
-                this.recalculateStats();
-                this.isLoading = false;
-            },
-            error: () => {
-                this.toast.error('Failed to load expenses');
-                this.isLoading = false;
-            }
-        });
-    }
+    this.api.deleteExpense(id).subscribe({
+      next: () => {
+        this.toast.success('تم حذف المصروف');
+        this.expenses = this.expenses.filter(e => e.id !== id);
+        this.recalculateStats();
+      },
+      error: () => {
+        this.toast.error('فشل حذف المصروف');
+      }
+    });
+  }
 
-    addExpense() {
-        if (!this.canSubmit) {
-            this.toast.warning('Please enter a valid description and amount');
-            return;
-        }
+  recalculateStats() {
+    this.totalAmount = this.expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const map: { [key: string]: number } = {};
+    this.expenses.forEach(e => {
+      const key = e.category || 'OTHER';
+      map[key] = (map[key] || 0) + (e.amount || 0);
+    });
+    this.categoryTotals = map;
+    this.categoryKeys = Object.keys(map);
+  }
 
-        this.isSubmitting = true;
-        const payload: Expense = {
-            ...this.newExpense,
-            description: this.newExpense.description.trim()
-        };
-
-        this.api.addExpense(payload).subscribe({
-            next: () => {
-                this.toast.success('Expense added successfully');
-                this.showAddModal = false;
-                this.newExpense = { description: '', amount: 0, category: 'OTHER' };
-                this.isSubmitting = false;
-                this.loadExpenses();
-            },
-            error: () => {
-                this.toast.error('Failed to add expense');
-                this.isSubmitting = false;
-            }
-        });
-    }
-
-    deleteExpense(id: number) {
-        if (!confirm('Delete this expense?')) {
-            return;
-        }
-
-        this.api.deleteExpense(id).subscribe({
-            next: () => {
-                this.toast.success('Expense deleted');
-                this.expenses = this.expenses.filter(e => e.id !== id);
-                this.recalculateStats();
-            },
-            error: () => {
-                this.toast.error('Failed to delete expense');
-            }
-        });
-    }
-
-    recalculateStats() {
-        this.totalAmount = this.expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-        const map: { [key: string]: number } = {};
-        this.expenses.forEach(e => {
-            const key = e.category || 'OTHER';
-            map[key] = (map[key] || 0) + (e.amount || 0);
-        });
-        this.categoryTotals = map;
-        this.categoryKeys = Object.keys(map);
-    }
-
-    getCategoryLabel(cat: string): string {
-        const labels: any = {
-            'RENT': 'Rent',
-            'ELECTRICITY': 'Electricity',
-            'SALARY': 'Salary',
-            'MAINTENANCE': 'Maintenance',
-            'OTHER': 'Other'
-        };
-        return labels[cat] || cat;
-    }
+  getCategoryLabel(cat: string): string {
+    const labels: any = {
+      'RENT': 'إيجار',
+      'ELECTRICITY': 'كهرباء',
+      'SALARY': 'رواتب',
+      'MAINTENANCE': 'صيانة',
+      'OTHER': 'أخرى'
+    };
+    return labels[cat] || cat;
+  }
 }

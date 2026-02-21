@@ -20,7 +20,7 @@ import { Subscription } from 'rxjs';
         </div>
 
         <div class="nav-main">
-          <a class="logo-group" routerLink="/shop/home" aria-label="Home">
+          <a class="logo-group" routerLink="/shop/home" aria-label="الرئيسية">
             <span class="logo-icon" aria-hidden="true">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none">
                 <path d="M4 6H6L8.6 15.5H18.5L20.2 9H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -28,7 +28,7 @@ import { Subscription } from 'rxjs';
                 <circle cx="17.2" cy="18.2" r="1.3" fill="currentColor"></circle>
               </svg>
             </span>
-            <span class="logo">Baqalti</span>
+            <span class="logo">بقالتي</span>
           </a>
 
           <div class="search-wrap">
@@ -37,7 +37,7 @@ import { Subscription } from 'rxjs';
               placeholder="ابحث عن المنتجات والعروض"
               [(ngModel)]="searchTerm"
               (keyup.enter)="goSearch()" />
-            <button type="button" (click)="goSearch()" aria-label="Search">
+            <button type="button" (click)="goSearch()" aria-label="بحث">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none">
                 <circle cx="11" cy="11" r="6.8" stroke="currentColor" stroke-width="2"></circle>
                 <path d="M20 20L16.7 16.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
@@ -544,7 +544,7 @@ export class StorefrontLayoutComponent implements OnDestroy {
   searchTerm = '';
   cartCount = 0;
   wishlistCount = 0;
-  currentTheme = 'theme-light';
+  currentTheme = 'theme-dark';
   private readonly storageKey = 'app-theme';
   private readonly subscriptions = new Subscription();
 
@@ -562,12 +562,12 @@ export class StorefrontLayoutComponent implements OnDestroy {
       this.wishlistCount = items.length;
     }));
 
-    const saved = localStorage.getItem(this.storageKey) || 'theme-light';
+    const saved = localStorage.getItem(this.storageKey) || 'theme-dark';
     this.setTheme(saved);
   }
 
   setTheme(t: string) {
-    const normalized = (t === 'theme-light' || t === 'theme-dark') ? t : 'theme-light';
+    const normalized = (t === 'theme-light' || t === 'theme-dark') ? t : 'theme-dark';
     this.currentTheme = normalized;
     localStorage.setItem(this.storageKey, normalized);
     Array.from(document.body.classList)

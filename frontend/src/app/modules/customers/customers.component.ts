@@ -13,37 +13,37 @@ import { ToastService } from '../../core/services/toast.service';
   template: `
     <div class="container">
       <div class="header">
-        <h1>Customers</h1>
-        <button class="btn btn-primary" (click)="openModal()">Add Customer</button>
+        <h1>العملاء</h1>
+        <button class="btn btn-primary" (click)="openModal()">إضافة عميل</button>
       </div>
 
       <div class="alert-bar" *ngIf="stagnantCustomers.length">
         <div class="alert-content">
-          <strong>Inactive customers:</strong>
-          {{ stagnantCustomers.length }} customers did not visit for 30+ days.
-          <button class="btn btn-sm btn-link" (click)="filterStagnant()">Show only inactive</button>
+          <strong>عملاء غير نشطين:</strong>
+          هناك {{ stagnantCustomers.length }} عملاء لم يزوروا المتجر منذ أكثر من 30 يوماً.
+          <button class="btn btn-sm btn-link" (click)="filterStagnant()">إظهار غير النشطين فقط</button>
         </div>
       </div>
 
       <div class="search-bar">
-        <input type="text" [(ngModel)]="searchTerm" (input)="search()" class="form-control" placeholder="Search by name or phone...">
+        <input type="text" [(ngModel)]="searchTerm" (input)="search()" class="form-control" placeholder="بحث بالاسم أو الهاتف...">
       </div>
 
-      <app-modal *ngIf="isModalOpen" [title]="editingCustomer ? 'Edit Customer' : 'Add Customer'" (onClose)="closeModal()">
+      <app-modal *ngIf="isModalOpen" [title]="editingCustomer ? 'تعديل بيانات العميل' : 'إضافة عميل'" (onClose)="closeModal()">
         <form (ngSubmit)="saveCustomer()">
           <div class="form-group">
-            <label>Customer Name</label>
+            <label>اسم العميل</label>
             <input [(ngModel)]="currentCustomer.name" name="name" class="form-control" required minlength="2">
           </div>
 
           <div class="form-group">
-            <label>Phone Number</label>
+            <label>رقم الهاتف</label>
             <input [(ngModel)]="currentCustomer.phone" name="phone" class="form-control" required pattern="^[0-9+()\-\s]{7,20}$">
           </div>
 
           <div class="modal-actions">
-            <button type="button" class="btn" (click)="closeModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">{{ isSubmitting ? 'Saving...' : 'Save' }}</button>
+            <button type="button" class="btn" (click)="closeModal()">إلغاء</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">{{ isSubmitting ? 'جاري الحفظ...' : 'حفظ' }}</button>
           </div>
         </form>
       </app-modal>
@@ -53,13 +53,13 @@ import { ToastService } from '../../core/services/toast.service';
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Total Purchases</th>
-                <th>Loyalty Points</th>
-                <th>Last Visit</th>
-                <th>Stats</th>
-                <th>Actions</th>
+                <th>الاسم</th>
+                <th>الهاتف</th>
+                <th>إجمالي المشتريات</th>
+                <th>نقاط الولاء</th>
+                <th>آخر زيارة</th>
+                <th>الإحصائيات</th>
+                <th>إجراءات</th>
               </tr>
             </thead>
             <tbody>
@@ -70,24 +70,24 @@ import { ToastService } from '../../core/services/toast.service';
                 <td>
                   <span class="truncate" [title]="customer.phone">{{ customer.phone }}</span>
                 </td>
-                <td>{{ customer.totalPurchases | number:'1.2-2' }} EGP</td>
+                <td>{{ customer.totalPurchases | number:'1.2-2' }} ج.م</td>
                 <td><span class="badge points">{{ customer.loyaltyPoints || 0 }}</span></td>
                 <td class="last-visit">
                   <span *ngIf="customer.lastVisitAt">{{ customer.lastVisitAt | date:'shortDate' }}</span>
-                  <span *ngIf="!customer.lastVisitAt" class="text-muted">No visits yet</span>
+                  <span *ngIf="!customer.lastVisitAt" class="text-muted">لا توجد زيارات بعد</span>
                 </td>
                 <td>
                   <div class="stat-pill">
-                    <span class="stat-label">Visits:</span>
+                    <span class="stat-label">الزيارات:</span>
                     <span class="stat-value">{{ customer.visitCount || 0 }}</span>
                   </div>
                   <div class="stat-pill">
-                    <span class="stat-label">Avg:</span>
+                    <span class="stat-label">المتوسط:</span>
                     <span class="stat-value">{{ customer.avgTicketSize || 0 | number:'1.1-1' }}</span>
                   </div>
                 </td>
                 <td>
-                  <button class="btn-icon" (click)="editCustomer(customer)">Edit</button>
+                  <button class="btn-icon" (click)="editCustomer(customer)">تعديل</button>
                 </td>
               </tr>
             </tbody>
@@ -95,13 +95,13 @@ import { ToastService } from '../../core/services/toast.service';
         </div>
 
         <div class="empty-state" *ngIf="!customers.length">
-            <p>No customers found.</p>
+            <p>لم يتم العثور على عملاء.</p>
         </div>
       </div>
 
       <ng-template #loadingTpl>
         <div class="card empty-state">
-          <p>Loading customers...</p>
+          <p>جاري تحميل العملاء...</p>
         </div>
       </ng-template>
     </div>
@@ -220,7 +220,7 @@ export class CustomersComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.toast.error('Failed to load customers');
+        this.toast.error('فشل تحميل العملاء');
         this.isLoading = false;
       }
     });
@@ -262,7 +262,7 @@ export class CustomersComponent implements OnInit {
 
   saveCustomer() {
     if (!this.currentCustomer.name?.trim() || !this.currentCustomer.phone?.trim()) {
-      this.toast.warning('Name and phone are required');
+      this.toast.warning('الاسم والهاتف مطلوبان');
       return;
     }
     const payload: Customer = {
@@ -276,14 +276,14 @@ export class CustomersComponent implements OnInit {
     if (payload.id) {
       this.api.updateCustomer(payload.id, payload).subscribe({
         next: () => {
-          this.toast.success('Customer updated successfully');
+          this.toast.success('تم تحديث بيانات العميل بنجاح');
           this.loadCustomers();
           this.loadStagnantCustomers();
           this.closeModal();
           this.isSubmitting = false;
         },
         error: () => {
-          this.toast.error('Failed to update customer');
+          this.toast.error('فشل تحديث بيانات العميل');
           this.isSubmitting = false;
         }
       });
@@ -292,14 +292,14 @@ export class CustomersComponent implements OnInit {
 
     this.api.createCustomer(payload).subscribe({
       next: () => {
-        this.toast.success('Customer added successfully');
+        this.toast.success('تم إضافة العميل بنجاح');
         this.loadCustomers();
         this.loadStagnantCustomers();
         this.closeModal();
         this.isSubmitting = false;
       },
       error: () => {
-        this.toast.error('Failed to add customer');
+        this.toast.error('فشل إضافة العميل');
         this.isSubmitting = false;
       }
     });

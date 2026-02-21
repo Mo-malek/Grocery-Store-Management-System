@@ -14,16 +14,16 @@ import { ToastService } from '../../core/services/toast.service';
     <div class="orders-page container fade-in">
       <div class="orders-wrapper">
         <header class="orders-header slide-up">
-          <h1>My Orders</h1>
-          <p>Track current order status and your order history.</p>
+          <h1>طلباتي</h1>
+          <p>تابع حالة الطلبات الحالية وسجل طلباتك.</p>
           <button class="refresh-btn" (click)="loadOrders()" [disabled]="isLoading">
-            {{ isLoading ? 'Updating...' : 'Refresh' }}
+            {{ isLoading ? 'جاري التحديث...' : 'تحديث' }}
           </button>
         </header>
 
         <div class="loading-state" *ngIf="isLoading">
           <div class="spinner"></div>
-          <p>Loading orders...</p>
+          <p>جاري تحميل الطلبات...</p>
         </div>
 
         <p class="error-state" *ngIf="!isLoading && loadError">{{ loadError }}</p>
@@ -33,7 +33,7 @@ import { ToastService } from '../../core/services/toast.service';
             <article class="order-card glass-card slide-up" *ngFor="let order of orders; let i = index" [style.animation-delay]="i * 0.1 + 's'">
               <div class="order-head">
                 <div class="id-date">
-                  <span class="order-id">Order #{{ order.id }}</span>
+                  <span class="order-id">طلب رقم #{{ order.id }}</span>
                   <span class="order-date">{{ order.createdAt | date:'mediumDate' }}</span>
                 </div>
                 <div class="status-pill" [attr.data-status]="order.status">
@@ -44,17 +44,17 @@ import { ToastService } from '../../core/services/toast.service';
 
               <div class="order-items-preview">
                 <div class="preview-row" *ngFor="let item of order.items">
-                  <span class="item-name">{{ item.productName || 'Product' }} <small>x {{ item.quantity }}</small></span>
-                  <span class="item-total">{{ (item.unitPrice * item.quantity) | number:'1.2-2' }} EGP</span>
+                  <span class="item-name">{{ item.productName || 'منتج' }} <small>x {{ item.quantity }}</small></span>
+                  <span class="item-total">{{ (item.unitPrice * item.quantity) | number:'1.2-2' }} ج.م</span>
                 </div>
               </div>
 
               <div class="order-foot">
                 <div class="total-info">
-                  <span class="label">Total paid</span>
-                  <span class="val">{{ order.totalAmount | number:'1.2-2' }} EGP</span>
+                  <span class="label">الإجمالي المدفوع</span>
+                  <span class="val">{{ order.totalAmount | number:'1.2-2' }} ج.م</span>
                 </div>
-                <button class="btn-text" (click)="loadOrders(true)">Refresh status</button>
+                <button class="btn-text" (click)="loadOrders(true)">تحديث الحالة</button>
               </div>
             </article>
           </div>
@@ -63,9 +63,9 @@ import { ToastService } from '../../core/services/toast.service';
         <ng-template #noOrders>
           <div class="empty-orders glass-box fade-in" *ngIf="!isLoading && !loadError">
             <div class="empty-icon">📦</div>
-            <h2>No orders yet</h2>
-            <p>Start shopping and your orders will appear here.</p>
-            <a routerLink="/shop/catalog" class="btn-primary">Browse store</a>
+            <h2>لا توجد طلبات بعد</h2>
+            <p>ابدأ التسوق وستظهر طلباتك هنا.</p>
+            <a routerLink="/shop/catalog" class="btn-primary">تصفح المتجر</a>
           </div>
         </ng-template>
       </div>
@@ -198,9 +198,9 @@ export class StorefrontOrdersComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.isLoading = false;
-        this.loadError = 'Failed to load orders. Please try again.';
+        this.loadError = 'فشل تحميل الطلبات. حاول مرة أخرى.';
         if (!silent) {
-          this.toast.error('Failed to load orders');
+          this.toast.error('فشل تحميل الطلبات');
         }
       }
     });
@@ -208,11 +208,11 @@ export class StorefrontOrdersComponent implements OnInit, OnDestroy {
 
   getStatusLabel(status: string): string {
     switch (status as DeliveryStatus) {
-      case DeliveryStatus.PENDING: return 'Pending';
-      case DeliveryStatus.PREPARING: return 'Preparing';
-      case DeliveryStatus.OUT_FOR_DELIVERY: return 'Out for delivery';
-      case DeliveryStatus.DELIVERED: return 'Delivered';
-      case DeliveryStatus.CANCELLED: return 'Cancelled';
+      case DeliveryStatus.PENDING: return 'قيد الانتظار';
+      case DeliveryStatus.PREPARING: return 'جاري التجهيز';
+      case DeliveryStatus.OUT_FOR_DELIVERY: return 'خرج للتوصيل';
+      case DeliveryStatus.DELIVERED: return 'تم التسليم';
+      case DeliveryStatus.CANCELLED: return 'ملغي';
       default: return status;
     }
   }

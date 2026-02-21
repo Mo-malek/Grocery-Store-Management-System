@@ -16,9 +16,9 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
   template: `
     <section class="product-page" *ngIf="product; else loading">
       <nav class="breadcrumb">
-        <a routerLink="/shop/home">Home</a>
+        <a routerLink="/shop/home">الرئيسية</a>
         <span>/</span>
-        <a routerLink="/shop/catalog">Products</a>
+        <a routerLink="/shop/catalog">المنتجات</a>
         <span>/</span>
         <span>{{ product.name }}</span>
       </nav>
@@ -39,22 +39,25 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
           <h1>{{ product.name }}</h1>
           <div class="rating-row">
             <span class="stars">{{ getStars(product.ratingAverage) }}</span>
-            <span>{{ ratingAverage | number:'1.1-1' }} ({{ reviews.length || product.ratingCount || 0 }} reviews)</span>
+            <span>{{ ratingAverage | number:'1.1-1' }} ({{ reviews.length || product.ratingCount || 0 }} تقييم)</span>
           </div>
 
           <div class="price-row">
-            <span class="price">{{ product.price | number:'1.2-2' }} EGP</span>
-            <span class="old-price" *ngIf="product.discountPercentage">
-              {{ (product.price / (1 - (product.discountPercentage / 100))) | number:'1.2-2' }} EGP
+            <span class="price">{{ product.price | number:'1.2-2' }} ج.م</span>
+            <span class="old-price" *ngIf="(product.discountPercentage ?? 0) > 0 && (product.discountPercentage ?? 0) < 100">
+              {{ (product.price / (1 - ((product.discountPercentage ?? 0) / 100))) | number:'1.2-2' }} ج.م
             </span>
           </div>
+          <span class="discount-pill" *ngIf="(product.discountPercentage ?? 0) > 0">
+            {{ product.discountPercentage | number:'1.0-2' }}% خصم
+          </span>
 
           <div class="stock" [class.in-stock]="product.stock > 0" [class.out-stock]="product.stock === 0">
-            {{ product.stock > 0 ? 'In stock' : 'Out of stock' }}
+            {{ product.stock > 0 ? 'متوفر' : 'غير متوفر' }}
           </div>
 
           <div class="qty-control" *ngIf="product.stock > 0">
-            <label>Quantity</label>
+            <label>الكمية</label>
             <div class="qty-box">
               <button (click)="qty = qty > 1 ? qty - 1 : 1">-</button>
               <input type="number" [(ngModel)]="qty" min="1" [max]="product.stock">
@@ -63,31 +66,31 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
           </div>
 
           <div class="cta-row">
-            <button class="add-btn" [disabled]="product.stock === 0" (click)="addToCart()">Add to Cart</button>
-            <button class="buy-btn" [disabled]="product.stock === 0" (click)="buyNow()">Buy Now</button>
-            <button class="wish-btn" [class.active]="wishlist.has(product.id)" (click)="toggleWishlist()">♡</button>
+            <button class="add-btn" [disabled]="product.stock === 0" (click)="addToCart()">أضف للسلة</button>
+            <button class="buy-btn" [disabled]="product.stock === 0" (click)="buyNow()">اشتر الآن</button>
+            <button class="wish-btn" [class.active]="wishlist.has(product.id)" (click)="toggleWishlist()">&#9825;</button>
           </div>
 
           <div class="meta-grid">
-            <div><span>Category</span><strong>{{ product.category || 'General' }}</strong></div>
-            <div><span>Unit</span><strong>{{ product.unit || '-' }}</strong></div>
-            <div><span>Brand</span><strong>{{ product.manufacturer || '-' }}</strong></div>
+            <div><span>القسم</span><strong>{{ product.category || 'عام' }}</strong></div>
+            <div><span>الوحدة</span><strong>{{ product.unit || '-' }}</strong></div>
+            <div><span>العلامة</span><strong>{{ product.manufacturer || '-' }}</strong></div>
           </div>
         </section>
       </div>
 
       <section class="content-section">
-        <h2>Description</h2>
-        <p>{{ product.description || 'No description available for this product yet.' }}</p>
+        <h2>الوصف</h2>
+        <p>{{ product.description || 'لا يوجد وصف متاح لهذا المنتج حاليا.' }}</p>
       </section>
 
       <section class="content-section">
-        <h2>Reviews</h2>
+        <h2>التقييمات</h2>
         <div class="reviews-summary">
           <div class="avg-score">
             <strong>{{ ratingAverage | number:'1.1-1' }}</strong>
             <span>{{ getStars(ratingAverage) }}</span>
-            <small>{{ reviews.length }} reviews</small>
+            <small>{{ reviews.length }} تقييم</small>
           </div>
           <div class="rating-bars">
             <div class="bar-row" *ngFor="let row of ratingRows">
@@ -109,34 +112,34 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
           </article>
         </div>
         <ng-template #noReviews>
-          <p class="empty">No reviews yet.</p>
+          <p class="empty">لا توجد تقييمات بعد.</p>
         </ng-template>
       </section>
 
       <section class="content-section" *ngIf="recommendations.length">
-        <h2>Similar Products</h2>
+        <h2>منتجات مشابهة</h2>
         <div class="recommend-grid">
           <a class="recommend-card" *ngFor="let p of recommendations" [routerLink]="['/shop/product', p.id]">
             <img [src]="getImageUrl(p.imageUrl)" alt="" />
             <h3>{{ p.name }}</h3>
-            <span>{{ p.price | number:'1.2-2' }} EGP</span>
+            <span>{{ p.price | number:'1.2-2' }} ج.م</span>
           </a>
         </div>
       </section>
 
       <div class="mobile-sticky-cta">
         <div class="left">
-          <span>Total</span>
-          <strong>{{ (product.price * qty) | number:'1.2-2' }} EGP</strong>
+          <span>الإجمالي</span>
+          <strong>{{ (product.price * qty) | number:'1.2-2' }} ج.م</strong>
         </div>
-        <button [disabled]="product.stock === 0" (click)="addToCart()">Add to Cart</button>
+        <button [disabled]="product.stock === 0" (click)="addToCart()">أضف للسلة</button>
       </div>
     </section>
 
     <ng-template #loading>
       <div class="loading-state" *ngIf="!loadError; else loadFailed">
         <div class="spinner"></div>
-        <span>Loading product...</span>
+        <span>جاري تحميل المنتج...</span>
       </div>
     </ng-template>
 
@@ -280,6 +283,19 @@ import { resolveImageUrl } from '../../core/utils/image-url.util';
       color: var(--text-muted);
       text-decoration: line-through;
       font-size: 0.9rem;
+    }
+
+    .discount-pill {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 0.45rem;
+      background: var(--danger-color);
+      color: #fff;
+      border-radius: 999px;
+      padding: 0.22rem 0.6rem;
+      font-size: 0.78rem;
+      font-weight: 800;
     }
 
     .stock {
@@ -717,7 +733,7 @@ export class StorefrontProductComponent implements OnInit {
     this.route.params.subscribe(params => {
       const id = Number(params['id']);
       if (!id) {
-        this.loadError = 'Invalid product id.';
+        this.loadError = 'معرف المنتج غير صالح.';
         return;
       }
       this.product = undefined;
@@ -741,7 +757,7 @@ export class StorefrontProductComponent implements OnInit {
       },
       error: () => {
         this.product = undefined;
-        this.loadError = 'Failed to load product details.';
+        this.loadError = 'فشل تحميل تفاصيل المنتج.';
       }
     });
   }
@@ -774,7 +790,7 @@ export class StorefrontProductComponent implements OnInit {
     if (!this.product) return;
     const quantity = this.sanitizeQty();
     this.cart.addToCart(this.product, quantity);
-    this.toast.success(`${this.product.name} added to cart`);
+    this.toast.success(`تمت إضافة ${this.product.name} إلى السلة`);
   }
 
   buyNow() {
@@ -787,7 +803,7 @@ export class StorefrontProductComponent implements OnInit {
   toggleWishlist() {
     if (!this.product) return;
     const added = this.wishlist.toggle(this.product);
-    this.toast.info(added ? 'Added to wishlist' : 'Removed from wishlist');
+    this.toast.info(added ? 'تمت الإضافة إلى المفضلة' : 'تمت الإزالة من المفضلة');
   }
 
   getImageUrl(url?: string): string {
@@ -833,3 +849,4 @@ export class StorefrontProductComponent implements OnInit {
     return this.qty;
   }
 }
+

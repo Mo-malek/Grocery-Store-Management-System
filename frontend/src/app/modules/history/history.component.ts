@@ -58,6 +58,7 @@ import { ToastService } from '../../core/services/toast.service';
               <th>رقم الفاتورة</th>
               <th>الوقت</th>
               <th>العميل</th>
+              <th>النوع</th>
               <th>طريقة الدفع</th>
               <th>الإجمالي</th>
               <th>الأجراءات</th>
@@ -67,10 +68,15 @@ import { ToastService } from '../../core/services/toast.service';
             <tr *ngFor="let sale of sales">
               <td>#{{ sale.id }}</td>
               <td>{{ sale.createdAt | date:'shortTime' }}</td>
-              <td>{{ sale.customer?.name || 'عميل نقدي' }}</td>
+              <td>{{ getCustomerName(sale) }}</td>
+              <td>
+                <span class="badge" [class.badge-online]="sale.saleChannel === 'ONLINE'" [class.badge-pos]="sale.saleChannel !== 'ONLINE'">
+                  {{ getSaleChannelLabel(sale) }}
+                </span>
+              </td>
               <td>
                 <span class="badge" [class.badge-primary]="sale.paymentMethod === 'CASH'">
-                  {{ sale.paymentMethod === 'CASH' ? 'نقدي' : 'فيزا' }}
+                  {{ getPaymentLabel(sale.paymentMethod) }}
                 </span>
               </td>
               <td class="total">{{ sale.total | number:'1.2-2' }} ج.م</td>
@@ -79,7 +85,7 @@ import { ToastService } from '../../core/services/toast.service';
               </td>
             </tr>
             <tr *ngIf="sales.length === 0">
-              <td colspan="6" class="empty-msg">لا توجد مبيعات في هذه الفترة</td>
+              <td colspan="7" class="empty-msg">لا توجد مبيعات في هذه الفترة</td>
             </tr>
           </tbody>
         </table>
@@ -209,6 +215,17 @@ import { ToastService } from '../../core/services/toast.service';
       color: var(--primary-color);
     }
 
+    .badge-online {
+      background: var(--secondary-color);
+      color: var(--secondary-text);
+    }
+
+    .badge-pos {
+      background: var(--surface-soft);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
     .btn-outline {
       background: transparent;
       border: 1px solid var(--border-color);
@@ -335,5 +352,24 @@ export class HistoryComponent implements OnInit {
 
   viewSale(sale: SaleView) {
     this.selectedSale = sale;
+  }
+
+  getSaleChannelLabel(sale: SaleView): string {
+    return sale.saleChannel === 'ONLINE' ? 'أونلاين' : 'داخل المحل';
+  }
+
+  getCustomerName(sale: SaleView): string {
+    return sale.customer?.name || sale.externalCustomerName || 'عميل نقدي';
+  }
+
+  getPaymentLabel(paymentMethod: SaleView['paymentMethod']): string {
+    switch (paymentMethod) {
+      case 'CASH':
+        return 'نقدي';
+      case 'CARD':
+        return 'فيزا';
+      default:
+        return paymentMethod;
+    }
   }
 }

@@ -47,7 +47,7 @@ import { RegisterRequest } from '../../core/models/models';
               name="username" 
               [(ngModel)]="username" 
               #usernameModel="ngModel"
-              placeholder="Username" 
+              placeholder="اسم المستخدم" 
               required
               minlength="3"
               class="form-control"
@@ -65,7 +65,7 @@ import { RegisterRequest } from '../../core/models/models';
               name="password" 
               [(ngModel)]="password" 
               #passwordModel="ngModel"
-              placeholder="Password" 
+              placeholder="كلمة المرور" 
               required
               minlength="6"
               class="form-control"

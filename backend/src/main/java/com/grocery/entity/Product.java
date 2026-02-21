@@ -65,6 +65,8 @@ public class Product {
     private String description;
 
     @Column(name = "discount_percentage")
+    @DecimalMin(value = "0.0", message = "Ù†Ø³Ø¨Ø© Ø§Ù„Ø®ØµÙ… ÙŠØ¬Ø¨ Ø£Ù† ØªÙƒÙˆÙ† 0 Ø£Ùˆ Ø£ÙƒØ«Ø±")
+    @DecimalMax(value = "100.0", message = "Ù†Ø³Ø¨Ø© Ø§Ù„Ø®ØµÙ… ÙŠØ¬Ø¨ Ø£Ù„Ø§ ØªØ²ÙŠØ¯ Ø¹Ù† 100")
     @Builder.Default
     private BigDecimal discountPercentage = BigDecimal.ZERO;
 

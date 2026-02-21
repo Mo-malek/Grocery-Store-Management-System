@@ -25,7 +25,7 @@ interface HeroSlide {
       <section class="hero-slider">
         <article class="hero-card" *ngFor="let slide of slides; let i = index" [class.active]="i === activeSlideIndex">
           <div class="hero-content">
-            <p class="hero-eyebrow">Everyday grocery essentials</p>
+            <p class="hero-eyebrow">احتياجاتك اليومية من البقالة</p>
             <h1>{{ slide.title }}</h1>
             <p>{{ slide.subtitle }}</p>
             <a [routerLink]="slide.ctaLink" class="hero-cta">{{ slide.ctaText }}</a>
@@ -39,13 +39,13 @@ interface HeroSlide {
         </div>
       </section>
 
-      <div class="loading-banner" *ngIf="isLoading">Loading storefront data...</div>
+      <div class="loading-banner" *ngIf="isLoading">جاري تحميل بيانات المتجر...</div>
       <p class="error-banner" *ngIf="!isLoading && loadError">{{ loadError }}</p>
 
       <section class="section-block">
         <div class="section-head">
-          <h2>Shop by Categories</h2>
-          <a routerLink="/shop/categories">View all</a>
+          <h2>تسوق حسب الأقسام</h2>
+          <a routerLink="/shop/categories">عرض الكل</a>
         </div>
         <div class="categories-grid">
           <button class="category-card" *ngFor="let c of categories" (click)="goCategory(c.category)">
@@ -54,32 +54,32 @@ interface HeroSlide {
                 <path d="M4 7H10L12 9H20V18.5H4V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
               </svg>
             </span>
-            <span class="name">{{ c.category || 'General' }}</span>
-            <span class="count">{{ c.count }} items</span>
+            <span class="name">{{ c.category || 'عام' }}</span>
+            <span class="count">{{ c.count }} منتج</span>
           </button>
         </div>
       </section>
 
       <section class="section-block flash-offers">
         <div class="section-head">
-          <h2>Flash Offers</h2>
-          <a routerLink="/shop/offers">View all offers</a>
+          <h2>عروض سريعة</h2>
+          <a routerLink="/shop/offers">عرض كل العروض</a>
         </div>
         <div class="products-grid">
           <article class="product-card" *ngFor="let p of flashOffers">
-            <span class="discount-badge" *ngIf="p.discountPercentage">{{ p.discountPercentage }}% OFF</span>
+            <span class="discount-badge" *ngIf="(p.discountPercentage ?? 0) > 0">{{ p.discountPercentage | number:'1.0-2' }}% خصم</span>
             <a [routerLink]="['/shop/product', p.id]" class="img-link">
               <img [src]="getImageUrl(p.imageUrl)" [alt]="p.name" />
             </a>
             <h3>{{ p.name }}</h3>
             <div class="price-row">
-              <span class="current">{{ p.price | number:'1.2-2' }} EGP</span>
-              <span class="old" *ngIf="p.discountPercentage">
-                {{ (p.price / (1 - (p.discountPercentage / 100))) | number:'1.2-2' }} EGP
+              <span class="current">{{ p.price | number:'1.2-2' }} ج.م</span>
+              <span class="old" *ngIf="(p.discountPercentage ?? 0) > 0 && (p.discountPercentage ?? 0) < 100">
+                {{ (p.price / (1 - ((p.discountPercentage ?? 0) / 100))) | number:'1.2-2' }} ج.م
               </span>
             </div>
             <div class="card-actions">
-              <button class="add-btn" [disabled]="p.stock === 0" (click)="addToCart(p)">Add to Cart</button>
+              <button class="add-btn" [disabled]="p.stock === 0" (click)="addToCart(p)">أضف للسلة</button>
               <button class="wish-btn" [class.active]="wishlist.has(p.id)" (click)="toggleWishlist(p)">&#9825;</button>
             </div>
           </article>
@@ -88,8 +88,8 @@ interface HeroSlide {
 
       <section class="section-block">
         <div class="section-head">
-          <h2>Best Sellers</h2>
-          <a routerLink="/shop/catalog">Browse catalog</a>
+          <h2>الأكثر مبيعا</h2>
+          <a routerLink="/shop/catalog">تصفح المنتجات</a>
         </div>
         <div class="products-grid">
           <article class="product-card" *ngFor="let p of bestSellers">
@@ -99,10 +99,10 @@ interface HeroSlide {
             <h3>{{ p.name }}</h3>
             <div class="rating">{{ getStars(p.ratingAverage) }} <span>({{ p.ratingCount || 0 }})</span></div>
             <div class="price-row">
-              <span class="current">{{ p.price | number:'1.2-2' }} EGP</span>
+              <span class="current">{{ p.price | number:'1.2-2' }} ج.م</span>
             </div>
             <div class="card-actions">
-              <button class="add-btn" [disabled]="p.stock === 0" (click)="addToCart(p)">Add to Cart</button>
+              <button class="add-btn" [disabled]="p.stock === 0" (click)="addToCart(p)">أضف للسلة</button>
               <button class="wish-btn" [class.active]="wishlist.has(p.id)" (click)="toggleWishlist(p)">&#9825;</button>
             </div>
           </article>
@@ -111,8 +111,8 @@ interface HeroSlide {
 
       <section class="section-block" *ngIf="recommended.length">
         <div class="section-head">
-          <h2>Recommended For You</h2>
-          <a routerLink="/shop/catalog">See more</a>
+          <h2>مقترح لك</h2>
+          <a routerLink="/shop/catalog">المزيد</a>
         </div>
         <div class="products-grid">
           <article class="product-card" *ngFor="let p of recommended">
@@ -122,10 +122,10 @@ interface HeroSlide {
             <h3>{{ p.name }}</h3>
             <div class="rating">{{ getStars(p.ratingAverage) }} <span>({{ p.ratingCount || 0 }})</span></div>
             <div class="price-row">
-              <span class="current">{{ p.price | number:'1.2-2' }} EGP</span>
+              <span class="current">{{ p.price | number:'1.2-2' }} ج.م</span>
             </div>
             <div class="card-actions">
-              <button class="add-btn" [disabled]="p.stock === 0" (click)="addToCart(p)">Add to Cart</button>
+              <button class="add-btn" [disabled]="p.stock === 0" (click)="addToCart(p)">أضف للسلة</button>
               <button class="wish-btn" [class.active]="wishlist.has(p.id)" (click)="toggleWishlist(p)">&#9825;</button>
             </div>
           </article>
@@ -134,15 +134,15 @@ interface HeroSlide {
 
       <section class="section-block bundles-block" *ngIf="offers.length">
         <div class="section-head">
-          <h2>Saving Bundles</h2>
-          <a routerLink="/shop/offers">More bundles</a>
+          <h2>باقات التوفير</h2>
+          <a routerLink="/shop/offers">المزيد من الباقات</a>
         </div>
         <div class="bundle-grid">
           <article class="bundle-card" *ngFor="let o of offers">
             <h3>{{ o.name }}</h3>
-            <p>{{ o.items.length }} products included</p>
-            <div class="bundle-price">{{ o.price | number:'1.2-2' }} EGP</div>
-            <button class="add-btn" (click)="addOffer(o)">Add Bundle</button>
+            <p>{{ o.items.length }} منتجات ضمن الباقة</p>
+            <div class="bundle-price">{{ o.price | number:'1.2-2' }} ج.م</div>
+            <button class="add-btn" (click)="addOffer(o)">أضف الباقة</button>
           </article>
         </div>
       </section>
@@ -597,24 +597,24 @@ interface HeroSlide {
 export class StorefrontHomeComponent implements OnInit, OnDestroy {
   slides: HeroSlide[] = [
     {
-      title: 'Stock your home in minutes',
-      subtitle: 'Daily essentials, fresh products and fast delivery across your area.',
+      title: 'جهّز بيتك في دقائق',
+      subtitle: 'منتجات يومية طازجة وتوصيل سريع داخل منطقتك.',
       image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
-      ctaText: 'Shop now',
+      ctaText: 'تسوق الآن',
       ctaLink: '/shop/catalog'
     },
     {
-      title: 'Flash deals you should not miss',
-      subtitle: 'Save more with bundled offers and high-demand items at better prices.',
+      title: 'عروض قوية لا تفوّتها',
+      subtitle: 'وفّر أكثر مع الباقات والعروض على المنتجات المطلوبة.',
       image: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=1200&q=80',
-      ctaText: 'View offers',
+      ctaText: 'شاهد العروض',
       ctaLink: '/shop/offers'
     },
     {
-      title: 'Fast grocery delivery all week',
-      subtitle: 'Pick your items, checkout quickly and track your order status easily.',
+      title: 'توصيل سريع طوال الأسبوع',
+      subtitle: 'اختر منتجاتك وأكمل الطلب بسرعة وتتبع حالته بسهولة.',
       image: 'https://images.unsplash.com/photo-1601598851547-4302969d0614?auto=format&fit=crop&w=1200&q=80',
-      ctaText: 'Start shopping',
+      ctaText: 'ابدأ التسوق',
       ctaLink: '/shop/categories'
     }
   ];
@@ -666,12 +666,12 @@ export class StorefrontHomeComponent implements OnInit, OnDestroy {
 
   addToCart(product: StorefrontProduct) {
     this.cart.addToCart(product);
-    this.toast.success(`${product.name} added to cart`);
+    this.toast.success(`تمت إضافة ${product.name} إلى السلة`);
   }
 
   toggleWishlist(product: StorefrontProduct) {
     const added = this.wishlist.toggle(product);
-    this.toast.info(added ? 'Added to wishlist' : 'Removed from wishlist');
+    this.toast.info(added ? 'تمت الإضافة إلى المفضلة' : 'تمت الإزالة من المفضلة');
   }
 
   addOffer(bundle: StorefrontBundle) {
@@ -688,13 +688,13 @@ export class StorefrontHomeComponent implements OnInit, OnDestroy {
           this.cart.addToCart(product, item.quantity);
           done += 1;
           if (done === bundle.items.length) {
-            this.toast.success(`${bundle.name} added to cart`);
+            this.toast.success(`تمت إضافة ${bundle.name} إلى السلة`);
           }
         },
         error: () => {
           if (!failed) {
             failed = true;
-            this.toast.error(`Failed to add ${bundle.name}`);
+            this.toast.error(`فشل إضافة ${bundle.name}`);
           }
         }
       });
@@ -735,7 +735,7 @@ export class StorefrontHomeComponent implements OnInit, OnDestroy {
         this.flashOffers = [];
         this.bestSellers = [];
         this.recommended = [];
-        this.loadError = this.loadError || 'Failed to load storefront products.';
+        this.loadError = this.loadError || 'فشل تحميل منتجات المتجر.';
         this.markLoadDone();
       }
     });
@@ -749,7 +749,7 @@ export class StorefrontHomeComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.offers = [];
-        this.loadError = this.loadError || 'Failed to load offers.';
+        this.loadError = this.loadError || 'فشل تحميل العروض.';
         this.markLoadDone();
       }
     });
@@ -763,7 +763,7 @@ export class StorefrontHomeComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.categories = [];
-        this.loadError = this.loadError || 'Failed to load categories.';
+        this.loadError = this.loadError || 'فشل تحميل الأقسام.';
         this.markLoadDone();
       }
     });

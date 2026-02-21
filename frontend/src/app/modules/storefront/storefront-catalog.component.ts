@@ -18,39 +18,39 @@ type SortMode = 'bestSelling' | 'priceAsc' | 'priceDesc' | 'newest';
   template: `
     <section class="catalog-page">
       <nav class="breadcrumb">
-        <a routerLink="/shop/home">Home</a>
+        <a routerLink="/shop/home">الرئيسية</a>
         <span>/</span>
-        <span>Catalog</span>
+        <span>المنتجات</span>
       </nav>
 
       <div class="layout-grid">
         <aside class="filters-sidebar">
           <div class="filters-header">
-            <h2>Filters</h2>
-            <button type="button" class="clear-link" (click)="clearFilters()">Reset</button>
+            <h2>الفلاتر</h2>
+            <button type="button" class="clear-link" (click)="clearFilters()">إعادة ضبط</button>
           </div>
 
           <div class="filter-block">
-            <label>Search</label>
-            <input [(ngModel)]="search" (keyup.enter)="reload(0)" type="search" class="filter-input" placeholder="Search products..." />
+            <label>بحث</label>
+            <input [(ngModel)]="search" (keyup.enter)="reload(0)" type="search" class="filter-input" placeholder="ابحث عن المنتجات..." />
           </div>
 
           <div class="filter-block">
-            <label>Price range</label>
+            <label>نطاق السعر</label>
             <div class="price-values">
-              <span>{{ minPrice }} EGP</span>
-              <span>{{ maxPrice }} EGP</span>
+              <span>{{ minPrice }} ج.م</span>
+              <span>{{ maxPrice }} ج.م</span>
             </div>
             <input type="range" [min]="rangeMin" [max]="rangeMax" [step]="5" [(ngModel)]="minPrice" (input)="onMinRangeChange()" />
             <input type="range" [min]="rangeMin" [max]="rangeMax" [step]="5" [(ngModel)]="maxPrice" (input)="onMaxRangeChange()" />
           </div>
 
           <div class="filter-block">
-            <label>Categories</label>
+            <label>الأقسام</label>
             <div class="category-options">
               <label class="check-item">
                 <input type="radio" name="category" [checked]="selectedCategory === ''" (change)="setCategory('')" />
-                <span>All categories</span>
+                <span>كل الأقسام</span>
               </label>
               <label class="check-item" *ngFor="let c of categories">
                 <input type="radio" name="category" [checked]="selectedCategory === c" (change)="setCategory(c)" />
@@ -60,27 +60,27 @@ type SortMode = 'bestSelling' | 'priceAsc' | 'priceDesc' | 'newest';
           </div>
 
           <div class="filter-block">
-            <label>Sort by</label>
+            <label>ترتيب حسب</label>
             <select [(ngModel)]="sortBy" (change)="reload(0)" class="filter-select">
-              <option value="bestSelling">Best selling</option>
-              <option value="priceAsc">Price: low to high</option>
-              <option value="priceDesc">Price: high to low</option>
-              <option value="newest">Newest</option>
+              <option value="bestSelling">الأكثر مبيعا</option>
+              <option value="priceAsc">السعر: من الأقل للأعلى</option>
+              <option value="priceDesc">السعر: من الأعلى للأقل</option>
+              <option value="newest">الأحدث</option>
             </select>
           </div>
 
-          <button class="apply-btn" (click)="reload(0)">Apply</button>
+          <button class="apply-btn" (click)="reload(0)">تطبيق</button>
         </aside>
 
         <section class="products-area">
           <div class="top-meta">
-            <h1>Products</h1>
-            <p>{{ page?.totalElements || 0 }} items found</p>
+            <h1>المنتجات</h1>
+            <p>{{ page?.totalElements || 0 }} منتج متاح</p>
           </div>
 
           <div class="loading-state" *ngIf="isLoading">
             <div class="spinner"></div>
-            <p>Loading products...</p>
+            <p>جاري تحميل المنتجات...</p>
           </div>
 
           <p class="error-state" *ngIf="!isLoading && loadError">{{ loadError }}</p>
@@ -89,29 +89,37 @@ type SortMode = 'bestSelling' | 'priceAsc' | 'priceDesc' | 'newest';
             <article class="product-card" *ngFor="let p of products">
               <a [routerLink]="['/shop/product', p.id]" class="img-wrap">
                 <img [src]="getImageUrl(p.imageUrl)" [alt]="p.name" />
+                <span class="discount-badge" *ngIf="(p.discountPercentage ?? 0) > 0">
+                  {{ p.discountPercentage | number:'1.0-2' }}% خصم
+                </span>
               </a>
               <h3>{{ p.name }}</h3>
               <div class="rating">{{ getStars(p.ratingAverage) }} <span>({{ p.ratingCount || 0 }})</span></div>
-              <div class="price">{{ p.price | number:'1.2-2' }} EGP</div>
+              <div class="price-row">
+                <div class="price">{{ p.price | number:'1.2-2' }} ج.م</div>
+                <div class="old-price" *ngIf="(p.discountPercentage ?? 0) > 0 && (p.discountPercentage ?? 0) < 100">
+                  {{ (p.price / (1 - ((p.discountPercentage ?? 0) / 100))) | number:'1.2-2' }} ج.م
+                </div>
+              </div>
               <div class="actions">
                 <button class="wish-btn" [class.active]="wishlist.has(p.id)" (click)="toggleWishlist(p)">&#9825;</button>
-                <button class="cart-btn" [disabled]="p.stock === 0" (click)="addToCart(p)">Add to cart</button>
+                <button class="cart-btn" [disabled]="p.stock === 0" (click)="addToCart(p)">أضف للسلة</button>
               </div>
             </article>
           </div>
 
           <ng-template #empty>
             <div class="empty-state" *ngIf="!isLoading && !loadError">
-              <h3>No matching products</h3>
-              <p>Try changing filters or search keyword.</p>
-              <button class="apply-btn" (click)="clearFilters()">Clear filters</button>
+              <h3>لا توجد منتجات مطابقة</h3>
+              <p>جرّب تغيير الفلاتر أو كلمة البحث.</p>
+              <button class="apply-btn" (click)="clearFilters()">مسح الفلاتر</button>
             </div>
           </ng-template>
 
           <div class="pagination" *ngIf="page && page.totalPages > 1">
-            <button class="page-btn" (click)="changePage(page.number - 1)" [disabled]="page.first">Prev</button>
-            <span>Page {{ page.number + 1 }} of {{ page.totalPages }}</span>
-            <button class="page-btn" (click)="changePage(page.number + 1)" [disabled]="page.last">Next</button>
+            <button class="page-btn" (click)="changePage(page.number - 1)" [disabled]="page.first">السابق</button>
+            <span>صفحة {{ page.number + 1 }} من {{ page.totalPages }}</span>
+            <button class="page-btn" (click)="changePage(page.number + 1)" [disabled]="page.last">التالي</button>
           </div>
         </section>
       </div>
@@ -145,12 +153,15 @@ type SortMode = 'bestSelling' | 'priceAsc' | 'priceDesc' | 'newest';
     .products-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
     .product-card { border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-card); padding: 0.65rem; display: flex; flex-direction: column; min-height: 320px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .product-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-    .img-wrap { display: block; width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: var(--image-surface); margin-bottom: 0.6rem; }
+    .img-wrap { display: block; width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: var(--image-surface); margin-bottom: 0.6rem; position: relative; }
     .img-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 0.45rem; display: block; }
+    .discount-badge { position: absolute; top: 8px; right: 8px; background: var(--danger-color); color: #fff; font-size: 0.72rem; font-weight: 800; border-radius: 999px; padding: 0.2rem 0.55rem; }
     .product-card h3 { margin: 0 0 0.35rem; font-size: 0.95rem; line-height: 1.35; min-height: 2.52rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .rating { font-size: 0.8rem; color: var(--warning-color); margin-bottom: 0.45rem; font-weight: 700; }
     .rating span { color: var(--text-muted); font-weight: 500; }
-    .price { margin-top: auto; margin-bottom: 0.65rem; font-size: 1rem; font-weight: 800; color: var(--text-main); }
+    .price-row { margin-top: auto; margin-bottom: 0.65rem; display: flex; flex-direction: column; gap: 0.2rem; }
+    .price { font-size: 1rem; font-weight: 800; color: var(--text-main); }
+    .old-price { color: var(--text-muted); font-size: 0.82rem; text-decoration: line-through; }
     .actions { display: flex; align-items: center; gap: 0.45rem; }
     .wish-btn { width: 40px; height: 40px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-card); color: var(--text-secondary); cursor: pointer; font-size: 1rem; font-weight: 700; transition: transform 0.2s ease; }
     .wish-btn:hover { transform: scale(1.04); }
@@ -233,7 +244,7 @@ export class StorefrontCatalogComponent implements OnInit {
         this.page = undefined;
         this.products = [];
         this.isLoading = false;
-        this.loadError = 'Failed to load products.';
+        this.loadError = 'فشل تحميل المنتجات.';
       }
     });
   }
@@ -253,7 +264,7 @@ export class StorefrontCatalogComponent implements OnInit {
 
   addToCart(p: StorefrontProduct) {
     this.cart.addToCart(p);
-    this.toast.success(`${p.name} added to cart`);
+    this.toast.success(`تمت إضافة ${p.name} إلى السلة`);
   }
 
   toggleWishlist(p: StorefrontProduct) {

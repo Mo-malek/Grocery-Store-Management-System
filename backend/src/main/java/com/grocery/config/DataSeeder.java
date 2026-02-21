@@ -7,7 +7,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class DataSeeder {
@@ -27,7 +29,7 @@ public class DataSeeder {
                         .active(true)
                         .build();
                 userRepository.save(admin);
-                System.out.println(">>>  user created (admin / password)");
+                log.info(">>>  user created (admin / password)");
             }
         };
     }

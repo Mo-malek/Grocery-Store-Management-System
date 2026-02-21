@@ -168,8 +168,8 @@ import { ToastService } from '../../core/services/toast.service';
     .btn-icon.delete:hover { border-color: var(--danger-color); color: var(--danger-color); }
 
     /* Modal Styles */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-    .modal-content { width: 100%; max-width: 500px; padding: 2rem; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); display: flex; align-items: flex-start; justify-content: center; z-index: 1000; padding: 1rem; overflow-y: auto; }
+    .modal-content { width: min(560px, 100%); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 2rem; margin: auto 0; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
     .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
 
@@ -178,10 +178,22 @@ import { ToastService } from '../../core/services/toast.service';
     .glass-input, .glass-select-full { width: 100%; background: var(--surface-soft); border: 1px solid var(--glass-border); border-radius: 12px; padding: 0.9rem; color: var(--text-main); outline: none; transition: 0.3s; }
     .glass-input:focus { border-color: var(--primary-color); background: var(--surface-soft-hover); }
 
-    .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2.5rem; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; }
     .btn-secondary-glass { background: var(--surface-soft); border: 1px solid var(--glass-border); color: var(--text-main); padding: 0.8rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: 600; }
     .btn-primary-glass { background: var(--secondary-color); border: none; color: var(--secondary-text); padding: 0.8rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: 700; box-shadow: 0 4px 15px rgba(var(--secondary-rgb), 0.2); transition: 0.3s; }
     .btn-primary-glass:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @media (max-width: 640px) {
+      .management-container { padding: 1rem; }
+      .header { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+      .stats-row { flex-direction: column; gap: 0.8rem; }
+      .modal-overlay { padding: 0.65rem; }
+      .modal-content { padding: 1rem; max-height: calc(100dvh - 1.3rem); }
+      .modal-header { margin-bottom: 1rem; }
+      .form-grid { gap: 1rem; }
+      .modal-footer { margin-top: 1.5rem; }
+      .modal-footer button { width: 100%; }
+    }
   `]
 })
 export class UserManagementComponent implements OnInit {

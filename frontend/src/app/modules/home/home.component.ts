@@ -13,7 +13,7 @@ import { OnInit } from '@angular/core';
     <section class="home-shell">
       <article class="hero">
         <div class="hero-content">
-          <span class="eyebrow">Internal Operations</span>
+          <span class="eyebrow">عمليات داخلية</span>
           <h1>مرحبًا بك في مركز تشغيل المتجر</h1>
           <p>
             واجهة موحدة لإدارة المبيعات والمخزون والطلبات بسرعة عالية

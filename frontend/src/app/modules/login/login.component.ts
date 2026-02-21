@@ -30,7 +30,7 @@ import { ToastService } from '../../core/services/toast.service';
               type="text" 
               name="username" 
               [(ngModel)]="username" 
-              placeholder="Username" 
+              placeholder="اسم المستخدم" 
               required
               class="form-control"
             >
@@ -42,7 +42,7 @@ import { ToastService } from '../../core/services/toast.service';
               type="password" 
               name="password" 
               [(ngModel)]="password" 
-              placeholder="Password" 
+              placeholder="كلمة المرور" 
               required
               class="form-control"
             >

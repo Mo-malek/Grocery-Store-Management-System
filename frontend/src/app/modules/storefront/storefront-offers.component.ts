@@ -13,15 +13,15 @@ import { ToastService } from '../../core/services/toast.service';
     <section class="offers-page container fade-in">
       <header class="page-header slide-up">
         <div class="title-area">
-          <p class="eyebrow">Save more with curated packs</p>
-          <h1>Smart Bundle Offers</h1>
+          <p class="eyebrow">وفّر أكثر مع باقات مختارة</p>
+          <h1>عروض الباقات الذكية</h1>
         </div>
-        <div class="count-badge">{{ offers.length }} active offers</div>
+        <div class="count-badge">{{ offers.length }} عرض متاح</div>
       </header>
 
       <div class="loading-state" *ngIf="isLoading">
         <div class="spinner"></div>
-        <p>Loading offers...</p>
+        <p>جاري تحميل العروض...</p>
       </div>
 
       <p class="error-state" *ngIf="!isLoading && loadError">{{ loadError }}</p>
@@ -33,7 +33,7 @@ import { ToastService } from '../../core/services/toast.service';
             <h3>{{ o.name }}</h3>
             <div class="price-tag">
               <span class="num">{{ o.price | number:'1.2-2' }}</span>
-              <span class="curr">EGP</span>
+              <span class="curr">ج.م</span>
             </div>
           </div>
 
@@ -46,16 +46,16 @@ import { ToastService } from '../../core/services/toast.service';
           </div>
 
           <button class="btn-primary add-bundle" [disabled]="addingBundleId === o.id" (click)="addBundleToCart(o)">
-            <span *ngIf="addingBundleId !== o.id">Add bundle to cart</span>
-            <span *ngIf="addingBundleId === o.id">Adding...</span>
+            <span *ngIf="addingBundleId !== o.id">أضف الباقة للسلة</span>
+            <span *ngIf="addingBundleId === o.id">جاري الإضافة...</span>
           </button>
         </article>
       </div>
 
       <ng-template #empty>
         <div class="empty-state glass-box zoom-in" *ngIf="!isLoading && !loadError">
-          <h2>No offers right now</h2>
-          <p>Check back soon for new bundle promotions.</p>
+          <h2>لا توجد عروض حاليا</h2>
+          <p>عد لاحقا لمشاهدة عروض باقات جديدة.</p>
         </div>
       </ng-template>
     </section>
@@ -154,7 +154,7 @@ export class StorefrontOffersComponent implements OnInit {
       error: () => {
         this.offers = [];
         this.isLoading = false;
-        this.loadError = 'Failed to load offers.';
+        this.loadError = 'فشل تحميل العروض.';
       }
     });
   }
@@ -176,14 +176,14 @@ export class StorefrontOffersComponent implements OnInit {
           completed += 1;
           if (completed === requests.length) {
             this.addingBundleId = null;
-            this.toast.success(`${bundle.name} added to cart`);
+            this.toast.success(`تمت إضافة ${bundle.name} إلى السلة`);
           }
         },
         error: () => {
           if (!failed) {
             failed = true;
             this.addingBundleId = null;
-            this.toast.error(`Failed to add ${bundle.name}`);
+            this.toast.error(`فشل إضافة ${bundle.name}`);
           }
         }
       });

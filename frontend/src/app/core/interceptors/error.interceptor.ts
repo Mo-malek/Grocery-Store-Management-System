@@ -24,7 +24,7 @@ export class ErrorInterceptor implements HttpInterceptor {
                             ? 'جلسة العمل انتهت أو البيانات غير صحيحة'
                             : 'ليس لديك صلاحية للقيام بهذا الإجراء';
 
-                        if (error.status === 401) {
+                        if (error.status === 401 || error.status === 403) {
                             const authService = this.injector.get(AuthService);
                             authService.logout();
                         }

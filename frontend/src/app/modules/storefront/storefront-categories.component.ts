@@ -12,15 +12,15 @@ import { CategoryCount } from '../../core/models/models';
     <section class="categories-page container fade-in">
       <header class="page-header slide-up">
         <div class="title-area">
-          <p class="eyebrow">Explore all departments</p>
-          <h1>Shop by Category</h1>
+          <p class="eyebrow">تصفح كل الأقسام</p>
+          <h1>التسوق حسب القسم</h1>
         </div>
-        <div class="count-badge">{{ categories.length }} categories</div>
+        <div class="count-badge">{{ categories.length }} قسم</div>
       </header>
 
       <div class="loading-state" *ngIf="isLoading">
         <div class="spinner"></div>
-        <p>Loading categories...</p>
+        <p>جاري تحميل الأقسام...</p>
       </div>
 
       <p class="error-state" *ngIf="!isLoading && loadError">{{ loadError }}</p>
@@ -34,8 +34,8 @@ import { CategoryCount } from '../../core/models/models';
             </svg>
           </div>
           <div class="card-content">
-            <h3>{{ c.category || 'General' }}</h3>
-            <p class="count">{{ c.count }} products</p>
+            <h3>{{ c.category || 'عام' }}</h3>
+            <p class="count">{{ c.count }} منتج</p>
           </div>
           <span class="arrow" aria-hidden="true">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="none">
@@ -47,8 +47,8 @@ import { CategoryCount } from '../../core/models/models';
 
       <ng-template #empty>
         <div class="empty-state" *ngIf="!isLoading && !loadError">
-          <h2>No categories found</h2>
-          <p>Categories will appear here after products are added.</p>
+          <h2>لا توجد أقسام</h2>
+          <p>ستظهر الأقسام هنا بعد إضافة المنتجات.</p>
         </div>
       </ng-template>
     </section>
@@ -141,7 +141,7 @@ export class StorefrontCategoriesComponent implements OnInit {
       error: () => {
         this.categories = [];
         this.isLoading = false;
-        this.loadError = 'Failed to load categories.';
+        this.loadError = 'فشل تحميل الأقسام.';
       }
     });
   }

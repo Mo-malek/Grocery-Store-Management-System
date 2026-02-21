@@ -40,6 +40,22 @@ public class Sale {
     @Builder.Default
     private String paymentMethod = "CASH";
 
+    @Column(name = "sale_channel", nullable = false)
+    @Builder.Default
+    private String saleChannel = "POS";
+
+    @Column(name = "source_order_id")
+    private Long sourceOrderId;
+
+    @Column(name = "external_customer_name")
+    private String externalCustomerName;
+
+    @Column(name = "external_customer_phone")
+    private String externalCustomerPhone;
+
+    @Column(name = "external_customer_address", columnDefinition = "TEXT")
+    private String externalCustomerAddress;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

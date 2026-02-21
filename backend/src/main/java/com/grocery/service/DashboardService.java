@@ -40,7 +40,18 @@ public class DashboardService {
                 // KPIs
                 BigDecimal totalSalesToday = saleRepository.getTotalSalesBetween(startOfDay, endOfDay);
                 BigDecimal totalSalesThisMonth = saleRepository.getTotalSalesBetween(startOfMonth, endOfDay);
+                BigDecimal posSalesToday = saleRepository.getTotalSalesBetweenByChannel(startOfDay, endOfDay, "POS");
+                BigDecimal onlineSalesToday = saleRepository.getTotalSalesBetweenByChannel(startOfDay, endOfDay,
+                                "ONLINE");
+                BigDecimal posSalesThisMonth = saleRepository.getTotalSalesBetweenByChannel(startOfMonth, endOfDay,
+                                "POS");
+                BigDecimal onlineSalesThisMonth = saleRepository.getTotalSalesBetweenByChannel(startOfMonth, endOfDay,
+                                "ONLINE");
                 Long transactionCount = saleRepository.getTransactionCountBetween(startOfDay, endOfDay);
+                Long posTransactionCountToday = saleRepository.getTransactionCountBetweenByChannel(startOfDay, endOfDay,
+                                "POS");
+                Long onlineTransactionCountToday = saleRepository.getTransactionCountBetweenByChannel(startOfDay,
+                                endOfDay, "ONLINE");
 
                 BigDecimal averageBasket = transactionCount > 0
                                 ? totalSalesToday.divide(BigDecimal.valueOf(transactionCount), 2, RoundingMode.HALF_UP)
@@ -61,6 +72,8 @@ public class DashboardService {
                 // عدد المنتجات تحت الحد الأدنى
                 List<com.grocery.entity.Product> lowStockItems = productRepository.findLowStockProducts();
                 long lowStockCount = lowStockItems.size();
+                long outOfStockCount = productRepository.countOutOfStockProducts();
+                long expiringSoonCount = productRepository.countExpiringSoonProducts(LocalDate.now().plusDays(7));
 
                 // أعلى 10 منتجات مبيعاً هذا الشهر
                 List<DashboardStats.TopProduct> topProducts = saleRepository.getTopProducts(startOfMonth, endOfDay)
@@ -132,8 +145,6 @@ public class DashboardService {
                                 .size();
                 healthScore -= Math.min(stagnantCount * 3, 20); // خصم للعملاء الغائبين
 
-                long expiringSoonCount = productRepository.findExpiringSoon(java.time.LocalDate.now().plusDays(7))
-                                .size();
                 healthScore -= Math.min(expiringSoonCount * 5, 20); // خصم للمنتجات القريبة من الانتهاء
 
                 healthScore = Math.max(0, Math.min(100, healthScore));
@@ -153,12 +164,20 @@ public class DashboardService {
                 return DashboardStats.builder()
                                 .totalSalesToday(totalSalesToday)
                                 .totalSalesThisMonth(totalSalesThisMonth)
+                                .posSalesToday(posSalesToday)
+                                .onlineSalesToday(onlineSalesToday)
+                                .posSalesThisMonth(posSalesThisMonth)
+                                .onlineSalesThisMonth(onlineSalesThisMonth)
                                 .transactionCountToday(transactionCount)
+                                .posTransactionCountToday(posTransactionCountToday)
+                                .onlineTransactionCountToday(onlineTransactionCountToday)
                                 .averageBasketSize(averageBasket)
                                 .estimatedProfitToday(estimatedProfitToday)
                                 .totalExpensesThisMonth(totalExpensesMonth)
                                 .netProfitThisMonth(netProfitMonth)
                                 .lowStockCount(lowStockCount)
+                                .outOfStockCount(outOfStockCount)
+                                .expiringSoonCount(expiringSoonCount)
                                 .lowStockProducts(lowStockItems)
                                 .topProducts(topProducts)
                                 .dailySales(dailySales)
@@ -178,6 +197,11 @@ public class DashboardService {
                                 .discount(sale.getDiscount())
                                 .total(sale.getTotal())
                                 .paymentMethod(sale.getPaymentMethod())
+                                .saleChannel(sale.getSaleChannel())
+                                .sourceOrderId(sale.getSourceOrderId())
+                                .externalCustomerName(sale.getExternalCustomerName())
+                                .externalCustomerPhone(sale.getExternalCustomerPhone())
+                                .externalCustomerAddress(sale.getExternalCustomerAddress())
                                 .createdAt(sale.getCreatedAt())
                                 .customer(sale.getCustomer() != null ? CustomerView.builder()
                                                 .id(sale.getCustomer().getId())
