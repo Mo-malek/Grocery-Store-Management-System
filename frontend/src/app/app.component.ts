@@ -6,6 +6,7 @@ import { TopbarComponent } from './shared/components/topbar/topbar.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { LayoutService } from './core/services/layout.service';
 import { filter } from 'rxjs/operators';
+import { Messaging, onMessage } from '@angular/fire/messaging';
 
 @Component({
   selector: 'app-root',
@@ -125,7 +126,11 @@ import { filter } from 'rxjs/operators';
 export class AppComponent {
   showLayout = true;
 
-  constructor(public layout: LayoutService, private router: Router) {
+  constructor(
+    public layout: LayoutService,
+    private router: Router,
+    private messaging: Messaging
+  ) {
     this.updateLayoutByUrl(this.router.url || '');
 
     this.router.events.pipe(
@@ -133,11 +138,22 @@ export class AppComponent {
     ).subscribe((event: any) => {
       this.updateLayoutByUrl(event.urlAfterRedirects || '');
     });
+
+    this.listenForMessages();
   }
 
   private updateLayoutByUrl(url: string) {
     const isPublicPage = url.includes('/login') || url.includes('/signup') || url.includes('/shop');
     this.showLayout = !isPublicPage;
     document.body.classList.toggle('admin-app', this.showLayout);
+  }
+
+  private listenForMessages() {
+    onMessage(this.messaging, (payload) => {
+      console.log('Message received in foreground: ', payload);
+      if (payload.notification) {
+        alert(`New Notification: ${payload.notification.title}\n${payload.notification.body}`);
+      }
+    });
   }
 }

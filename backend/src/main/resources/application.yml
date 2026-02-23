@@ -60,3 +60,9 @@ jwt:
 # ==========================================
 server:
   port: 8080
+
+# ==========================================
+# Firebase Configuration
+# ==========================================
+firebase:
+  config: classpath:firebase-service-account.json

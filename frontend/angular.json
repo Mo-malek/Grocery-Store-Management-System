@@ -48,6 +48,8 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               "src/assets",
+              "src/manifest.webmanifest",
+              "src/firebase-messaging-sw.js",
               {
                 "glob": "**/*",
                 "input": "public"
@@ -84,7 +86,9 @@
                 "fonts": {
                   "inline": false
                 }
-              }
+              },
+              "serviceWorker": true,
+              "ngswConfigPath": "ngsw-config.json"
             },
             "development": {
               "optimization": false,

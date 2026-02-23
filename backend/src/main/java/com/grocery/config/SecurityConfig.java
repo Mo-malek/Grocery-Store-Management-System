@@ -55,6 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/pos/**").hasAnyRole("ADMIN", "MANAGER", "CASHIER")
                         .requestMatchers("/api/orders/**").hasAnyRole("ADMIN", "MANAGER", "CASHIER", "CUSTOMER")
+                        .requestMatchers("/api/notifications/**").authenticated()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

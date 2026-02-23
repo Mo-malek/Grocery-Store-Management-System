@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LayoutService } from '../../../core/services/layout.service';
+import { NotificationService, AppNotification } from '../../../core/services/notification.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-topbar',
@@ -39,12 +41,30 @@ import { LayoutService } from '../../../core/services/layout.service';
 
         <div class="divider"></div>
 
-        <button type="button" class="icon-btn" title="الإشعارات">
-          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M15 17H9M17 17V11.5C17 8.46 14.99 5.86 12.2 5.11V4.5C12.2 3.67 11.53 3 10.7 3C9.87 3 9.2 3.67 9.2 4.5V5.11C6.41 5.86 4.4 8.46 4.4 11.5V17L3 18.4V19H18.4V18.4L17 17Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-          <span class="badge">3</span>
-        </button>
+        <div class="notification-wrapper">
+          <button type="button" class="icon-btn" title="الإشعارات" (click)="toggleNotifications()">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M15 17H9M17 17V11.5C17 8.46 14.99 5.86 12.2 5.11V4.5C12.2 3.67 11.53 3 10.7 3C9.87 3 9.2 3.67 9.2 4.5V5.11C6.41 5.86 4.4 8.46 4.4 11.5V17L3 18.4V19H18.4V18.4L17 17Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span class="badge" *ngIf="(unreadCount$ | async)! > 0">{{ unreadCount$ | async }}</span>
+          </button>
+          
+          <div class="notification-dropdown" *ngIf="showNotifications">
+            <div class="nd-header">
+              <h4>الإشعارات</h4>
+            </div>
+            <div class="nd-body">
+               <div class="n-item" *ngFor="let n of notifications" [class.unread]="!n.read" (click)="markAsRead(n)">
+                 <strong>{{ n.title }}</strong>
+                 <p>{{ n.body }}</p>
+                 <small>{{ n.createdAt | date:'short' }}</small>
+               </div>
+               <div class="n-empty" *ngIf="notifications.length === 0">
+                 لا توجد إشعارات
+               </div>
+            </div>
+          </div>
+        </div>
 
         <button type="button" class="theme-toggle" (click)="nextTheme()" [title]="'المظهر: ' + currentTheme.label">
           <span class="theme-icon" aria-hidden="true">
@@ -200,6 +220,47 @@ import { LayoutService } from '../../../core/services/layout.service';
       justify-content: center;
       border: 2px solid var(--bg-card);
     }
+    
+    .notification-wrapper { position: relative; }
+    .notification-dropdown {
+        position: absolute;
+        top: 50px;
+        left: -140px;
+        width: 320px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        max-height: 480px;
+        overflow: hidden;
+    }
+    .nd-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .nd-header h4 { margin: 0; font-size: 1rem; }
+    .nd-body {
+        overflow-y: auto;
+        flex: 1;
+    }
+    .n-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .n-item:hover { background: var(--surface-soft); }
+    .n-item.unread {
+        background: rgba(var(--primary-rgb), 0.05);
+        border-right: 3px solid var(--primary-color);
+    }
+    .n-item strong { display: block; font-size: 0.95rem; }
+    .n-item p { margin: 0.25rem 0; font-size: 0.85rem; color: var(--text-muted); }
+    .n-item small { font-size: 0.75rem; color: var(--text-muted); opacity: 0.8; }
+    .n-empty { padding: 2rem; text-align: center; color: var(--text-muted); }
 
     .profile {
       display: flex;
@@ -289,7 +350,7 @@ import { LayoutService } from '../../../core/services/layout.service';
     }
   `]
 })
-export class TopbarComponent implements OnInit {
+export class TopbarComponent implements OnInit, OnDestroy {
   themes = [
     { key: 'theme-light', label: 'فاتح' },
     { key: 'theme-dark', label: 'داكن' },
@@ -298,13 +359,25 @@ export class TopbarComponent implements OnInit {
   private readonly storageKey = 'app-theme';
   currentTheme = this.themes[1];
 
-  constructor(private layout: LayoutService) { }
+  showNotifications = false;
+  notifications: AppNotification[] = [];
+  unreadCount$: Observable<number>;
+
+  constructor(private layout: LayoutService, private notificationService: NotificationService) {
+    this.unreadCount$ = this.notificationService.unreadCount$;
+  }
 
   ngOnInit() {
     const saved = localStorage.getItem(this.storageKey);
     const found = this.themes.find(t => t.key === saved);
     this.currentTheme = found ?? this.themes[1];
     this.applyTheme(this.currentTheme.key);
+
+    this.notificationService.startPolling();
+  }
+
+  ngOnDestroy() {
+    this.notificationService.stopPolling();
   }
 
   nextTheme() {
@@ -324,5 +397,26 @@ export class TopbarComponent implements OnInit {
 
   toggleSidebar() {
     this.layout.toggleSidebar();
+  }
+
+  toggleNotifications() {
+    this.showNotifications = !this.showNotifications;
+    if (this.showNotifications) {
+      this.loadNotifications();
+    }
+  }
+
+  loadNotifications() {
+    this.notificationService.getNotifications().subscribe(data => {
+      this.notifications = data;
+    });
+  }
+
+  markAsRead(n: AppNotification) {
+    if (n.read) return;
+    this.notificationService.markAsRead(n.id).subscribe(() => {
+      n.read = true;
+      this.notificationService.getUnreadCount().subscribe(c => this.notificationService.updateUnreadCount(c));
+    });
   }
 }

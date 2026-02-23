@@ -5,6 +5,8 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "product")
@@ -80,6 +82,10 @@ public class Product {
     @Column(name = "rating_count")
     @Builder.Default
     private Integer ratingCount = 0;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

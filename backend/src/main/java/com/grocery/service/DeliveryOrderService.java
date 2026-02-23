@@ -9,6 +9,7 @@ import com.grocery.entity.SaleItem;
 import com.grocery.entity.User;
 import com.grocery.repository.DeliveryOrderRepository;
 import com.grocery.repository.ProductRepository;
+import com.grocery.dto.NotificationRequest;
 import com.grocery.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class DeliveryOrderService {
     private final ProductRepository productRepository;
     private final SaleRepository saleRepository;
     private final StockLogService stockLogService;
+    private final NotificationService notificationService;
 
     public List<DeliveryOrder> getPendingOrders() {
         return deliveryOrderRepository.findByStatusOrderByCreatedAtDesc(DeliveryOrder.DeliveryStatus.PENDING);
@@ -42,7 +44,17 @@ public class DeliveryOrderService {
         DeliveryOrder order = deliveryOrderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(status);
-        return deliveryOrderRepository.save(order);
+        DeliveryOrder saved = deliveryOrderRepository.save(order);
+
+        if (order.getCustomer() != null) {
+            NotificationRequest request = NotificationRequest.builder()
+                    .title("Order Update")
+                    .body("Your order #" + order.getId() + " status is now " + status.name())
+                    .build();
+            notificationService.sendToUser(order.getCustomer(), request);
+        }
+
+        return saved;
     }
 
     @Transactional
@@ -96,6 +108,7 @@ public class DeliveryOrderService {
 
         DeliveryOrder savedOrder = deliveryOrderRepository.save(order);
         createLinkedOnlineSale(savedOrder, request.getFullName());
+
         return savedOrder;
     }
 
