@@ -7,12 +7,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-messaging-compa
 // But as per the Firebase v9+ we actually just need to point to the config.
 
 firebase.initializeApp({
-    apiKey: "AIzaSyAvYUfwvAHltc9hjxhBgkichJPDWKgCfgk",
-    authDomain: "grocery-store-management-bfc4f.firebaseapp.com",
-    projectId: "grocery-store-management-bfc4f",
-    storageBucket: "grocery-store-management-bfc4f.firebasestorage.app",
-    messagingSenderId: "1092811827372",
-    appId: "1:1092811827372:web:ea7558a92875e27352d709"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
 });
 
 const messaging = firebase.messaging();

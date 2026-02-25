@@ -2,12 +2,12 @@ export const environment = {
     production: false,
     apiUrl: 'http://localhost:8080/api',
     firebase: {
-        apiKey: "AIzaSyAvYUfwvAHltc9hjxhBgkichJPDWKgCfgk",
-        authDomain: "grocery-store-management-bfc4f.firebaseapp.com",
-        projectId: "grocery-store-management-bfc4f",
-        storageBucket: "grocery-store-management-bfc4f.firebasestorage.app",
-        messagingSenderId: "1092811827372",
-        appId: "1:1092811827372:web:ea7558a92875e27352d709",
-        measurementId: "G-HD8684TEBH"
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID",
+        measurementId: "YOUR_MEASUREMENT_ID"
     }
 };
