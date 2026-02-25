@@ -22,3 +22,6 @@ Thumbs.db
 *.env
 .env.local
 node_modules
+
+# Secrets
+backend/src/main/resources/firebase-service-account.json
