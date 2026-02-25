@@ -48,7 +48,7 @@ import { Observable } from 'rxjs';
             </svg>
             <span class="badge" *ngIf="(unreadCount$ | async)! > 0">{{ unreadCount$ | async }}</span>
           </button>
-          
+
           <div class="notification-dropdown" *ngIf="showNotifications">
             <div class="nd-header">
               <h4>الإشعارات</h4>
@@ -220,7 +220,7 @@ import { Observable } from 'rxjs';
       justify-content: center;
       border: 2px solid var(--bg-card);
     }
-    
+
     .notification-wrapper { position: relative; }
     .notification-dropdown {
         position: absolute;

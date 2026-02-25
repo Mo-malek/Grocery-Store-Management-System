@@ -15,8 +15,8 @@ import { Messaging, onMessage } from '@angular/fire/messaging';
   template: `
     <!-- Layout for Authenticated Pages -->
     <div class="app-layout" *ngIf="showLayout">
-      <div class="mobile-overlay" 
-           *ngIf="layout.isSidebarOpen()" 
+      <div class="mobile-overlay"
+           *ngIf="layout.isSidebarOpen()"
            (click)="layout.closeSidebar()">
       </div>
 
