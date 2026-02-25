@@ -1,31 +1,43 @@
 /**
  * set-env.js
  * 
- * Pre-build script that injects environment variables from Vercel
+ * Pre-build script that injects environment variables from Vercel/Railway
  * into Angular environment files and firebase-messaging-sw.js.
- * 
- * Run before `ng build` via: node set-env.js
  */
 const fs = require('fs');
 const path = require('path');
 
+// Helper to mask secrets in logs
+const mask = (str) => {
+    if (!str) return 'MISSING';
+    if (str.length <= 4) return '****';
+    return str.substring(0, 4) + '...';
+};
+
 // Read from Vercel environment variables
 const apiUrl = process.env.API_URL || 'http://localhost:8080/api';
-const firebaseApiKey = process.env.FIREBASE_API_KEY || '';
-const firebaseAuthDomain = process.env.FIREBASE_AUTH_DOMAIN || '';
-const firebaseProjectId = process.env.FIREBASE_PROJECT_ID || '';
-const firebaseStorageBucket = process.env.FIREBASE_STORAGE_BUCKET || '';
-const firebaseMessagingSenderId = process.env.FIREBASE_MESSAGING_SENDER_ID || '';
-const firebaseAppId = process.env.FIREBASE_APP_ID || '';
-const firebaseMeasurementId = process.env.FIREBASE_MEASUREMENT_ID || '';
+const firebaseApiKey = process.env.FIREBASE_API_KEY;
+const firebaseAuthDomain = process.env.FIREBASE_AUTH_DOMAIN;
+const firebaseProjectId = process.env.FIREBASE_PROJECT_ID;
+const firebaseStorageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+const firebaseMessagingSenderId = process.env.FIREBASE_MESSAGING_SENDER_ID;
+const firebaseAppId = process.env.FIREBASE_APP_ID;
+const firebaseMeasurementId = process.env.FIREBASE_MEASUREMENT_ID;
 
-// Only write if we have actual values (i.e., running on Vercel)
+console.log('--- Environment Check ---');
+console.log('API_URL:', apiUrl);
+console.log('FIREBASE_API_KEY:', mask(firebaseApiKey));
+console.log('FIREBASE_PROJECT_ID:', mask(firebaseProjectId));
+console.log('-------------------------');
+
+// Only proceed if we have at least the API Key
 if (!firebaseApiKey) {
-    console.log('No FIREBASE_API_KEY set — skipping env injection (local dev).');
+    console.log('⚠️ FIREBASE_API_KEY is not set. Skipping injection.');
+    console.log('If this is a production build, please set your environment variables!');
     process.exit(0);
 }
 
-console.log('Injecting Vercel environment variables into Angular files...');
+console.log('Injecting environment variables into source files...');
 
 // --- 1. Write environment.prod.ts ---
 const envProdContent = `export const environment = {
@@ -33,19 +45,19 @@ const envProdContent = `export const environment = {
     apiUrl: '${apiUrl}',
     firebase: {
         apiKey: '${firebaseApiKey}',
-        authDomain: '${firebaseAuthDomain}',
-        projectId: '${firebaseProjectId}',
-        storageBucket: '${firebaseStorageBucket}',
-        messagingSenderId: '${firebaseMessagingSenderId}',
-        appId: '${firebaseAppId}',
-        measurementId: '${firebaseMeasurementId}'
+        authDomain: '${firebaseAuthDomain || ''}',
+        projectId: '${firebaseProjectId || ''}',
+        storageBucket: '${firebaseStorageBucket || ''}',
+        messagingSenderId: '${firebaseMessagingSenderId || ''}',
+        appId: '${firebaseAppId || ''}',
+        measurementId: '${firebaseMeasurementId || ''}'
     }
 };
 `;
 
-const envProdPath = path.join(__dirname, 'src', 'environments', 'environment.prod.ts');
+const envProdPath = path.resolve(__dirname, 'src/environments/environment.prod.ts');
 fs.writeFileSync(envProdPath, envProdContent, 'utf8');
-console.log('✅ environment.prod.ts written');
+console.log('✅ environment.prod.ts updated');
 
 // --- 2. Write firebase-messaging-sw.js ---
 const swContent = `importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-app-compat.js');
@@ -53,11 +65,11 @@ importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-messaging-compa
 
 firebase.initializeApp({
     apiKey: "${firebaseApiKey}",
-    authDomain: "${firebaseAuthDomain}",
-    projectId: "${firebaseProjectId}",
-    storageBucket: "${firebaseStorageBucket}",
-    messagingSenderId: "${firebaseMessagingSenderId}",
-    appId: "${firebaseAppId}"
+    authDomain: "${firebaseAuthDomain || ''}",
+    projectId: "${firebaseProjectId || ''}",
+    storageBucket: "${firebaseStorageBucket || ''}",
+    messagingSenderId: "${firebaseMessagingSenderId || ''}",
+    appId: "${firebaseAppId || ''}"
 });
 
 const messaging = firebase.messaging();
@@ -74,8 +86,8 @@ messaging.onBackgroundMessage((payload) => {
 });
 `;
 
-const swPath = path.join(__dirname, 'src', 'firebase-messaging-sw.js');
+const swPath = path.resolve(__dirname, 'src/firebase-messaging-sw.js');
 fs.writeFileSync(swPath, swContent, 'utf8');
-console.log('✅ firebase-messaging-sw.js written');
+console.log('✅ firebase-messaging-sw.js updated');
 
-console.log('✅ All environment files injected successfully.');
+console.log('✅ Finished preparing environment files.');
