@@ -133,6 +133,17 @@ import { AuthService } from '../../../core/services/auth.service';
             <span>الموظفون</span>
           </a>
         </li>
+        <li *ngIf="user.role === 'ROLE_ADMIN' || user.role === 'ROLE_MANAGER'">
+          <a routerLink="/broadcast-notifications" routerLinkActive="active" (click)="closeSidebar()">
+            <span class="icon" aria-hidden="true">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none">
+                <path d="M18 8A6 6 0 0 0 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M13.73 21A2 2 0 0 1 10.27 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+            <span>تنبيهات عامة</span>
+          </a>
+        </li>
         <li>
           <a routerLink="/customers" routerLinkActive="active" (click)="closeSidebar()">
             <span class="icon" aria-hidden="true">

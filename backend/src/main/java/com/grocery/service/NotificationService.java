@@ -55,27 +55,62 @@ public class NotificationService {
     }
 
     public void sendToUser(User user, NotificationRequest request) {
-        try {
-            saveAppNotification(user, request);
-            List<FcmToken> tokens = tokenRepository.findByUser(user);
-            for (FcmToken token : tokens) {
-                sendToToken(token.getToken(), request);
-            }
-        } catch (Exception e) {
-            log.error("Failed to send notification to user: {}", user.getUsername(), e);
-        }
+        if (user == null)
+            return;
+        sendToUsers(java.util.Collections.singletonList(user), request);
     }
 
     public void sendToRole(String role, NotificationRequest request) {
+        sendToRoles(java.util.Collections.singletonList(role), request);
+    }
+
+    public void sendToRoles(java.util.Collection<String> roles, NotificationRequest request) {
         try {
-            List<FcmToken> tokens = tokenRepository.findByUserRole(role);
-            for (FcmToken token : tokens) {
-                User user = token.getUser();
-                saveAppNotification(user, request);
-                sendToToken(token.getToken(), request);
+            java.util.Set<User> targetUsers = new java.util.HashSet<>();
+            for (String role : roles) {
+                List<FcmToken> tokens = tokenRepository.findByUserRole(role);
+                for (FcmToken token : tokens) {
+                    if (token.getUser() != null) {
+                        targetUsers.add(token.getUser());
+                    }
+                }
             }
+            sendToUsers(targetUsers, request);
         } catch (Exception e) {
-            log.error("Failed to send notification to role: {}", role, e);
+            log.error("Failed to send notification to roles: {}", roles, e);
+        }
+    }
+
+    public void sendToAll(NotificationRequest request) {
+        try {
+            List<FcmToken> allTokens = tokenRepository.findAll();
+            java.util.Set<User> allUsers = allTokens.stream()
+                    .map(FcmToken::getUser)
+                    .filter(java.util.Objects::nonNull)
+                    .collect(java.util.stream.Collectors.toSet());
+            sendToUsers(allUsers, request);
+        } catch (Exception e) {
+            log.error("Failed to broadcast notification", e);
+        }
+    }
+
+    public void sendToUsers(java.util.Collection<User> users, NotificationRequest request) {
+        if (users == null || users.isEmpty())
+            return;
+
+        for (User user : users) {
+            try {
+                // 1. Save ONE notification entry in database for the user history
+                saveAppNotification(user, request);
+
+                // 2. Send to all active tokens (devices) of THIS user
+                List<FcmToken> tokens = tokenRepository.findByUser(user);
+                for (FcmToken token : tokens) {
+                    sendToToken(token.getToken(), request);
+                }
+            } catch (Exception e) {
+                log.error("Failed to send notification to user ID: {}", user.getId(), e);
+            }
         }
     }
 
@@ -144,5 +179,13 @@ public class NotificationService {
 
         notification.setRead(true);
         appNotificationRepository.save(notification);
+    }
+
+    public void markAllAsRead(User user) {
+        List<AppNotification> unread = appNotificationRepository.findByUserAndIsReadFalseOrderByCreatedAtDesc(user);
+        for (AppNotification n : unread) {
+            n.setRead(true);
+        }
+        appNotificationRepository.saveAll(unread);
     }
 }

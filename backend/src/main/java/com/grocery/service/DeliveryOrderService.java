@@ -109,6 +109,22 @@ public class DeliveryOrderService {
         DeliveryOrder savedOrder = deliveryOrderRepository.save(order);
         createLinkedOnlineSale(savedOrder, request.getFullName());
 
+        // Notify customer
+        notificationService.sendToUser(customer, NotificationRequest.builder()
+                .title("Order Placed Successfully")
+                .body("Thank you for your order! Your order #" + savedOrder.getId() + " has been received.")
+                .data(java.util.Map.of("orderId", String.valueOf(savedOrder.getId())))
+                .build());
+
+        // Notify Admins and Managers
+        NotificationRequest adminNotif = NotificationRequest.builder()
+                .title("New Order Received")
+                .body("Order #" + savedOrder.getId() + " placed by "
+                        + (customer != null ? customer.getFullName() : "Guest"))
+                .data(java.util.Map.of("orderId", String.valueOf(savedOrder.getId())))
+                .build();
+        notificationService.sendToRoles(java.util.Arrays.asList("ROLE_MANAGER", "ROLE_ADMIN"), adminNotif);
+
         return savedOrder;
     }
 

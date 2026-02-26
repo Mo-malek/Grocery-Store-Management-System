@@ -96,6 +96,12 @@ export const routes: Routes = [
                 loadComponent: () => import('./modules/admin/delivery-order-management.component').then(c => c.DeliveryOrderManagementComponent),
                 title: 'طلبات التوصيل',
                 canActivate: [adminManagerGuard]
+            },
+            {
+                path: 'broadcast-notifications',
+                loadComponent: () => import('./modules/admin/broadcast-notification.component').then(c => c.BroadcastNotificationComponent),
+                title: 'تنبيهات عامة',
+                canActivate: [adminManagerGuard]
             }
         ]
     },

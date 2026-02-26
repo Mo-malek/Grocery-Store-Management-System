@@ -58,12 +58,39 @@ public class NotificationController {
     }
 
     @PutMapping("/{id}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<Void> markAsRead(@PathVariable("id") Long id, Authentication authentication) {
         String username = authentication.getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         notificationService.markAsRead(id, user);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/read-all")
+    public ResponseEntity<Void> markAllAsRead(Authentication authentication) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        notificationService.markAllAsRead(user);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/broadcast")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Void> broadcast(@Valid @RequestBody com.grocery.dto.NotificationRequest request) {
+        notificationService.sendToAll(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/send-to-user/{userId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Void> sendToUser(@PathVariable("userId") Long userId,
+            @Valid @RequestBody com.grocery.dto.NotificationRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        notificationService.sendToUser(user, request);
         return ResponseEntity.ok().build();
     }
 }

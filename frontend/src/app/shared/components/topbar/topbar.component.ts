@@ -42,25 +42,37 @@ import { Observable } from 'rxjs';
         <div class="divider"></div>
 
         <div class="notification-wrapper">
-          <button type="button" class="icon-btn" title="الإشعارات" (click)="toggleNotifications()">
+          <button type="button" class="icon-btn n-trigger" [class.has-unread]="(unreadCount$ | async)! > 0" title="الإشعارات" (click)="toggleNotifications($event)">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M15 17H9M17 17V11.5C17 8.46 14.99 5.86 12.2 5.11V4.5C12.2 3.67 11.53 3 10.7 3C9.87 3 9.2 3.67 9.2 4.5V5.11C6.41 5.86 4.4 8.46 4.4 11.5V17L3 18.4V19H18.4V18.4L17 17Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
-            <span class="badge" *ngIf="(unreadCount$ | async)! > 0">{{ unreadCount$ | async }}</span>
+            <span class="badge fade-in" *ngIf="(unreadCount$ | async)! > 0">{{ unreadCount$ | async }}</span>
           </button>
 
-          <div class="notification-dropdown" *ngIf="showNotifications">
+          <div class="notification-dropdown glass-card shadow-2xl fade-in-up" *ngIf="showNotifications" (click)="$event.stopPropagation()">
             <div class="nd-header">
-              <h4>الإشعارات</h4>
+              <div class="nd-title-row">
+                <h4>التنبيهات</h4>
+                <button class="btn-clear-all" *ngIf="notifications.length > 0" (click)="markAllRead()">
+                  تحديد الكل كمقروء
+                </button>
+              </div>
             </div>
-            <div class="nd-body">
+            <div class="nd-body custom-scrollbar">
                <div class="n-item" *ngFor="let n of notifications" [class.unread]="!n.read" (click)="markAsRead(n)">
-                 <strong>{{ n.title }}</strong>
-                 <p>{{ n.body }}</p>
-                 <small>{{ n.createdAt | date:'short' }}</small>
+                 <div class="n-indicator" *ngIf="!n.read"></div>
+                 <div class="n-icon-box">🔔</div>
+                 <div class="n-details">
+                   <span class="n-title">{{ n.title }}</span>
+                   <p class="n-body text-truncate-2">{{ n.body }}</p>
+                   <span class="n-time">🕒 {{ n.createdAt | date:'short' }}</span>
+                 </div>
                </div>
-               <div class="n-empty" *ngIf="notifications.length === 0">
-                 لا توجد إشعارات
+               
+               <div class="n-empty-premium fade-in" *ngIf="notifications.length === 0">
+                 <div class="empty-art">✨</div>
+                 <p>صندوق الوارد نظيف!</p>
+                 <span>لا توجد تنبيهات جديدة في الوقت الحالي</span>
                </div>
             </div>
           </div>
@@ -165,20 +177,23 @@ import { Observable } from 'rxjs';
       color: var(--text-main);
       cursor: pointer;
       position: relative;
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       padding: 0;
-      border-radius: 10px;
+      border-radius: 12px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
+      transition: all 0.2s;
     }
 
     .icon-btn:hover {
       background: var(--surface-soft);
       border-color: var(--primary-color);
+      transform: translateY(-1px);
     }
+
+    .n-trigger.has-unread { border-color: rgba(var(--primary-rgb), 0.3); background: rgba(var(--primary-rgb), 0.05); }
 
     .theme-toggle {
       display: inline-flex;
@@ -207,60 +222,81 @@ import { Observable } from 'rxjs';
 
     .badge {
       position: absolute;
-      top: -4px;
-      right: -4px;
+      top: -2px;
+      right: -2px;
       background: var(--danger-color);
       color: white;
-      font-size: 0.7rem;
-      width: 17px;
-      height: 17px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      min-width: 18px;
+      height: 18px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       border: 2px solid var(--bg-card);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .notification-wrapper { position: relative; }
+    
     .notification-dropdown {
         position: absolute;
-        top: 50px;
-        left: -140px;
-        width: 320px;
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-md);
-        z-index: 200;
+        top: 55px;
+        left: 0;
+        width: 360px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        z-index: 1000;
         display: flex;
         flex-direction: column;
-        max-height: 480px;
+        max-height: 520px;
         overflow: hidden;
+        animation: slideInDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .nd-header {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
+
+    @keyframes slideInDown {
+      from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .nd-header h4 { margin: 0; font-size: 1rem; }
-    .nd-body {
-        overflow-y: auto;
-        flex: 1;
-    }
+
+    .nd-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--glass-border); }
+    .nd-title-row { display: flex; justify-content: space-between; align-items: center; }
+    .nd-header h4 { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
+    
+    .btn-clear-all { background: none; border: none; color: var(--primary-color); font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0.4rem 0.8rem; border-radius: 8px; transition: 0.2s; }
+    .btn-clear-all:hover { background: rgba(var(--primary-rgb), 0.1); }
+
+    .nd-body { overflow-y: auto; flex: 1; padding: 0.5rem; }
+    
     .n-item {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
+        position: relative;
+        padding: 1.1rem 1.25rem;
+        border-radius: 16px;
+        display: flex;
+        gap: 1rem;
         cursor: pointer;
-        transition: background 0.2s;
+        transition: 0.3s;
+        margin-bottom: 0.25rem;
     }
-    .n-item:hover { background: var(--surface-soft); }
-    .n-item.unread {
-        background: rgba(var(--primary-rgb), 0.05);
-        border-right: 3px solid var(--primary-color);
-    }
-    .n-item strong { display: block; font-size: 0.95rem; }
-    .n-item p { margin: 0.25rem 0; font-size: 0.85rem; color: var(--text-muted); }
-    .n-item small { font-size: 0.75rem; color: var(--text-muted); opacity: 0.8; }
-    .n-empty { padding: 2rem; text-align: center; color: var(--text-muted); }
+    .n-item:hover { background: var(--surface-soft-hover); }
+    .n-item.unread { background: rgba(var(--primary-rgb), 0.03); }
+    
+    .n-indicator { width: 4px; height: 32px; background: var(--primary-color); border-radius: 4px; position: absolute; left: 6px; top: 50%; transform: translateY(-50%); }
+    .n-icon-box { width: 40px; height: 40px; background: var(--surface-soft); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .n-details { flex: 1; min-width: 0; }
+    .n-title { display: block; font-weight: 700; font-size: 0.92rem; color: var(--text-main); margin-bottom: 0.2rem; }
+    .n-body { margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 0.4rem; }
+    .n-time { font-size: 0.72rem; color: var(--text-muted); opacity: 0.8; font-weight: 500; }
+
+    .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .n-empty-premium { padding: 4rem 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+    .empty-art { font-size: 3rem; margin-bottom: 1rem; filter: drop-shadow(0 0 15px rgba(var(--secondary-rgb), 0.3)); }
+    .n-empty-premium p { margin: 0; font-weight: 800; font-size: 1.1rem; color: var(--text-main); }
+    .n-empty-premium span { font-size: 0.85rem; color: var(--text-muted); }
 
     .profile {
       display: flex;
@@ -279,10 +315,11 @@ import { Observable } from 'rxjs';
     }
 
     .avatar {
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 2px solid var(--primary-color);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
     .info {
@@ -399,16 +436,23 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.layout.toggleSidebar();
   }
 
-  toggleNotifications() {
+  toggleNotifications(event: MouseEvent) {
+    event.stopPropagation();
     this.showNotifications = !this.showNotifications;
     if (this.showNotifications) {
       this.loadNotifications();
+      // Add one-time listener to close on click outside
+      const closeDropdown = () => {
+        this.showNotifications = false;
+        document.removeEventListener('click', closeDropdown);
+      };
+      setTimeout(() => document.addEventListener('click', closeDropdown));
     }
   }
 
   loadNotifications() {
     this.notificationService.getNotifications().subscribe(data => {
-      this.notifications = data;
+      this.notifications = data || [];
     });
   }
 
@@ -417,6 +461,13 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.notificationService.markAsRead(n.id).subscribe(() => {
       n.read = true;
       this.notificationService.getUnreadCount().subscribe(c => this.notificationService.updateUnreadCount(c));
+    });
+  }
+
+  markAllRead() {
+    this.notificationService.markAllAsRead().subscribe(() => {
+      this.notifications.forEach(n => n.read = true);
+      this.notificationService.updateUnreadCount(0);
     });
   }
 }

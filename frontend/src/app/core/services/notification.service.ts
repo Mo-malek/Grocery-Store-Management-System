@@ -59,4 +59,18 @@ export class NotificationService {
   updateUnreadCount(count: number) {
     this._unreadCount.next(count);
   }
+
+  markAllAsRead(): Observable<void> {
+    return this.http.put<void>(`${environment.apiUrl}/notifications/read-all`, {});
+  }
+
+  broadcastNotification(title: string, body: string, image?: string): Observable<void> {
+    const request = { title, body, image };
+    return this.http.post<void>(`${environment.apiUrl}/notifications/broadcast`, request);
+  }
+
+  sendToSpecificUser(userId: number, title: string, body: string, image?: string): Observable<void> {
+    const request = { title, body, image };
+    return this.http.post<void>(`${environment.apiUrl}/notifications/send-to-user/${userId}`, request);
+  }
 }
