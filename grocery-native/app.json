@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Baqa'ah Grocery",
+    "slug": "baqa-grocery",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTabletMode": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow Baqa'ah Grocery to access the camera for barcode scanning in POS."
+      }
+    },
+    "android": {
+      "package": "com.baqa.grocery",
+      "permissions": [
+        "CAMERA"
+      ]
+    },
+    "plugins": [
+      "expo-camera"
+    ]
+  }
+}

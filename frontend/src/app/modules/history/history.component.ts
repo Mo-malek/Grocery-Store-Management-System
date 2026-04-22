@@ -57,7 +57,9 @@ import { ToastService } from '../../core/services/toast.service';
             <tr>
               <th>رقم الفاتورة</th>
               <th>الوقت</th>
-              <th>العميل</th>
+              <th>المستلم</th>
+              <th>الهاتف</th>
+              <th>المباع</th>
               <th>النوع</th>
               <th>طريقة الدفع</th>
               <th>الإجمالي</th>
@@ -68,7 +70,14 @@ import { ToastService } from '../../core/services/toast.service';
             <tr *ngFor="let sale of sales">
               <td>#{{ sale.id }}</td>
               <td>{{ sale.createdAt | date:'shortTime' }}</td>
-              <td>{{ getCustomerName(sale) }}</td>
+              <td class="recipient-cell">{{ getRecipientName(sale) }}</td>
+              <td class="recipient-phone">{{ getRecipientPhone(sale) }}</td>
+              <td class="items-cell">
+                <div class="item-line" *ngFor="let item of (sale.items || [])">
+                  {{ item.productName }} ×{{ item.quantity }} ({{ item.total | number:'1.2-2' }} ج.م)
+                </div>
+                <span *ngIf="!(sale.items || []).length">-</span>
+              </td>
               <td>
                 <span class="badge" [class.badge-online]="sale.saleChannel === 'ONLINE'" [class.badge-pos]="sale.saleChannel !== 'ONLINE'">
                   {{ getSaleChannelLabel(sale) }}
@@ -85,7 +94,7 @@ import { ToastService } from '../../core/services/toast.service';
               </td>
             </tr>
             <tr *ngIf="sales.length === 0">
-              <td colspan="7" class="empty-msg">لا توجد مبيعات في هذه الفترة</td>
+              <td colspan="9" class="empty-msg">لا توجد مبيعات في هذه الفترة</td>
             </tr>
           </tbody>
         </table>
@@ -202,6 +211,29 @@ import { ToastService } from '../../core/services/toast.service';
     .total {
       font-weight: bold;
       color: var(--primary-color);
+    }
+
+    .recipient-cell {
+      font-weight: 600;
+    }
+
+    .recipient-phone {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      direction: ltr;
+      text-align: right;
+    }
+
+    .items-cell {
+      max-width: 280px;
+      font-size: 0.85rem;
+      color: var(--text-main);
+    }
+
+    .item-line {
+      white-space: normal;
+      line-height: 1.35;
+      margin-bottom: 0.2rem;
     }
 
     .badge {
@@ -360,6 +392,14 @@ export class HistoryComponent implements OnInit {
 
   getCustomerName(sale: SaleView): string {
     return sale.customer?.name || sale.externalCustomerName || 'عميل نقدي';
+  }
+
+  getRecipientName(sale: SaleView): string {
+    return sale.customer?.name || sale.externalCustomerName || 'عميل نقدي';
+  }
+
+  getRecipientPhone(sale: SaleView): string {
+    return sale.customer?.phone || sale.externalCustomerPhone || '-';
   }
 
   getPaymentLabel(paymentMethod: SaleView['paymentMethod']): string {

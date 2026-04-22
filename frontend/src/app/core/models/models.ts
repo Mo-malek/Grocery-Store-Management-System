@@ -53,6 +53,9 @@ export interface SaleRequest {
     items: SaleItemRequest[];
     bundleIds?: number[];
     discount?: number;
+    externalCustomerName?: string;
+    externalCustomerPhone?: string;
+    externalCustomerAddress?: string;
     paymentMethod: 'CASH' | 'CARD';
 }
 

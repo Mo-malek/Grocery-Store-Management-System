@@ -106,13 +106,15 @@ import { ToastService } from '../../../core/services/toast.service';
           <div class="share-options" *ngIf="showShareOptions">
             <button class="btn btn-sm share-opt" (click)="shareAsFile('image')">🖼️ صورة</button>
             <button class="btn btn-sm share-opt" (click)="shareAsFile('pdf')">📄 PDF</button>
+            <button class="btn btn-sm share-opt" (click)="shareOnWhatsApp('image')">📲 واتساب صورة</button>
+            <button class="btn btn-sm share-opt" (click)="shareOnWhatsApp('pdf')">📲 واتساب PDF</button>
             <button class="btn btn-sm share-opt" (click)="shareAsText()">💬 نص</button>
             <button class="btn btn-sm" (click)="showShareOptions = false">✖️</button>
           </div>
           
           <ng-container *ngIf="!showShareOptions">
             <button class="btn" style="background-color: #25D366; color: white; border: none;" (click)="showShareOptions = true">📱 مشاركة واتساب</button>
-            <button class="btn btn-primary" (click)="print()">🖨️ طباعة</button>
+            <button class="btn btn-primary" (click)="printReceipt()">🖨️ طباعة</button>
             <button class="btn btn-secondary" (click)="close()">إغلاق</button>
           </ng-container>
         </div>
@@ -264,6 +266,7 @@ import { ToastService } from '../../../core/services/toast.service';
 
     .share-options {
       display: flex;
+      flex-wrap: wrap;
       gap: 5px;
       background: #f3f4f6;
       padding: 10px;
@@ -274,7 +277,7 @@ import { ToastService } from '../../../core/services/toast.service';
     .share-opt {
       background: white;
       border: 1px solid #ddd;
-      flex: 1;
+      flex: 1 1 calc(50% - 5px);
     }
 
     @media (max-width: 480px) {
@@ -364,8 +367,53 @@ export class SaleDetailModalComponent {
     this.onClosed.emit();
   }
 
-  print() {
-    window.print();
+  printReceipt() {
+    if (!this.receiptContainer?.nativeElement) {
+      this.toast.error('تعذر تجهيز الطباعة');
+      return;
+    }
+
+    const receiptHtml = this.receiptContainer.nativeElement.innerHTML;
+    const printWindow = window.open('', '_blank', 'width=420,height=800');
+    if (!printWindow) {
+      this.toast.warning('اسمح بفتح النوافذ المنبثقة للطباعة');
+      return;
+    }
+
+    printWindow.document.write(`
+      <html lang="ar" dir="rtl">
+        <head>
+          <title>Receipt #${this.sale?.id ?? ''}</title>
+          <style>
+            body { font-family: 'Courier New', monospace; padding: 12px; color: #111; background: #fff; }
+            .receipt-print-area { width: 80mm; margin: 0 auto; }
+            .receipt-header { text-align: center; margin-bottom: 12px; }
+            .store-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+            .receipt-title { font-size: 0.95rem; text-decoration: underline; margin-bottom: 4px; }
+            .receipt-id, .receipt-date { font-size: 0.8rem; color: #444; }
+            .receipt-divider { border-top: 1px dashed #999; margin: 8px 0; }
+            .item-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem; }
+            .item-row.header { font-weight: 700; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-bottom: 6px; }
+            .col-name { flex: 2; word-break: break-word; }
+            .col-qty { flex: 1; text-align: center; }
+            .col-total { flex: 1; text-align: left; }
+            .summary-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem; }
+            .summary-row.total { font-weight: 700; font-size: 1rem; border-top: 1px solid #333; margin-top: 6px; padding-top: 6px; }
+            .receipt-footer { text-align: center; margin-top: 12px; font-size: 0.8rem; }
+            .loyalty-card { background: #f8fafc; padding: 6px; border-radius: 4px; margin-top: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="receipt-print-area">${receiptHtml}</div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
   }
 
   getPaymentLabel(method?: string): string {
@@ -407,34 +455,45 @@ export class SaleDetailModalComponent {
 
       const file = new File([blob], filename, { type: fileType });
 
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      const canNativeShareFile = typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] });
+      if (canNativeShareFile) {
         await navigator.share({
           files: [file],
           title: 'فاتورة بيع',
           text: `فاتورة رقم #${this.sale.id}`
         });
         this.showShareOptions = false;
+        return true;
       } else {
-        // Fallback: Download file and explain
+        // Desktop fallback: download file so user can attach it manually.
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = filename;
         link.click();
-        this.toast.success('تم تحميل الملف. يمكنك الآن إرساله يدوياً عبر واتساب.');
-
-        // Also open WhatsApp with text if possible
-        this.shareAsText();
+        this.toast.success('تم تحميل الملف. يمكنك إرساله عبر واتساب.');
+        return false;
       }
     } catch (error) {
       this.toast.error('فشل إنشاء الملف');
+      return false;
     }
   }
 
-  shareAsText() {
+  async shareOnWhatsApp(type: 'image' | 'pdf') {
+    const sharedDirectly = await this.shareAsFile(type);
+    if (sharedDirectly) {
+      return;
+    }
+    this.toast.info('واتساب ويب لا يدعم إرفاق الملفات تلقائياً من المتصفح. تم تنزيل الملف للرفع اليدوي.');
+    this.shareAsText('تم تجهيز الفاتورة كملف مرفق');
+  }
+
+  shareAsText(prefixMessage?: string) {
     const sale = this.sale;
     if (!sale) return;
 
-    let text = `🧾 *فاتورة بيع* - بقالة السعادة\n`;
+    let text = prefixMessage ? `${prefixMessage}\n\n` : '';
+    text += `🧾 *فاتورة بيع* - بقالة السعادة\n`;
     text += `رقم: #${sale.id}\n`;
     if (sale.sourceOrderId) {
       text += `رقم الطلب: #${sale.sourceOrderId}\n`;
@@ -462,7 +521,9 @@ export class SaleDetailModalComponent {
 
     const phoneRaw = sale.customer?.phone || sale.externalCustomerPhone || '';
     const phone = phoneRaw.replace(/\D/g, '');
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+    const url = phone
+      ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
     this.showShareOptions = false;
   }

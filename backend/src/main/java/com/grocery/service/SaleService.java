@@ -58,6 +58,10 @@ public class SaleService {
             sale.setCustomer(customer);
         }
 
+        sale.setExternalCustomerName(trimToNull(request.getExternalCustomerName()));
+        sale.setExternalCustomerPhone(trimToNull(request.getExternalCustomerPhone()));
+        sale.setExternalCustomerAddress(trimToNull(request.getExternalCustomerAddress()));
+
         // التأكد من وجود أصناف أو عروض
         boolean hasItems = request.getItems() != null && !request.getItems().isEmpty();
         boolean hasBundles = request.getBundleIds() != null && !request.getBundleIds().isEmpty();
@@ -237,5 +241,11 @@ public class SaleService {
                         .total(item.getTotal())
                         .build()).collect(Collectors.toList()))
                 .build();
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

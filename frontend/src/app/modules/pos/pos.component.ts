@@ -64,10 +64,31 @@ interface StoredCartItem {
           <!-- Customer Selection -->
           <div class="customer-select-row">
             <div class="select-label">👤 العميل:</div>
-            <select [(ngModel)]="selectedCustomerId" class="customer-picker">
+            <select [(ngModel)]="selectedCustomerId" (ngModelChange)="onCustomerChange()" class="customer-picker">
               <option [ngValue]="null">عميل نقدي</option>
               <option *ngFor="let c of customers" [ngValue]="c.id">{{ c.name }} ({{ c.phone }})</option>
             </select>
+          </div>
+
+          <div class="recipient-grid">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="اسم المستلم (اختياري)"
+              [(ngModel)]="recipientName"
+            >
+            <input
+              type="text"
+              class="form-control"
+              placeholder="هاتف المستلم (اختياري)"
+              [(ngModel)]="recipientPhone"
+            >
+            <input
+              type="text"
+              class="form-control"
+              placeholder="عنوان المستلم (اختياري)"
+              [(ngModel)]="recipientAddress"
+            >
           </div>
 
           <div class="summary-row">
@@ -81,6 +102,28 @@ interface StoredCartItem {
           <div class="summary-row total-row">
             <span>الإجمالي:</span>
             <span>{{ total | number:'1.2-2' }} ج.م</span>
+          </div>
+
+          <div class="payment-method-row">
+            <span class="pm-label">طريقة الدفع:</span>
+            <div class="pm-actions">
+              <button
+                type="button"
+                class="pm-btn"
+                [class.active]="paymentMethod === 'CASH'"
+                (click)="paymentMethod = 'CASH'"
+              >
+                نقدي
+              </button>
+              <button
+                type="button"
+                class="pm-btn"
+                [class.active]="paymentMethod === 'CARD'"
+                (click)="paymentMethod = 'CARD'"
+              >
+                فيزا
+              </button>
+            </div>
           </div>
 
           <button class="btn btn-primary checkout-btn" 
@@ -339,6 +382,12 @@ interface StoredCartItem {
       color: white;
       border: 1px solid var(--border-color);
     }
+
+    .recipient-grid {
+      display: grid;
+      gap: 0.5rem;
+      margin-bottom: 0.9rem;
+    }
     
     .summary-row {
       display: flex;
@@ -372,6 +421,47 @@ interface StoredCartItem {
       padding: 1rem;
       font-size: 1.1rem;
       position: relative;
+    }
+
+    .payment-method-row {
+      margin-top: 0.85rem;
+      padding-top: 0.85rem;
+      border-top: 1px dashed var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .pm-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .pm-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .pm-btn {
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-main);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .pm-btn:hover {
+      border-color: var(--primary-color);
+    }
+
+    .pm-btn.active {
+      border-color: var(--primary-color);
+      background: color-mix(in srgb, var(--primary-color) 22%, transparent);
+      color: var(--primary-color);
     }
     
     /* Products Section */
@@ -637,6 +727,7 @@ export class PosComponent implements OnInit {
   subtotal: number = 0;
   discount: number = 0;
   total: number = 0;
+  paymentMethod: 'CASH' | 'CARD' = 'CASH';
   isProcessing: boolean = false;
   isLoading: boolean = false;
   lastSale: SaleView | null = null;
@@ -644,6 +735,9 @@ export class PosComponent implements OnInit {
 
   customers: Customer[] = [];
   selectedCustomerId: number | null = null;
+  recipientName: string = '';
+  recipientPhone: string = '';
+  recipientAddress: string = '';
   private readonly cartStorageKey = 'pos-cart';
   private productsLoaded = false;
   private bundlesLoaded = false;
@@ -742,6 +836,17 @@ export class PosComponent implements OnInit {
       next: (data) => this.customers = data,
       error: (err) => console.error('Failed to load customers', err)
     });
+  }
+
+  onCustomerChange() {
+    if (!this.selectedCustomerId) {
+      this.recipientName = '';
+      this.recipientPhone = '';
+      return;
+    }
+    const customer = this.customers.find(c => c.id === this.selectedCustomerId);
+    this.recipientName = customer?.name || '';
+    this.recipientPhone = customer?.phone || '';
   }
 
   extractCategories() {
@@ -959,7 +1064,10 @@ export class PosComponent implements OnInit {
       })),
       bundleIds: this.cart.filter(i => i.isBundle).map(i => i.bundle?.id!),
       discount: this.discount,
-      paymentMethod: 'CASH'
+      externalCustomerName: this.recipientName?.trim() || undefined,
+      externalCustomerPhone: this.recipientPhone?.trim() || undefined,
+      externalCustomerAddress: this.recipientAddress?.trim() || undefined,
+      paymentMethod: this.paymentMethod
     };
 
     this.api.createSale(saleRequest).subscribe({
@@ -968,7 +1076,11 @@ export class PosComponent implements OnInit {
         this.lastSale = sale; // Store for modal
         this.cart = [];
         this.discount = 0;
+        this.paymentMethod = 'CASH';
         this.selectedCustomerId = null;
+        this.recipientName = '';
+        this.recipientPhone = '';
+        this.recipientAddress = '';
         this.calculateTotals();
         this.updateRecommendations();
         this.persistCart(true);
